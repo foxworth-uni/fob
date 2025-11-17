@@ -145,6 +145,31 @@ impl Symbol {
     pub fn parameter_count(&self) -> Option<usize> {
         self.code_quality_metadata().and_then(|m| m.parameter_count)
     }
+
+    /// Get cyclomatic complexity from code quality metadata (for functions)
+    pub fn complexity(&self) -> Option<usize> {
+        self.code_quality_metadata().and_then(|m| m.complexity)
+    }
+
+    /// Get maximum nesting depth from code quality metadata
+    pub fn max_nesting_depth(&self) -> Option<usize> {
+        self.code_quality_metadata().and_then(|m| m.max_nesting_depth)
+    }
+
+    /// Get return count from code quality metadata (for functions)
+    pub fn return_count(&self) -> Option<usize> {
+        self.code_quality_metadata().and_then(|m| m.return_count)
+    }
+
+    /// Get method count from code quality metadata (for classes)
+    pub fn method_count(&self) -> Option<usize> {
+        self.code_quality_metadata().and_then(|m| m.method_count)
+    }
+
+    /// Get field count from code quality metadata (for classes)
+    pub fn field_count(&self) -> Option<usize> {
+        self.code_quality_metadata().and_then(|m| m.field_count)
+    }
 }
 
 /// Classification of symbol types for better diagnostics.
