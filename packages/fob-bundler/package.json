@@ -1,0 +1,49 @@
+{
+  "name": "@fob/bundler",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./native": {
+      "types": "./dist/native/index.d.ts",
+      "import": "./dist/native/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "import": "./dist/runtime/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "index.node"
+  ],
+  "scripts": {
+    "build": "pnpm run build:ts",
+    "build:ts": "tsc --project tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
+  },
+  "optionalDependencies": {
+    "@fob/bundler-darwin-x64": "0.1.0",
+    "@fob/bundler-darwin-arm64": "0.1.0",
+    "@fob/bundler-linux-x64-gnu": "0.1.0",
+    "@fob/bundler-linux-x64-musl": "0.1.0",
+    "@fob/bundler-linux-arm64-gnu": "0.1.0",
+    "@fob/bundler-win32-x64-msvc": "0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "@types/node": "^20.16.10",
+    "vitest": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

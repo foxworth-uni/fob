@@ -1,0 +1,7 @@
+{
+  "entry": ["./src/index.js"],
+  "outDir": "./dist",
+  "bundle": true,
+  "minify": true,
+  "platform": "browser"
+}

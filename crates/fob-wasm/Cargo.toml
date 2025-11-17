@@ -1,0 +1,66 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# WASM-ONLY BUILD REQUIREMENT
+# ═══════════════════════════════════════════════════════════════════════════
+# 
+# This crate MUST be built for wasm32-wasip1 target using ./build.sh
+# 
+# ❌ DO NOT use: cargo build --package fob-wasm
+#    (will fail with linker errors on native targets)
+# 
+# ✅ Correct build: ./build.sh [dev|release]
+# 
+# Why? This crate uses WASI Component Model with wit-bindgen, which generates
+# WASM-specific exports that cannot compile for native targets (aarch64, x86_64).
+# 
+# Target: wasm32-wasip1 (WASI Preview 1, single-threaded)
+# - Maximum compatibility across all edge runtimes
+# - No SharedArrayBuffer/CORS requirements
+# - Component Model compatible
+# ═══════════════════════════════════════════════════════════════════════════
+
+[package]
+name = "fob-wasm"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "WASI bindings for Fob - Pre-configured Rolldown + MDX for edge/cloud environments (wasm32-wasip1)"
+
+[lib]
+name = "fob_bundler_wasm"
+crate-type = ["cdylib"]
+
+[dependencies]
+# Core Fob bundler (wraps Rolldown + provides plugin support)
+# Explicitly disable dts-generation feature (requires native file I/O)
+fob-core = { path = "../fob-core", default-features = true }
+
+# Error handling and serialization
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+# Async runtime for wasm32-wasip1 target (single-threaded)
+# Features supported on wasm32-wasip1: macros, io-util, rt, time
+# Note: Using current_thread runtime (only option for WASI without threads)
+# Note: No 'sync' feature - would require WASI thread-spawn (not available)
+tokio = { workspace = true, features = ["macros", "io-util", "rt", "time"] }
+
+# Component Model bindings
+wit-bindgen = "0.38"
+
+[package.metadata.component]
+package = "component:fob-bundler"
+
+[package.metadata.component.dependencies]
+
+# Note: Using WASI Component Model with WIT interface
+# Note: Compatible with all WASI runtimes (Node.js 18+, Wasmtime, StackBlitz, Cloudflare Workers)
+# Note: No threading/SharedArrayBuffer requirements - maximum compatibility
+
+# Platform-specific dev dependencies for native tests
+[target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
+tempfile.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

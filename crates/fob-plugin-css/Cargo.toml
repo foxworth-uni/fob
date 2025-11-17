@@ -1,0 +1,30 @@
+[package]
+name = "fob-plugin-css"
+version = "0.1.0"
+authors = ["Fob Contributors"]
+edition = "2021"
+rust-version = "1.75"
+license = "MIT OR Apache-2.0"
+description = "Rolldown bundler plugin for CSS - process, bundle, and minify CSS using lightningcss"
+
+[dependencies]
+# Lightning CSS for parsing, bundling, and minification
+lightningcss.workspace = true
+
+# Rolldown bundler integration (must match fob-core versions)
+rolldown = { workspace = true }
+rolldown_plugin = { workspace = true }
+rolldown_common = { workspace = true }
+
+# Workspace dependencies
+anyhow.workspace = true
+thiserror.workspace = true
+rustc-hash.workspace = true
+parking_lot.workspace = true
+
+# Filesystem operations
+walkdir.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+tokio = { workspace = true, features = ["macros", "rt"] }

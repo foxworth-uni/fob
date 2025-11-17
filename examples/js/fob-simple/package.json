@@ -1,0 +1,14 @@
+{
+  "name": "fob-simple-example",
+  "version": "1.0.0",
+  "description": "Simple Fob bundler example - get started in 5 minutes",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "node bundler.js",
+    "start": "node bundler.js"
+  },
+  "dependencies": {
+    "@fob/bundler": "workspace:*"
+  }
+}

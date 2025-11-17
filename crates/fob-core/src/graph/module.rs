@@ -1,0 +1,280 @@
+use std::path::{Path, PathBuf};
+
+use serde::{Deserialize, Serialize};
+
+use super::symbol::SymbolTable;
+use super::{Export, Import, ModuleId};
+
+/// Resolved module metadata used by graph algorithms and builders.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Module {
+    pub id: ModuleId,
+    pub path: PathBuf,
+    pub source_type: SourceType,
+    pub imports: Vec<Import>,
+    pub exports: Vec<Export>,
+    pub has_side_effects: bool,
+    pub is_entry: bool,
+    pub is_external: bool,
+    pub original_size: usize,
+    pub bundled_size: Option<usize>,
+    /// Symbol table from semantic analysis (intra-file dead code detection)
+    pub symbol_table: SymbolTable,
+    /// Module format (ESM vs CJS) from rolldown analysis
+    pub module_format: ModuleFormat,
+    /// Export structure kind (ESM, CJS, or None)
+    pub exports_kind: ExportsKind,
+    /// True if module has star re-exports (`export * from`)
+    pub has_star_exports: bool,
+    /// Execution order in module graph (topological sort)
+    pub execution_order: Option<u32>,
+}
+
+impl Module {
+    /// Create a new module builder with sensible defaults.
+    pub fn builder(id: ModuleId, path: PathBuf, source_type: SourceType) -> ModuleBuilder {
+        ModuleBuilder {
+            module: Self {
+                id,
+                path,
+                source_type,
+                imports: Vec::new(),
+                exports: Vec::new(),
+                has_side_effects: false,
+                is_entry: false,
+                is_external: false,
+                original_size: 0,
+                bundled_size: None,
+                symbol_table: SymbolTable::new(),
+                module_format: ModuleFormat::Unknown,
+                exports_kind: ExportsKind::None,
+                has_star_exports: false,
+                execution_order: None,
+            },
+        }
+    }
+
+    /// Mark the module as an entry module.
+    pub fn mark_entry(&mut self) {
+        self.is_entry = true;
+    }
+
+    /// Mark the module as an external dependency.
+    pub fn mark_external(&mut self) {
+        self.is_external = true;
+    }
+
+    /// Toggle side-effect tracking on the module.
+    pub fn set_side_effects(&mut self, has_side_effects: bool) {
+        self.has_side_effects = has_side_effects;
+    }
+
+    /// Update bundled size information (if available).
+    pub fn set_bundled_size(&mut self, size: Option<usize>) {
+        self.bundled_size = size;
+    }
+
+    /// Get mutable access to exports (for external tools like framework rules).
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// for export in module.exports_mut() {
+    ///     if export.name.starts_with("use") {
+    ///         export.mark_framework_used();
+    ///     }
+    /// }
+    /// ```
+    pub fn exports_mut(&mut self) -> &mut [Export] {
+        &mut self.exports
+    }
+
+    /// Get imports that reference a specific module.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// use fob_core::graph::ModuleId;
+    ///
+    /// let react_id = ModuleId::new("node_modules/react/index.js")?;
+    /// let imports = module.imports_from(&react_id);
+    /// assert_eq!(imports.len(), 1);
+    /// ```
+    pub fn imports_from(&self, target: &ModuleId) -> Vec<&Import> {
+        self.imports
+            .iter()
+            .filter(|imp| imp.resolved_to.as_ref() == Some(target))
+            .collect()
+    }
+
+    /// Check if this module imports from a specific source specifier.
+    ///
+    /// This is useful for framework detection - checking if a module imports
+    /// from "react", "vue", "svelte", etc.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// if module.has_import_from("react") {
+    ///     // This is a React module
+    /// }
+    /// ```
+    pub fn has_import_from(&self, source: &str) -> bool {
+        self.imports.iter().any(|imp| imp.source == source)
+    }
+
+    /// Get all import sources (for dependency analysis).
+    ///
+    /// Returns a vector of source specifiers that this module imports from.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// let sources = module.import_sources();
+    /// // sources = ["react", "lodash", "./utils"]
+    /// ```
+    pub fn import_sources(&self) -> Vec<&str> {
+        self.imports.iter().map(|imp| imp.source.as_str()).collect()
+    }
+}
+
+/// Builder for `Module` to avoid long argument lists in constructors.
+pub struct ModuleBuilder {
+    module: Module,
+}
+
+impl ModuleBuilder {
+    pub fn imports(mut self, imports: Vec<Import>) -> Self {
+        self.module.imports = imports;
+        self
+    }
+
+    pub fn exports(mut self, exports: Vec<Export>) -> Self {
+        self.module.exports = exports;
+        self
+    }
+
+    pub fn side_effects(mut self, has_side_effects: bool) -> Self {
+        self.module.has_side_effects = has_side_effects;
+        self
+    }
+
+    pub fn entry(mut self, is_entry: bool) -> Self {
+        self.module.is_entry = is_entry;
+        self
+    }
+
+    pub fn external(mut self, is_external: bool) -> Self {
+        self.module.is_external = is_external;
+        self
+    }
+
+    pub fn original_size(mut self, original_size: usize) -> Self {
+        self.module.original_size = original_size;
+        self
+    }
+
+    pub fn bundled_size(mut self, bundled_size: Option<usize>) -> Self {
+        self.module.bundled_size = bundled_size;
+        self
+    }
+
+    pub fn symbol_table(mut self, symbol_table: SymbolTable) -> Self {
+        self.module.symbol_table = symbol_table;
+        self
+    }
+
+    pub fn module_format(mut self, module_format: ModuleFormat) -> Self {
+        self.module.module_format = module_format;
+        self
+    }
+
+    pub fn exports_kind(mut self, exports_kind: ExportsKind) -> Self {
+        self.module.exports_kind = exports_kind;
+        self
+    }
+
+    pub fn has_star_exports(mut self, has_star_exports: bool) -> Self {
+        self.module.has_star_exports = has_star_exports;
+        self
+    }
+
+    pub fn execution_order(mut self, execution_order: Option<u32>) -> Self {
+        self.module.execution_order = execution_order;
+        self
+    }
+
+    pub fn build(self) -> Module {
+        self.module
+    }
+}
+
+/// Module definition format (ESM vs CJS).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ModuleFormat {
+    /// ECMAScript Module (.mjs or "type": "module")
+    EsmMjs,
+    /// ECMAScript Module (package.json "type": "module")
+    EsmPackageJson,
+    /// ECMAScript Module (regular .js with ESM syntax)
+    Esm,
+    /// CommonJS (package.json "type": "commonjs")
+    CjsPackageJson,
+    /// CommonJS (regular require/module.exports)
+    Cjs,
+    /// Unknown format
+    Unknown,
+}
+
+/// Export structure kind.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ExportsKind {
+    /// Module uses ESM exports
+    Esm,
+    /// Module uses CommonJS exports
+    CommonJs,
+    /// No exports detected
+    None,
+}
+
+/// Resolved module source type derived from file extensions.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum SourceType {
+    JavaScript,
+    TypeScript,
+    Jsx,
+    Tsx,
+    Json,
+    Css,
+    Unknown,
+}
+
+impl SourceType {
+    /// Derive the source type from a file extension string.
+    pub fn from_extension(ext: &str) -> Self {
+        match ext {
+            "js" | "mjs" | "cjs" => Self::JavaScript,
+            "ts" | "mts" | "cts" => Self::TypeScript,
+            "jsx" => Self::Jsx,
+            "tsx" => Self::Tsx,
+            "json" => Self::Json,
+            "css" => Self::Css,
+            _ => Self::Unknown,
+        }
+    }
+
+    /// Attempt to infer the source type from a file path.
+    pub fn from_path(path: &Path) -> Self {
+        path.extension()
+            .and_then(|ext| ext.to_str())
+            .map_or(Self::Unknown, Self::from_extension)
+    }
+
+    /// Returns true if the file is JavaScript/TypeScript based.
+    pub fn is_javascript_like(&self) -> bool {
+        matches!(
+            self,
+            Self::JavaScript | Self::TypeScript | Self::Jsx | Self::Tsx
+        )
+    }
+}

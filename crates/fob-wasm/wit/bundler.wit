@@ -1,0 +1,24 @@
+package fob:bundler@0.1.0;
+
+world bundler {
+  export bundle-api;
+}
+
+interface bundle-api {
+  record bundle-config {
+    entries: list<string>,
+    output-dir: string,
+    format: option<string>,
+    sourcemap: option<bool>,
+  }
+
+  record bundle-result {
+    assets-count: u32,
+    success: bool,
+    error: option<string>,
+  }
+
+  bundle: func(config: bundle-config) -> result<bundle-result, string>;
+  get-runtime-version: func() -> string;
+}
+

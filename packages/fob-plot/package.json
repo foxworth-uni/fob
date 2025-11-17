@@ -1,0 +1,28 @@
+{
+  "name": "@fob/plot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./standalone": "./dist/standalone.html"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node ./scripts/ensure-dist.cjs",
+    "dev": "node ./scripts/ensure-dist.cjs"
+  },
+  "dependencies": {
+    "@observablehq/plot": "^0.6.16"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

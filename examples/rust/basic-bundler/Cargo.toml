@@ -1,0 +1,14 @@
+[package]
+name = "basic-bundler-example"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "basic-bundler"
+path = "src/main.rs"
+
+[dependencies]
+fob-core = { path = "../../../crates/fob-core" }
+anyhow = "1.0"
+tokio = { version = "1", features = ["full"] }
+

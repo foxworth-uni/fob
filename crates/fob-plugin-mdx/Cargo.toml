@@ -1,0 +1,20 @@
+[package]
+name = "fob-plugin-mdx"
+version = "0.1.0"
+authors = ["Fob Contributors"]
+edition = "2021"
+rust-version = "1.75"
+license = "MIT OR Apache-2.0"
+description = "Rolldown bundler plugin for MDX - compile MDX files in Rolldown builds"
+
+[dependencies]
+# Cross-workspace dependency to bunny-mdx
+bunny-mdx = { path = "../../../bunny/crates/bunny-mdx" }
+
+# Rolldown bundler integration (must match fob-core versions)
+rolldown = { workspace = true }
+rolldown_plugin = { workspace = true }
+rolldown_common = { workspace = true }
+
+# Workspace dependencies
+anyhow.workspace = true

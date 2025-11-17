@@ -1,0 +1,36 @@
+[package]
+name = "fob-native"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Native Node.js bindings for Fob bundler core"
+
+[package.metadata.napi]
+name = "fob-native"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+fob-core = { path = "../fob-core" }
+napi = { version = "3", default-features = false, features = ["napi6", "tokio_rt"] }
+napi-derive = "3"
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+anyhow.workspace = true
+async-trait.workspace = true
+oxc_resolver.workspace = true
+
+# tokio with full features for native targets only
+# This prevents workspace feature unification from affecting WASM builds
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+tokio = { workspace = true, features = ["full"] }
+
+[build-dependencies]
+napi-build = "2.3"
+
+[dev-dependencies]
+tempfile.workspace = true

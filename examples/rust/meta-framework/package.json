@@ -1,0 +1,17 @@
+{
+  "name": "meta-framework-example",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Meta-framework example showing route discovery and code splitting with fob",
+  "scripts": {
+    "build": "cargo run",
+    "dev": "npm run build && node server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.12.0",
+    "hono": "^4.5.0"
+  }
+}
+

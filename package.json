@@ -1,0 +1,54 @@
+{
+  "name": "fob-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "examples/*",
+    "examples/js/*"
+  ],
+  "scripts": {
+    "build": "pnpm build:napi && pnpm build:packages",
+    "build:wasm": "cd crates/fob-wasm && ./build.sh release",
+    "build:wasm:dev": "cd crates/fob-wasm && ./build.sh dev",
+    "build:napi": "cd crates/fob-native && pnpm exec napi build --platform --release --js ../../packages/fob-bundler/index.node",
+    "build:napi:debug": "cd crates/fob-native && pnpm exec napi build --platform --js ../../packages/fob-bundler/index.node",
+    "build:packages": "turbo run build --filter='@fob/*'",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "lint": "oxlint --ignore-pattern 'node_modules/**' --ignore-pattern '**/dist/**' --ignore-pattern '**/build/**' --ignore-pattern 'target/**' --ignore-pattern '**/pkg/**' --ignore-pattern '.turbo/**' --ignore-pattern '**/wasm/**/*.js' --ignore-pattern 'packages/playground/dist-tests/**' .",
+    "clean": "turbo run clean && cargo clean",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "graph": "turbo run build --graph",
+    "rust:build": "cargo build --release",
+    "rust:test": "cargo test",
+    "rust:check": "cargo check --workspace",
+    "rust:fmt": "cargo fmt --all",
+    "rust:clippy": "cargo clippy --workspace --all-targets",
+    "cli": "pnpm --filter @fob/cli",
+    "check:all": "pnpm rust:check && pnpm rust:clippy && pnpm lint && pnpm format:check && pnpm test"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "3.3.0",
+    "@prettier/plugin-oxc": "^0.0.4",
+    "glob": "^11.0.0",
+    "oxlint": "^1.26.0",
+    "prettier": "^3.6.2",
+    "turbo": "2.6.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "packageManager": "pnpm@10.0.0",
+  "dependencies": {
+    "@codemirror/commands": "^6.7.0",
+    "@codemirror/lang-javascript": "^6.2.2",
+    "@codemirror/language": "^6.10.3",
+    "@codemirror/state": "^6.4.1",
+    "@codemirror/view": "^6.34.0",
+    "@tanstack/react-router": "^1.136.1"
+  }
+}

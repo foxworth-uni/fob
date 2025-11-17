@@ -1,0 +1,63 @@
+[package]
+name = "fob-cli"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = []
+dts-generation = ["fob-core/dts-generation"]
+llm-docs = ["fob-core/llm-docs"]
+
+[dependencies]
+# Core dependencies
+fob-core = { path = "../fob-core", features = ["docs-generation"] }
+fob-docs = { path = "../fob-docs" }
+fob-config = { path = "../fob-config" }
+fob-gen = { path = "../fob-gen" }
+
+# Async runtime
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "fs", "signal"] }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+miette = { version = "7.0", features = ["fancy"] }
+
+# CLI framework
+clap = { workspace = true }
+
+# Configuration
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+figment = { workspace = true }
+jsonschema = "0.33"
+schemars = "1.1"
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Terminal UI
+console = { workspace = true }
+indicatif = { workspace = true }
+owo-colors = { workspace = true }
+
+# File watching
+notify = "8.2"
+
+# Server
+axum = { workspace = true }
+tower-http = { workspace = true, features = ["fs", "cors"] }
+rust-embed = { workspace = true }
+
+# Concurrency
+parking_lot = "0.12"
+async-stream = "0.3"
+tokio-stream = "0.1"
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.1"
+tempfile = { workspace = true }
+insta = "1.40"
+

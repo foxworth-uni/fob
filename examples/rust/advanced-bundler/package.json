@@ -1,0 +1,7 @@
+{
+  "name": "advanced-bundler-example",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Advanced bundler example using fob-core with multiple formats"
+}
+

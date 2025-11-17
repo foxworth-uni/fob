@@ -1,0 +1,19 @@
+{
+  "name": "fob-native-build",
+  "version": "0.1.0",
+  "private": true,
+  "napi": {
+    "name": "fob-native",
+    "package": {
+      "name": "@fob/bundler"
+    },
+    "triples": {
+      "defaults": true,
+      "additional": [
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-gnu"
+      ]
+    }
+  }
+}
+

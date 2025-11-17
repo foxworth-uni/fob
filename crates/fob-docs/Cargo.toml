@@ -1,0 +1,49 @@
+[package]
+name = "fob-docs"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Documentation extraction and generation utilities for the Fob bundler"
+
+[features]
+default = ["rolldown-integration", "markdown", "json"]
+rolldown-integration = ["rolldown_plugin", "rolldown_common"]
+markdown = []
+json = []
+llm = ["dep:ollama-rs", "dep:schemars", "dep:tokio", "dep:blake3"]
+
+[dependencies]
+anyhow.workspace = true
+thiserror.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+oxc_parser.workspace = true
+oxc_ast.workspace = true
+oxc_allocator.workspace = true
+oxc_span.workspace = true
+oxc_ast_visit.workspace = true
+rustc-hash.workspace = true
+chrono.workspace = true
+fob-gen = { path = "../fob-gen", features = ["parser", "query-api"] }
+
+# LLM enhancement (optional, enabled with "llm" feature)
+ollama-rs = { version = "0.3", optional = true }
+schemars = { version = "1.1", optional = true }
+tokio = { workspace = true, optional = true, features = ["rt", "macros"] }
+blake3 = { workspace = true, optional = true }
+
+[dependencies.rolldown_plugin]
+workspace = true
+optional = true
+
+[dependencies.rolldown_common]
+workspace = true
+optional = true
+
+[dev-dependencies]
+tempfile.workspace = true
+serde_json.workspace = true
+

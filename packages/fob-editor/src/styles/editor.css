@@ -1,0 +1,18 @@
+/* Basic styling for MirrorEditor */
+.cm-editor {
+  height: 100%;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+  font-size: 14px;
+}
+
+.cm-scroller {
+  overflow: auto;
+}
+
+.cm-content {
+  padding: 12px 0;
+}
+
+.cm-line {
+  padding: 0 16px;
+}

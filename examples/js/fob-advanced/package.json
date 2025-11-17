@@ -1,0 +1,16 @@
+{
+  "name": "fob-advanced-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Advanced Fob bundler example - code splitting, minification, watch mode, and more",
+  "type": "module",
+  "scripts": {
+    "build": "node bundler.js",
+    "build:minified": "node bundler-minified.js",
+    "build:watch": "node bundler-watch.js"
+  },
+  "dependencies": {
+    "@fob/bundler": "workspace:*"
+  }
+}
+

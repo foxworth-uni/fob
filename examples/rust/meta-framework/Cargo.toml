@@ -1,0 +1,13 @@
+[package]
+name = "meta-framework-example"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "meta-framework"
+path = "src/main.rs"
+
+[dependencies]
+fob-core = { path = "../../../crates/fob-core" }
+tokio = { version = "1", features = ["full"] }
+anyhow = "1.0"

@@ -1,0 +1,37 @@
+[package]
+name = "fob-gen"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Ergonomic JavaScript code generation using OXC AST builders"
+
+[dependencies]
+# OXC for AST manipulation
+oxc_allocator = { workspace = true }
+oxc_ast = { workspace = true }
+oxc_codegen = { workspace = true }
+oxc_span = { workspace = true }
+oxc_semantic = { workspace = true }
+oxc_parser = { workspace = true, optional = true }
+oxc_ast_visit = { workspace = true, optional = true }
+
+# Error handling
+thiserror = { workspace = true }
+
+[features]
+default = []
+# Enable parser functionality for reading existing code
+parser = ["dep:oxc_parser"]
+# Enable query API for ergonomic AST traversal
+query-api = ["dep:oxc_ast_visit", "parser"]
+# Enable transformation engine
+transform-engine = ["query-api"]
+# Internal utilities for fob-core (not public API)
+fob_internal = []
+
+[dev-dependencies]
+# Testing
+proptest = "1.5"

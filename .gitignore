@@ -1,0 +1,79 @@
+# Rust
+/target/
+**/*.rs.bk
+.cargo/
+rustfmt.toml
+.rustc_info.json
+# Note: Cargo.lock is committed for this project
+
+# Node.js / JavaScript
+node_modules/
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+*.log
+.fob-debug.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-store/
+
+# Cache directories
+.fob-cache/
+**/.fob-cache/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Test and coverage
+coverage/
+.nyc_output/
+
+# WASM
+**/pkg/
+*.wasm
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+*.d
+*.rlib
+*.rmeta
+*.so
+*.dylib
+*.dll
+
+# Test outputs
+*.profraw
+*.profdata
+perf.data
+flamegraph.svg
+
+# Additional build outputs
+**/dist/
+**/pkg/
+packages/fob-edge/wasm/
+packages/fob-bundler/index.node
+packages/*/index.node
+
+# Example build outputs
+examples/**/dist/
+examples/**/output/
+examples/**/demo/dist/
+
+.claude/*
+.turbo/*

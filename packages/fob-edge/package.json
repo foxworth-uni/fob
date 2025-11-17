@@ -1,0 +1,52 @@
+{
+  "name": "@fob/edge",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./cloudflare": {
+      "types": "./dist/platforms/cloudflare.d.ts",
+      "import": "./dist/platforms/cloudflare.js"
+    },
+    "./deno": {
+      "types": "./dist/platforms/deno-deploy.d.ts",
+      "import": "./dist/platforms/deno-deploy.js"
+    },
+    "./vercel": {
+      "types": "./dist/platforms/vercel-edge.d.ts",
+      "import": "./dist/platforms/vercel-edge.js"
+    },
+    "./netlify": {
+      "types": "./dist/platforms/netlify-edge.d.ts",
+      "import": "./dist/platforms/netlify-edge.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "wasm"
+  ],
+  "scripts": {
+    "build": "pnpm run build:ts",
+    "build:ts": "tsc --project tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "cd ../../ && pnpm build:wasm"
+  },
+  "dependencies": {
+    "@bytecodealliance/preview2-shim": "^0.17.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "miniflare": "^4.20251109.1",
+    "vitest": "^4.0.9"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

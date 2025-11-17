@@ -1,0 +1,8 @@
+{
+  "name": "basic-bundler-example",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Basic bundler example using fob-core"
+}
+
