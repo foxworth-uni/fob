@@ -13,7 +13,7 @@ description = "Fob foundation - Graph analysis and runtime abstraction"
 fob-gen = { path = "../fob-gen", features = ["parser", "query-api", "fob_internal"] }
 
 # MDX compilation support from Bunny (WASM-compatible)
-bunny-mdx = { path = "../../../bunny/crates/bunny-mdx" }
+bunny-mdx = { workspace = true }
 fob-plugin-mdx = { path = "../fob-plugin-mdx" }
 
 # Core dependencies (all WASM-compatible)

@@ -4,7 +4,8 @@
 //! `design/02-graph-architecture.md`. They intentionally keep domain logic light so
 //! higher-level phases can compose them without pulling in heavy dependencies.
 //!
-//! ```rust
+//! # #[tokio::main]
+//! # async fn main() {
 //! use fob::graph::{
 //!     analyze_entries, Import, ImportKind, ImportSpecifier, Module, ModuleGraph, ModuleId,
 //!     SourceSpan, SourceType,
@@ -35,22 +36,23 @@
 //! entry.mark_entry();
 //!
 //! let mut graph = ModuleGraph::new();
-//! graph.add_module(utils);
-//! graph.add_module(entry);
-//! graph.add_dependency(entry_id, utils_id);
+//! graph.add_module(utils).await;
+//! graph.add_module(entry).await;
+//! graph.add_dependency(entry_id, utils_id).await;
 //!
-//! assert!(graph.unused_exports().is_empty());
-//! ```
+//! assert!(graph.unused_exports().await.is_empty());
+//! # }
 //!
 //! ```no_run
-//! use fob::graph::analyze_entries;
+//! use fob::analyze;
 //! use std::path::PathBuf;
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let project_root = PathBuf::from("./examples/my-app");
-//! let graph = analyze_entries(&[project_root.join("src/index.js")], &project_root).await?;
-//! println!("modules: {}", graph.len());
+//! // Note: analyze() uses current directory by default, or use Analyzer::new().cwd(...)
+//! let result = analyze(&[project_root.join("src/index.js")]).await?;
+//! println!("modules: {}", result.graph.len().await?);
 //! # Ok(())
 //! # }
 //! ```

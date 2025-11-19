@@ -38,7 +38,7 @@ use super::walker::GraphWalker;
 ///     .analyze()
 ///     .await?;
 ///
-/// println!("Unused exports: {}", analysis.unused_exports().len());
+/// println!("Unused exports: {}", analysis.unused_exports().await?.len());
 /// # Ok(())
 /// # }
 /// ```
@@ -77,8 +77,10 @@ impl Analyzer {
     /// # Example
     ///
     /// ```rust,no_run
+    /// use fob::analysis::analyzer::Analyzer;
+    ///
     /// Analyzer::new()
-    ///     .path_alias("@", "./src")
+    ///     .path_alias("@", "./src");
     ///     // Now "@/components/Button" resolves to "./src/components/Button"
     /// ```
     pub fn path_alias(mut self, from: impl Into<String>, to: impl Into<String>) -> Self {

@@ -29,8 +29,8 @@ mod roundtrip_impl {
 
     #[test]
     fn test_parse_and_regenerate_imports_exports() {
-        let source = read_fixture("imports_exports.js");
-        test_roundtrip(&source, "imports_exports.js");
+        let source = read_fixture("imports_exports.jsx");
+        test_roundtrip(&source, "imports_exports.jsx");
     }
 
     #[test]
@@ -47,8 +47,8 @@ mod roundtrip_impl {
 
     #[test]
     fn test_parse_and_regenerate_complex() {
-        let source = read_fixture("complex.js");
-        test_roundtrip(&source, "complex.js");
+        let source = read_fixture("complex.jsx");
+        test_roundtrip(&source, "complex.jsx");
     }
 
     fn test_roundtrip(source: &str, filename: &str) {

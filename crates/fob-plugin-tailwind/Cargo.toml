@@ -10,7 +10,7 @@ description = "Rolldown bundler plugin for Tailwind CSS - process Tailwind CSS i
 [dependencies]
 # Tailwind Oxide from GitHub (not published to crates.io)
 # Note: This is experimental and not officially supported by TailwindLabs
-tailwindcss-oxide = { git = "https://github.com/tailwindlabs/tailwindcss", package = "tailwindcss-oxide" }
+tailwindcss-oxide = { workspace = true }
 
 # Rolldown bundler integration (must match fob-core versions)
 rolldown = { workspace = true }

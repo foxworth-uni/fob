@@ -34,4 +34,4 @@ fob_internal = []
 
 [dev-dependencies]
 # Testing
-proptest = "1.5"
+proptest = { workspace = true }

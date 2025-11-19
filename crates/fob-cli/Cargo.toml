@@ -19,7 +19,7 @@ tokio = { workspace = true, features = ["macros", "rt-multi-thread", "fs", "sign
 # Error handling
 anyhow = { workspace = true }
 thiserror = { workspace = true }
-miette = { version = "7.0", features = ["fancy"] }
+miette = { workspace = true, features = ["fancy"] }
 
 # CLI framework
 clap = { workspace = true }
@@ -28,8 +28,8 @@ clap = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 figment = { workspace = true }
-jsonschema = "0.33"
-schemars = "1.1"
+jsonschema = { workspace = true }
+schemars = { workspace = true }
 
 # Logging
 tracing = { workspace = true }
@@ -41,7 +41,7 @@ indicatif = { workspace = true }
 owo-colors = { workspace = true }
 
 # File watching
-notify = "8.2"
+notify = { workspace = true }
 
 # Server
 axum = { workspace = true }
@@ -54,8 +54,8 @@ async-stream = "0.3"
 tokio-stream = "0.1"
 
 [dev-dependencies]
-assert_cmd = "2.0"
-predicates = "3.1"
+assert_cmd = { workspace = true }
+predicates = { workspace = true }
 tempfile = { workspace = true }
-insta = "1.40"
-serial_test = "3"
+insta = { workspace = true }
+serial_test = { workspace = true }

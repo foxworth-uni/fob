@@ -16,8 +16,8 @@ crate-type = ["cdylib"]
 
 [dependencies]
 fob-bundler = { path = "../fob-bundler" }
-napi = { version = "3", default-features = false, features = ["napi6", "tokio_rt"] }
-napi-derive = "3"
+napi = { workspace = true, features = ["napi6", "tokio_rt"] }
+napi-derive = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 anyhow.workspace = true
@@ -30,7 +30,7 @@ oxc_resolver.workspace = true
 tokio = { workspace = true, features = ["full"] }
 
 [build-dependencies]
-napi-build = "2.3"
+napi-build = { workspace = true }
 
 [dev-dependencies]
 tempfile.workspace = true

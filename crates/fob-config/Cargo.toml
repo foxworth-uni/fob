@@ -20,8 +20,8 @@ toml.workspace = true
 tracing.workspace = true
 
 # Runtime dependencies (conditional on eval feature)
-funtime = { path = "../../../funtime/crates/funtime", optional = true }
-funtime-boa = { path = "../../../funtime/crates/funtime-boa", optional = true }
+funtime = { workspace = true, optional = true }
+funtime-boa = { workspace = true, optional = true }
 tokio = { workspace = true, features = ["rt"], optional = true }
 
 [features]

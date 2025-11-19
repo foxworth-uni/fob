@@ -50,7 +50,7 @@ serde_json.workspace = true
 tokio = { workspace = true, features = ["macros", "io-util", "rt", "time"] }
 
 # Component Model bindings
-wit-bindgen = "0.38"
+wit-bindgen = { workspace = true }
 
 [package.metadata.component]
 package = "component:fob-bundler"

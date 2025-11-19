@@ -160,6 +160,31 @@ getrandom = { version = "0.3", features = ["wasm_js"] }
 # fob crates declare uuid as a direct dependency (inheriting workspace features)
 # This triggers feature unification, forcing rolldown's transitive uuid to use js feature
 
+# External Workspace Dependencies
+bunny-mdx = { git = "https://github.com/foxworth-uni/bunny", package = "bunny-mdx", branch = "main" }
+funtime = { path = "../funtime/crates/funtime" }
+funtime-boa = { path = "../funtime/crates/funtime-boa" }
+tailwindcss-oxide = { git = "https://github.com/tailwindlabs/tailwindcss", package = "tailwindcss-oxide" }
+
+# Native Bindings
+napi = { version = "3", default-features = false, features = ["napi6", "tokio_rt"] }
+napi-derive = "3"
+napi-build = "2.3"
+
+# WASM Bindings
+wit-bindgen = "0.38"
+
+# Schema & Validation
+jsonschema = "0.33"
+schemars = "1.1"
+
+# Testing
+assert_cmd = "2.0"
+predicates = "3.1"
+insta = "1.40"
+serial_test = "3"
+
+
 [profile.release]
 opt-level = 3
 lto = "thin"
