@@ -17,7 +17,7 @@
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let result = fob::BuildOptions::library("./src/index.js")
-//!     .externals(["react", "react-dom"])
+//!     .external(["react", "react-dom"])
 //!     .sourcemap(true)
 //!     .build()
 //!     .await?;

@@ -14,9 +14,21 @@
 //!
 //! # Example
 //!
-//! ```rust
-//! use fob_cli::error::{Result, ResultExt};
-//!
+//! ```rust,no_run
+//! use fob_cli::error::{Result, ResultExt, CliError};
+//! use std::path::Path;
+//! use std::str::FromStr;
+//! 
+//! struct Config;
+//! 
+//! impl FromStr for Config {
+//!     type Err = CliError;
+//! 
+//!     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+//!         Ok(Config)
+//!     }
+//! }
+//! 
 //! fn load_config(path: &Path) -> Result<Config> {
 //!     std::fs::read_to_string(path)
 //!         .with_path(path)?
@@ -203,9 +215,15 @@ pub trait ResultExt<T> {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,no_run
+    /// # use std::path::Path;
+    /// # use fob_cli::error::{Result, ResultExt};
+    /// # fn run() -> Result<()> {
+    /// let path = Path::new("non_existent_file.txt");
     /// std::fs::read_to_string(path)
     ///     .with_path(path)?;
+    /// # Ok(())
+    /// # }
     /// ```
     fn with_path(self, path: impl AsRef<std::path::Path>) -> Result<T>;
 
@@ -213,9 +231,17 @@ pub trait ResultExt<T> {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,no_run
+    /// # use fob_cli::error::{Result, ResultExt, CliError};
+    /// # fn run() -> Result<()> {
+    /// fn parse_config(content: &str) -> Result<()> {
+    ///     Err(CliError::Custom("parsing failed".into()))
+    /// }
+    /// let content = r#"{ "key": "value" }"#;
     /// parse_config(&content)
     ///     .with_hint("Check for trailing commas in JSON")?;
+    /// # Ok(())
+    /// # }
     /// ```
     fn with_hint(self, hint: impl std::fmt::Display) -> Result<T>;
 
@@ -223,9 +249,16 @@ pub trait ResultExt<T> {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,no_run
+    /// # use fob_cli::error::{Result, ResultExt, CliError};
+    /// # fn run() -> Result<()> {
+    /// fn operation() -> Result<()> {
+    ///     Err(CliError::Custom("something went wrong".into()))
+    /// }
     /// operation()
     ///     .context("Failed to initialize bundler")?;
+    /// # Ok(())
+    /// # }
     /// ```
     fn context(self, msg: impl std::fmt::Display) -> Result<T>;
 }

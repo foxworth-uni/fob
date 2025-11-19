@@ -17,10 +17,11 @@
 //! ```rust,no_run
 //! use fob_plugin_mdx::BunnyMdxPlugin;
 //! use std::sync::Arc;
+//! use std::path::PathBuf;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Use with your Rolldown bundler configuration
-//! let plugin = Arc::new(BunnyMdxPlugin::new());
+//! let plugin = Arc::new(BunnyMdxPlugin::new(PathBuf::from(".")));
 //! # Ok(())
 //! # }
 //! ```

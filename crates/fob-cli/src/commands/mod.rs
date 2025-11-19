@@ -15,7 +15,7 @@ pub mod check;
 pub mod dev;
 pub mod init;
 mod templates;
-pub(crate) mod utils;
+pub mod utils;
 
 // Re-export execute functions for convenience
 pub use build::execute as build_execute;

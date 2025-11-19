@@ -80,7 +80,7 @@ impl BuildResult {
     /// # async fn example() -> fob_bundler::Result<()> {
     /// let result = BuildOptions::library("./src/main.js").build().await?;
     /// for chunk in result.chunks() {
-    ///     println!("Chunk: {} ({} bytes)", chunk.file_name, chunk.code.len());
+    ///     println!("Chunk: {} ({} bytes)", chunk.filename, chunk.code.len());
     /// }
     /// # Ok(())
     /// # }

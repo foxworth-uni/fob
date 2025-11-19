@@ -13,11 +13,11 @@
 //!
 //! # Example
 //!
-//! ```rust
-//! use fob_cli::logger;
+//! ```rust,no_run
+//! use fob_cli::logger::init_logger;
 //! use tracing::{info, debug, error};
 //!
-//! logger::init_logger(false, false, false);
+//! init_logger(false, false, false);
 //!
 //! info!("Starting build");
 //! debug!("Processing module: {}", "index.ts");
@@ -46,7 +46,9 @@ use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, Env
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```rust,no_run
+/// use fob_cli::logger::init_logger;
+///
 /// // Default logging (INFO level)
 /// init_logger(false, false, false);
 ///
@@ -94,10 +96,11 @@ pub fn init_logger(verbose: bool, quiet: bool, no_color: bool) {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,no_run
+/// use fob_cli::logger::init_logger_with_filter;
 /// use tracing_subscriber::EnvFilter;
 ///
-/// let filter = EnvFilter::new("joy=trace,hyper=off");
+/// let filter = EnvFilter::new("fob=trace,hyper=off");
 /// init_logger_with_filter(filter, false);
 /// ```
 pub fn init_logger_with_filter(filter: EnvFilter, no_color: bool) {

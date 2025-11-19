@@ -344,9 +344,9 @@ impl BuildOptions {
     ///
     /// ```no_run
     /// use fob_bundler::BuildOptions;
-    /// use std::collections::HashMap;
+    /// use rustc_hash::FxHashMap;
     ///
-    /// let mut aliases = HashMap::new();
+    /// let mut aliases = FxHashMap::default();
     /// aliases.insert("@".to_string(), "./src".to_string());
     /// aliases.insert("~".to_string(), "./lib".to_string());
     ///
