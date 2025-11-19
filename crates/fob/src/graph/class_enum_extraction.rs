@@ -4,11 +4,15 @@
 //! class members (properties, methods, getters, setters) and enum members from
 //! JavaScript/TypeScript AST nodes.
 
-use oxc_ast::ast::{
-    Class, ClassElement, Expression, MethodDefinition, MethodDefinitionKind, PropertyDefinition,
-    PropertyKey, TSAccessibility, TSEnumDeclaration, TSEnumMemberName,
+// Use re-exported OXC types from the fob crate for version consistency
+use crate::oxc::{
+    ast::{
+        Class, ClassElement, Expression, MethodDefinition, MethodDefinitionKind,
+        PropertyDefinition, PropertyKey, TSAccessibility, TSEnumDeclaration, TSEnumMemberName,
+    },
+    Visit,
 };
-use oxc_ast_visit::{walk, Visit};
+use oxc_ast_visit::walk;
 
 use super::symbol::{
     ClassMemberMetadata, EnumMemberMetadata, EnumMemberValue, Symbol, SymbolKind, SymbolMetadata,

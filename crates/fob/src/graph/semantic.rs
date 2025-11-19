@@ -4,12 +4,12 @@
 //! files to extract symbol information, detect unused declarations, and identify
 //! unreachable code.
 
-use oxc_allocator::Allocator;
-use oxc_ast::ast::Statement;
-use oxc_ast_visit::{walk, Visit};
-use oxc_parser::{Parser, ParserReturn};
-use oxc_semantic::SemanticBuilder;
-use oxc_span::{GetSpan, SourceType as OxcSourceType};
+// Use re-exported OXC types from the fob crate for version consistency
+use crate::oxc::{
+    ast::Statement, Allocator, GetSpan, Parser, ParserReturn, SemanticBuilder,
+    SourceType as OxcSourceType, Visit,
+};
+use oxc_ast_visit::walk;
 
 use super::symbol::{Symbol, SymbolKind, SymbolSpan, SymbolTable, UnreachableCode};
 use super::ModuleId;

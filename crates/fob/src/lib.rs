@@ -94,6 +94,34 @@ pub use analysis::{
 // Re-export MDX plugin (WASM-compatible)
 pub use fob_plugin_mdx::BunnyMdxPlugin;
 
+// Re-export OXC foundation types for consistent version usage across workspace
+// These are commonly used types that appear in public APIs and cross crate boundaries
+pub mod oxc {
+    //! OXC (Oxidation Compiler) foundation types re-exported for workspace consistency.
+    //!
+    //! This ensures all workspace crates use the same OXC version for types that
+    //! cross crate boundaries. Specialized OXC crates (like `oxc_isolated_declarations`)
+    //! should still be imported directly by crates that need them.
+
+    /// Re-export allocator - required for all OXC AST operations
+    pub use oxc_allocator::Allocator;
+
+    /// Re-export AST types
+    pub use oxc_ast::ast;
+
+    /// Re-export AST visitor trait
+    pub use oxc_ast_visit::Visit;
+
+    /// Re-export span types for source location tracking
+    pub use oxc_span::{GetSpan, Span, SourceType};
+
+    /// Re-export parser for code analysis
+    pub use oxc_parser::{Parser, ParserReturn};
+
+    /// Re-export semantic analysis
+    pub use oxc_semantic::{ScopeFlags, SemanticBuilder};
+}
+
 // Note: AnalyzedBundle is available in fob-bundler, not here
 
 /// Error types for fob operations.

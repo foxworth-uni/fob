@@ -4,9 +4,12 @@
 //! (line count, parameter count, complexity, etc.) from JavaScript/TypeScript
 //! AST nodes and attaching them to symbols.
 
-use oxc_ast::ast::{Class, ClassElement, Function, Program, Statement};
-use oxc_ast_visit::{walk, Visit};
-use oxc_semantic::ScopeFlags;
+// Use re-exported OXC types from the fob crate for version consistency
+use crate::oxc::{
+    ast::{Class, ClassElement, Function, Program, Statement},
+    ScopeFlags, Visit,
+};
+use oxc_ast_visit::walk;
 use std::collections::HashMap;
 
 use super::symbol::{CodeQualityMetadata, SymbolMetadata, SymbolTable};
