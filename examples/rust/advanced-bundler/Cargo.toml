@@ -8,7 +8,7 @@ name = "advanced-bundler"
 path = "src/main.rs"
 
 [dependencies]
-fob-core = { path = "../../../crates/fob-core" }
+fob-bundler = { path = "../../../crates/fob-bundler" }
 anyhow = "1.0"
 tokio = { version = "1", features = ["full"] }
 

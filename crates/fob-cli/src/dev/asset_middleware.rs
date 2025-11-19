@@ -77,7 +77,7 @@ fn internal_error(message: String) -> Response {
 mod tests {
     use super::*;
     use crate::dev::DevServerState;
-    use fob_core::builders::asset_registry::AssetRegistry;
+    use fob_bundler::builders::asset_registry::AssetRegistry;
     use std::fs;
     use std::sync::Arc;
     use tempfile::TempDir;

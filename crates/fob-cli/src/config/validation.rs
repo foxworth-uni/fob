@@ -67,64 +67,6 @@ impl FobConfig {
             .into());
         }
 
-        if !self.docs {
-            if self.docs_format.is_some() {
-                return Err(ConfigError::InvalidValue {
-                    field: "docsFormat".to_string(),
-                    value: "set".to_string(),
-                    hint: "Set docs: true to configure documentation format".to_string(),
-                }
-                .into());
-            }
-            if self.docs_dir.is_some() {
-                return Err(ConfigError::InvalidValue {
-                    field: "docsDir".to_string(),
-                    value: "set".to_string(),
-                    hint: "Set docs: true to configure documentation directory".to_string(),
-                }
-                .into());
-            }
-            if self.docs_include_internal {
-                return Err(ConfigError::InvalidValue {
-                    field: "docsIncludeInternal".to_string(),
-                    value: "true".to_string(),
-                    hint: "Set docs: true to include @internal symbols".to_string(),
-                }
-                .into());
-            }
-        }
-
-        // LLM enhancement validation
-        if self.docs_enhance && !self.docs {
-            return Err(ConfigError::InvalidValue {
-                field: "docsEnhance".to_string(),
-                value: "true".to_string(),
-                hint: "LLM enhancement requires docs: true".to_string(),
-            }
-            .into());
-        }
-
-        if self.docs_llm.is_some() && !self.docs_enhance {
-            return Err(ConfigError::InvalidValue {
-                field: "docsLlm".to_string(),
-                value: "set".to_string(),
-                hint: "docsLlm configuration requires docsEnhance: true".to_string(),
-            }
-            .into());
-        }
-
-        // Validate LLM mode if present
-        if let Some(ref llm_config) = self.docs_llm {
-            if !["missing", "incomplete", "all"].contains(&llm_config.mode.as_str()) {
-                return Err(ConfigError::InvalidValue {
-                    field: "docsLlm.mode".to_string(),
-                    value: llm_config.mode.clone(),
-                    hint: "Mode must be 'missing', 'incomplete', or 'all'".to_string(),
-                }
-                .into());
-            }
-        }
-
         // Code splitting requires bundling
         if self.splitting && !self.bundle {
             return Err(ConfigError::InvalidValue {

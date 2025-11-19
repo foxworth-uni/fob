@@ -10,9 +10,11 @@ use fob_cli::cli;
 use fob_cli::config;
 use std::fs;
 use std::path::PathBuf;
+use serial_test::serial;
 use tempfile::TempDir;
 
 #[test]
+#[serial]
 fn test_config_cli_overrides_file() {
     let temp = TempDir::new().unwrap();
     let project_dir = temp.path();
@@ -69,6 +71,7 @@ fn test_config_cli_overrides_file() {
 }
 
 #[test]
+#[serial]
 fn test_config_file_fallback_when_cli_empty() {
     let temp = TempDir::new().unwrap();
     let project_dir = temp.path();
@@ -120,12 +123,13 @@ fn test_config_file_fallback_when_cli_empty() {
     
     // File entry should be used when CLI entry is empty
     assert_eq!(config.entry, vec!["src/file.ts"]);
-    assert_eq!(config.out_dir, PathBuf::from("file-dist"));
-    // CLI format should still override (non-entry fields)
+    // Non-entry CLI flags should still override config file values
+    assert_eq!(config.out_dir, PathBuf::from("dist"));
     assert_eq!(config.format, config::Format::Esm);
 }
 
 #[test]
+#[serial]
 fn test_config_defaults_when_no_file() {
     let temp = TempDir::new().unwrap();
     let project_dir = temp.path();
@@ -171,6 +175,7 @@ fn test_config_defaults_when_no_file() {
 }
 
 #[test]
+#[serial]
 fn test_config_environment_variables() {
     // RAII guard to ensure environment variables are cleaned up even if test panics
     struct EnvGuard {
@@ -245,4 +250,3 @@ fn test_config_environment_variables() {
 
     // Note: EnvGuard RAII will clean up environment variables automatically
 }
-

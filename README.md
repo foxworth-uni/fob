@@ -24,7 +24,7 @@ console.log(`Generated ${result.chunks.length} chunks`);
 ### Rust
 
 ```rust
-use fob_core::BuildOptions;
+use fob_bundler::BuildOptions;
 
 let result = BuildOptions::library("src/index.ts")
     .external(["react", "react-dom"])
@@ -81,7 +81,7 @@ for (const chunk of result.chunks) {
 ### Component Library (Rust)
 
 ```rust
-use fob_core::{BuildOptions, NativeRuntime};
+use fob_bundler::{BuildOptions, NativeRuntime};
 use std::sync::Arc;
 
 let result = BuildOptions::library("components/index.ts")

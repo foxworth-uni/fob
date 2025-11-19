@@ -33,9 +33,10 @@ name = "fob_bundler_wasm"
 crate-type = ["cdylib"]
 
 [dependencies]
-# Core Fob bundler (wraps Rolldown + provides plugin support)
-# Explicitly disable dts-generation feature (requires native file I/O)
-fob-core = { path = "../fob-core", default-features = true }
+# Core Fob bundler (required for BuildOptions and bundling)
+# Note: fob-bundler depends on fob foundation, which is WASM-compatible
+# Some features may not work in WASM (like dts-generation), but basic bundling should work
+fob-bundler = { path = "../fob-bundler", default-features = false }
 
 # Error handling and serialization
 anyhow.workspace = true

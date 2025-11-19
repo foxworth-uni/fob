@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use anyhow::{anyhow, Context, Result};
 use console::style;
 use indicatif::{ProgressBar, ProgressStyle};
-use fob_core::output::Bundle as LibraryBuild;
-use fob_core::library;
+use fob_bundler::output::Bundle as LibraryBuild;
+use fob_bundler::library;
 use tokio::fs;
 
 use crate::analysis::AnalysisDocument;

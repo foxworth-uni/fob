@@ -3,7 +3,7 @@
 //! Pre-configured task-based builders for WASI environments with MDX support.
 //! Uses WASI Component Model with WIT interface definitions.
 
-use fob_core::{plugin, BuildOptions, BunnyMdxPlugin, OutputFormat};
+use fob_bundler::{plugin, BuildOptions, BunnyMdxPlugin, OutputFormat};
 use std::fs;
 use std::path::PathBuf;
 
@@ -90,7 +90,7 @@ async fn bundle_internal(
         let entry = &config.entries[0];
 
         let result = BuildOptions::library(entry.clone())
-            .plugin(plugin(BunnyMdxPlugin::new()))
+            .plugin(plugin(BunnyMdxPlugin::new(PathBuf::from("."))))
             .format(format)
             .sourcemap(sourcemap)
             .build()
@@ -116,7 +116,7 @@ async fn bundle_internal(
         })
     } else {
         let result = BuildOptions::components(config.entries.clone())
-            .plugin(plugin(BunnyMdxPlugin::new()))
+            .plugin(plugin(BunnyMdxPlugin::new(PathBuf::from("."))))
             .format(format)
             .sourcemap(sourcemap)
             .build()

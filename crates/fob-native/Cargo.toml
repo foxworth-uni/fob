@@ -15,7 +15,7 @@ name = "fob-native"
 crate-type = ["cdylib"]
 
 [dependencies]
-fob-core = { path = "../fob-core" }
+fob-bundler = { path = "../fob-bundler" }
 napi = { version = "3", default-features = false, features = ["napi6", "tokio_rt"] }
 napi-derive = "3"
 serde = { workspace = true, features = ["derive"] }

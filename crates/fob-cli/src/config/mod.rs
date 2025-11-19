@@ -14,9 +14,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-pub use conversions::*;
 pub use defaults::*;
-pub use loading::*;
 pub use types::*;
 pub use validation::*;
 
@@ -46,42 +44,6 @@ pub struct FobConfig {
     /// External packages to exclude from bundle
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub external: Vec<String>,
-
-    /// Enable documentation generation
-    #[serde(default)]
-    pub docs: bool,
-
-    /// Documentation output format
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub docs_format: Option<DocsFormat>,
-
-    /// Output directory for documentation artifacts
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub docs_dir: Option<PathBuf>,
-
-    /// Include symbols marked with @internal
-    #[serde(default)]
-    pub docs_include_internal: bool,
-
-    /// Enable LLM-powered documentation enhancement
-    #[serde(default)]
-    pub docs_enhance: bool,
-
-    /// LLM configuration for documentation enhancement
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub docs_llm: Option<DocsLlmConfig>,
-
-    /// Write enhanced documentation back to source files
-    #[serde(default)]
-    pub docs_write_back: bool,
-
-    /// Merge strategy for writeback (merge/replace/skip)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub docs_merge_strategy: Option<String>,
-
-    /// Skip backup file creation when writing back
-    #[serde(default)]
-    pub docs_no_backup: bool,
 
     /// Target platform
     #[serde(default = "default_platform")]
@@ -146,15 +108,6 @@ impl FobConfig {
             dts: true,
             dts_bundle: Some(true),
             external: vec!["react".to_string(), "react-dom".to_string()],
-            docs: true,
-            docs_format: Some(DocsFormat::Markdown),
-            docs_dir: Some(PathBuf::from("docs")),
-            docs_include_internal: false,
-            docs_enhance: false,
-            docs_llm: None,
-            docs_write_back: false,
-            docs_merge_strategy: None,
-            docs_no_backup: false,
             platform: Platform::Browser,
             sourcemap: Some(SourceMapMode::External),
             minify: true,

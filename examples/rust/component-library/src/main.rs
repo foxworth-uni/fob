@@ -21,7 +21,7 @@
 //! for better tree-shaking: `import { Button } from 'my-lib/Button'`
 
 use anyhow::Result;
-use fob_core::{BuildOptions, NativeRuntime};
+use fob_bundler::{BuildOptions, NativeRuntime};
 use std::sync::Arc;
 
 #[tokio::main]

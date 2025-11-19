@@ -1,7 +1,7 @@
 //! Native runtime implementation for Node.js
 
 use async_trait::async_trait;
-use fob_core::runtime::{FileMetadata, Runtime, RuntimeError, RuntimeResult};
+use fob_bundler::runtime::{FileMetadata, Runtime, RuntimeError, RuntimeResult};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -31,6 +31,8 @@ impl NativeRuntime {
         })
     }
 
+    /// Get the current working directory for this runtime.
+    #[cfg_attr(not(test), allow(dead_code))]
     pub fn cwd(&self) -> &Path {
         &self.cwd
     }

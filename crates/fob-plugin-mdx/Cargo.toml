@@ -9,7 +9,7 @@ description = "Rolldown bundler plugin for MDX - compile MDX files in Rolldown b
 
 [dependencies]
 # Cross-workspace dependency to bunny-mdx
-bunny-mdx = { path = "../../../bunny/crates/bunny-mdx" }
+bunny-mdx = { git = "https://github.com/foxworth-uni/bunny" }
 
 # Rolldown bundler integration (must match fob-core versions)
 rolldown = { workspace = true }

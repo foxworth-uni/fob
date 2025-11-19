@@ -382,9 +382,14 @@ mod tests {
 
     #[test]
     fn test_validate_candidate_path_traversal() {
+        // Path traversal with .. should fail
         assert!(TailwindGenerator::validate_candidate("../etc/passwd").is_err());
-        assert!(TailwindGenerator::validate_candidate("foo/bar").is_err());
-        assert!(TailwindGenerator::validate_candidate("foo\\bar").is_err());
+        
+        // Forward slashes are allowed (for Tailwind arbitrary values like bg-[url('/image.jpg')])
+        assert!(TailwindGenerator::validate_candidate("foo/bar").is_ok());
+        
+        // Backslashes are also allowed (Windows paths in arbitrary values)
+        assert!(TailwindGenerator::validate_candidate("foo\\bar").is_ok());
     }
 
     #[test]

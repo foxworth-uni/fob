@@ -1,7 +1,6 @@
 use clap::ValueEnum;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
 /// Output format for bundled code
 #[derive(Copy, Clone, PartialEq, Eq, Debug, ValueEnum)]

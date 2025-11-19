@@ -2,8 +2,8 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use console::style;
-use fob_core::analysis::analyze;
-use fob_core::analysis::CacheAnalysis;
+use fob_bundler::analyze;
+use fob_bundler::analysis::CacheAnalysis;
 use tokio::fs;
 
 use crate::analysis::AnalysisDocument;

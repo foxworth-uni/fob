@@ -12,16 +12,6 @@ impl From<crate::cli::Format> for Format {
     }
 }
 
-impl From<crate::cli::DocsFormat> for DocsFormat {
-    fn from(format: crate::cli::DocsFormat) -> Self {
-        match format {
-            crate::cli::DocsFormat::Markdown => DocsFormat::Markdown,
-            crate::cli::DocsFormat::Json => DocsFormat::Json,
-            crate::cli::DocsFormat::Both => DocsFormat::Both,
-        }
-    }
-}
-
 impl From<crate::cli::Platform> for Platform {
     fn from(p: crate::cli::Platform) -> Self {
         match p {

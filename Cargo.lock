@@ -41,7 +41,7 @@ name = "advanced-bundler-example"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "fob-core",
+ "fob-bundler",
  "tokio",
 ]
 
@@ -736,7 +736,7 @@ name = "basic-bundler-example"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "fob-core",
+ "fob-bundler",
  "tokio",
 ]
 
@@ -1153,6 +1153,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "bunny-mdx"
+version = "0.1.0"
+source = "git+https://github.com/foxworth-uni/bunny#03d870a88a4510f33c225abe24dc1dfe9bbfc0d6"
+dependencies = [
+ "anyhow",
+ "markdown",
+ "oxc_allocator",
+ "oxc_parser",
+ "oxc_span",
+ "path-clean",
+ "regex",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "thiserror 2.0.17",
+ "toml 0.9.8",
+ "tracing",
+]
+
+[[package]]
 name = "bytecheck"
 version = "0.6.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1466,9 +1487,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.5.51"
+version = "4.5.52"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c26d721170e0295f191a69bd9a1f93efcdb0aff38684b61ab5750468972e5f5"
+checksum = "aa8120877db0e5c011242f96806ce3c94e0737ab8108532a76a3300a01db2ab8"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -1476,9 +1497,9 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.5.51"
+version = "4.5.52"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75835f0c7bf681bfd05abe44e965760fea999a5286c6eb2d59883634fd02011a"
+checksum = "02576b399397b659c26064fbc92a75fede9d18ffd5f80ca1cd74ddab167016e1"
 dependencies = [
  "anstream",
  "anstyle",
@@ -1507,7 +1528,7 @@ checksum = "a1d728cc89cf3aee9ff92b05e62b19ee65a02b5702cff7d5a377e32c6ae29d8d"
 [[package]]
 name = "classification-macros"
 version = "0.1.0"
-source = "git+https://github.com/tailwindlabs/tailwindcss#21f2bf99b9764929b5268ce2174840086ef191cc"
+source = "git+https://github.com/tailwindlabs/tailwindcss#c532955dd14d2ec282a18ebd5126e08c514180a0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1549,7 +1570,7 @@ name = "component-library-example"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "fob-core",
+ "fob-bundler",
  "tokio",
 ]
 
@@ -1665,16 +1686,6 @@ checksum = "688d7fbb8092b8de775ef2536f36c8c31f2bc4006ece2e8d8ad2d17d00ce0a2a"
 dependencies = [
  "loom",
  "tracing",
-]
-
-[[package]]
-name = "core-foundation"
-version = "0.9.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "91e195e091a93c46f7102ec7818a2aa394e1e1771c3ab4825963fa03e45afb8f"
-dependencies = [
- "core-foundation-sys",
- "libc",
 ]
 
 [[package]]
@@ -2384,6 +2395,34 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
+name = "fob"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bunny-mdx 0.1.0",
+ "fob-gen",
+ "fob-plugin-mdx",
+ "oxc_allocator",
+ "oxc_ast",
+ "oxc_ast_visit",
+ "oxc_parser",
+ "oxc_semantic",
+ "oxc_span",
+ "parking_lot",
+ "path-clean",
+ "regex",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tempfile",
+ "thiserror 2.0.17",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
 name = "fob-browser-test"
 version = "0.1.0"
 dependencies = [
@@ -2401,6 +2440,39 @@ dependencies = [
 ]
 
 [[package]]
+name = "fob-bundler"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "fob",
+ "fob-gen",
+ "oxc_allocator",
+ "oxc_ast",
+ "oxc_ast_visit",
+ "oxc_codegen",
+ "oxc_isolated_declarations",
+ "oxc_parser",
+ "oxc_semantic",
+ "oxc_span",
+ "parking_lot",
+ "path-clean",
+ "regex",
+ "rolldown",
+ "rolldown_common",
+ "rolldown_error",
+ "rolldown_plugin",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tempfile",
+ "thiserror 2.0.17",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
 name = "fob-cli"
 version = "0.1.0"
 dependencies = [
@@ -2411,9 +2483,8 @@ dependencies = [
  "clap",
  "console 0.16.1",
  "figment",
+ "fob-bundler",
  "fob-config",
- "fob-core",
- "fob-docs",
  "fob-gen",
  "indicatif",
  "insta",
@@ -2427,6 +2498,7 @@ dependencies = [
  "schemars 1.1.0",
  "serde",
  "serde_json",
+ "serial_test",
  "tempfile",
  "thiserror 2.0.17",
  "tokio",
@@ -2463,67 +2535,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fob-core"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "bunny-mdx",
- "fob-docs",
- "fob-gen",
- "fob-plugin-mdx",
- "oxc_allocator",
- "oxc_ast",
- "oxc_ast_visit",
- "oxc_codegen",
- "oxc_isolated_declarations",
- "oxc_parser",
- "oxc_semantic",
- "oxc_span",
- "parking_lot",
- "path-clean",
- "regex",
- "rolldown",
- "rolldown_common",
- "rolldown_error",
- "rolldown_plugin",
- "rustc-hash",
- "serde",
- "serde_json",
- "sha2",
- "surrealdb",
- "tempfile",
- "thiserror 2.0.17",
- "tokio",
- "uuid",
-]
-
-[[package]]
-name = "fob-docs"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "blake3",
- "chrono",
- "fob-gen",
- "ollama-rs",
- "oxc_allocator",
- "oxc_ast",
- "oxc_ast_visit",
- "oxc_parser",
- "oxc_span",
- "rolldown_common",
- "rolldown_plugin",
- "rustc-hash",
- "schemars 1.1.0",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.17",
- "tokio",
-]
-
-[[package]]
 name = "fob-gen"
 version = "0.1.0"
 dependencies = [
@@ -2544,7 +2555,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
- "fob-core",
+ "fob-bundler",
  "napi",
  "napi-build",
  "napi-derive",
@@ -2577,7 +2588,7 @@ name = "fob-plugin-mdx"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "bunny-mdx",
+ "bunny-mdx 0.1.0 (git+https://github.com/foxworth-uni/bunny)",
  "rolldown",
  "rolldown_common",
  "rolldown_plugin",
@@ -2603,11 +2614,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "fob-store"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "fob",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "surrealdb",
+ "thiserror 2.0.17",
+]
+
+[[package]]
 name = "fob-wasm"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "fob-core",
+ "fob-bundler",
  "serde",
  "serde_json",
  "tempfile",
@@ -2626,21 +2650,6 @@ name = "foldhash"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
-
-[[package]]
-name = "foreign-types"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6f339eb8adc052cd2ca78910fda869aefa38d22d5cb648e6485e4d3fc06f3b1"
-dependencies = [
- "foreign-types-shared",
-]
-
-[[package]]
-name = "foreign-types-shared"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "form_urlencoded"
@@ -3209,22 +3218,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hyper-tls"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70206fc6890eaca9fde8a0bf71caa2ddfc9fe045ac9e5c70df101a7dbde866e0"
-dependencies = [
- "bytes",
- "http-body-util",
- "hyper",
- "hyper-util",
- "native-tls",
- "tokio",
- "tokio-native-tls",
- "tower-service",
-]
-
-[[package]]
 name = "hyper-util"
 version = "0.1.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3397,7 +3390,7 @@ dependencies = [
 [[package]]
 name = "ignore"
 version = "0.4.24"
-source = "git+https://github.com/tailwindlabs/tailwindcss#21f2bf99b9764929b5268ce2174840086ef191cc"
+source = "git+https://github.com/tailwindlabs/tailwindcss#c532955dd14d2ec282a18ebd5126e08c514180a0"
 dependencies = [
  "crossbeam-deque",
  "dunce",
@@ -4062,7 +4055,7 @@ name = "meta-framework-example"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "fob-core",
+ "fob-bundler",
  "tokio",
 ]
 
@@ -4245,23 +4238,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "50ef9c1086f16aea2417c3788dbefed7591c3bccd800b827f4dfb271adff1149"
 dependencies = [
  "libloading 0.9.0",
-]
-
-[[package]]
-name = "native-tls"
-version = "0.2.14"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87de3442987e9dbec73158d5c715e7ad9072fda936bb03d19d7fa10e00520f0e"
-dependencies = [
- "libc",
- "log",
- "openssl",
- "openssl-probe",
- "openssl-sys",
- "schannel",
- "security-framework",
- "security-framework-sys",
- "tempfile",
 ]
 
 [[package]]
@@ -4576,23 +4552,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ollama-rs"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "659dd1460a1079db751a236b301e78e63486758fee7e2db1ddcd2372c264be36"
-dependencies = [
- "async-stream",
- "log",
- "reqwest",
- "schemars 1.1.0",
- "serde",
- "serde_json",
- "static_assertions",
- "thiserror 2.0.17",
- "url",
-]
-
-[[package]]
 name = "once_cell"
 version = "1.21.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4603,50 +4562,6 @@ name = "once_cell_polyfill"
 version = "1.70.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
-
-[[package]]
-name = "openssl"
-version = "0.10.75"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08838db121398ad17ab8531ce9de97b244589089e290a384c900cb9ff7434328"
-dependencies = [
- "bitflags 2.10.0",
- "cfg-if",
- "foreign-types",
- "libc",
- "once_cell",
- "openssl-macros",
- "openssl-sys",
-]
-
-[[package]]
-name = "openssl-macros"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a948666b637a0f465e8564c73e89d4dde00d72d4d473cc972f390fc3dcee7d9c"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.110",
-]
-
-[[package]]
-name = "openssl-probe"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d05e27ee213611ffe7d6348b942e8f942b37114c00cc03cec254295a4a17852e"
-
-[[package]]
-name = "openssl-sys"
-version = "0.9.111"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82cab2d520aa75e3c58898289429321eb788c3106963d0dc886ec7a5f4adc321"
-dependencies = [
- "cc",
- "libc",
- "pkg-config",
- "vcpkg",
-]
 
 [[package]]
 name = "outref"
@@ -5988,20 +5903,16 @@ dependencies = [
  "http-body",
  "http-body-util",
  "hyper",
- "hyper-tls",
  "hyper-util",
  "js-sys",
  "log",
- "native-tls",
  "percent-encoding",
  "pin-project-lite",
- "rustls-pki-types",
  "serde",
  "serde_json",
  "serde_urlencoded",
  "sync_wrapper",
  "tokio",
- "tokio-native-tls",
  "tower",
  "tower-http",
  "tower-service",
@@ -6762,12 +6673,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "schannel"
-version = "0.1.28"
+name = "scc"
+version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "891d81b926048e76efe18581bf793546b4c0eaf8448d72be8de2bbee5fd166e1"
+checksum = "46e6f046b7fef48e2660c57ed794263155d713de679057f2d0c169bfc6e756cc"
 dependencies = [
- "windows-sys 0.61.2",
+ "sdd",
 ]
 
 [[package]]
@@ -6832,33 +6743,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "sdd"
+version = "3.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "490dcfcbfef26be6800d11870ff2df8774fa6e86d047e3e8c8a76b25655e41ca"
+
+[[package]]
 name = "seahash"
 version = "4.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1c107b6f4780854c8b126e228ea8869f4d7b71260f962fefb57b996b8959ba6b"
-
-[[package]]
-name = "security-framework"
-version = "2.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "897b2245f0b511c87893af39b033e5ca9cce68824c4d7e7630b5a1d339658d02"
-dependencies = [
- "bitflags 2.10.0",
- "core-foundation",
- "core-foundation-sys",
- "libc",
- "security-framework-sys",
-]
-
-[[package]]
-name = "security-framework-sys"
-version = "2.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc1f0cbffaac4852523ce30d8bd3c5cdc873501d96ff467ca09b6767bb8cd5c0"
-dependencies = [
- "core-foundation-sys",
- "libc",
-]
 
 [[package]]
 name = "seize"
@@ -6930,17 +6824,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3753ca04f350fa92d00b6146a3555e63c55388c9ef2e11e09bce2ff1c0b509c6"
 dependencies = [
  "serde",
-]
-
-[[package]]
-name = "serde-wasm-bindgen"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3b143e2833c57ab9ad3ea280d21fd34e285a42837aeb0ee301f4f41890fa00e"
-dependencies = [
- "js-sys",
- "serde",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -7082,6 +6965,31 @@ dependencies = [
  "ryu",
  "serde",
  "unsafe-libyaml",
+]
+
+[[package]]
+name = "serial_test"
+version = "3.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b258109f244e1d6891bf1053a55d63a5cd4f8f4c30cf9a1280989f80e7a1fa9"
+dependencies = [
+ "futures",
+ "log",
+ "once_cell",
+ "parking_lot",
+ "scc",
+ "serial_test_derive",
+]
+
+[[package]]
+name = "serial_test_derive"
+version = "3.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5d69265a08751de7844521fd15003ae0a888e035773ba05695c5c759a6f89eef"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.110",
 ]
 
 [[package]]
@@ -7637,7 +7545,7 @@ checksum = "c0e973b34477b7823833469eb0f5a3a60370fef7a453e02d751b59180d0a5a05"
 [[package]]
 name = "tailwindcss-oxide"
 version = "0.1.0"
-source = "git+https://github.com/tailwindlabs/tailwindcss#21f2bf99b9764929b5268ce2174840086ef191cc"
+source = "git+https://github.com/tailwindlabs/tailwindcss#c532955dd14d2ec282a18ebd5126e08c514180a0"
 dependencies = [
  "bexpand",
  "bstr",
@@ -7882,16 +7790,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.110",
-]
-
-[[package]]
-name = "tokio-native-tls"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bbae76ab933c85776efabc971569dd6119c580d8f5d448769dec1764bf796ef2"
-dependencies = [
- "native-tls",
- "tokio",
 ]
 
 [[package]]
@@ -8352,9 +8250,9 @@ checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 
 [[package]]
 name = "unit-prefix"
-version = "0.5.1"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "323402cff2dd658f39ca17c789b502021b3f18707c91cdf22e3838e1b4023817"
+checksum = "81e544489bf3d8ef66c953931f56617f423cd4b5494be343d9b9d3dda037b9a3"
 
 [[package]]
 name = "unsafe-libyaml"
@@ -9372,9 +9270,9 @@ dependencies = [
 
 [[package]]
 name = "worker"
-version = "0.4.2"
+version = "0.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8aca53ec63e508176a89a573c972266f0f98bcc48bd866def7be0d939ef9268"
+checksum = "d9320293035d2074f1fb84baf7d79d7932c183dd04a7e0c143dc75db0d0037ac"
 dependencies = [
  "async-trait",
  "bytes",
@@ -9387,7 +9285,7 @@ dependencies = [
  "matchit 0.7.3",
  "pin-project",
  "serde",
- "serde-wasm-bindgen 0.6.5",
+ "serde-wasm-bindgen",
  "serde_json",
  "serde_urlencoded",
  "tokio",
@@ -9396,31 +9294,15 @@ dependencies = [
  "wasm-bindgen-futures",
  "wasm-streams",
  "web-sys",
- "worker-kv",
  "worker-macros",
  "worker-sys",
 ]
 
 [[package]]
-name = "worker-kv"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f06d4d1416a9f8346ee9123b0d9a11b3cfa38e6cfb5a139698017d1597c4d41"
-dependencies = [
- "js-sys",
- "serde",
- "serde-wasm-bindgen 0.5.0",
- "serde_json",
- "thiserror 1.0.69",
- "wasm-bindgen",
- "wasm-bindgen-futures",
-]
-
-[[package]]
 name = "worker-macros"
-version = "0.4.2"
+version = "0.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1118a0ceb59ddde7fdbaff6c47b6fa6ee47848975ea38b4ae9bb4080f96541cd"
+checksum = "eb37d4f9d99921836a1e4dc21e6041df9b0c2c5fe3c230edddd172a8ef9e251e"
 dependencies = [
  "async-trait",
  "proc-macro2",
@@ -9434,9 +9316,9 @@ dependencies = [
 
 [[package]]
 name = "worker-sys"
-version = "0.4.2"
+version = "0.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5643a2ba07df61aa50e37212ffcb0944417db7d3960d4331f36aeb2fa5e2fd7"
+checksum = "07b4e2ca5d405247a986d533bba78c396c941835747977631168b8b05304f1b6"
 dependencies = [
  "cfg-if",
  "js-sys",

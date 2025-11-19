@@ -2,8 +2,8 @@
 //!
 //! This demonstrates generating a client SDK with proper error handling.
 
-use fob_gen::{Allocator, JsBuilder, LogicalOperator};
-use oxc_ast::ast::{BinaryOperator, Statement};
+use fob_gen::{Allocator, JsBuilder};
+use oxc_ast::ast::Statement;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let allocator = Allocator::default();

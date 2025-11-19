@@ -237,15 +237,27 @@ impl DevConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::net::TcpListener;
 
     #[test]
     fn test_find_available_port_success() {
-        // Should find an available port (likely 3000 or next)
-        let result = DevConfig::find_available_port(3000);
-        assert!(result.is_ok());
+        let listener = match TcpListener::bind(("127.0.0.1", 0)) {
+            Ok(listener) => listener,
+            Err(err) => {
+                eprintln!(
+                    "Skipping test_find_available_port_success: unable to bind socket ({})",
+                    err
+                );
+                return;
+            }
+        };
 
-        let addr = result.unwrap();
+        let start_port = listener.local_addr().unwrap().port();
+        drop(listener);
+
+        let addr = DevConfig::find_available_port(start_port).expect("should find port");
         assert_eq!(addr.ip().to_string(), "127.0.0.1");
+        assert!(addr.port() >= start_port);
     }
 
     #[test]
@@ -301,15 +313,6 @@ mod tests {
             dts: false,
             dts_bundle: None,
             external: vec![],
-            docs: false,
-            docs_format: None,
-            docs_dir: None,
-            docs_include_internal: false,
-            docs_enhance: false,
-            docs_llm: None,
-            docs_write_back: false,
-            docs_merge_strategy: None,
-            docs_no_backup: false,
             platform: crate::config::Platform::Browser,
             sourcemap: None,
             minify: false,

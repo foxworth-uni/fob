@@ -6,7 +6,7 @@ mod bundle_result;
 mod runtime;
 
 use bundle_result::BundleResult;
-use fob_core::{BuildOptions, OutputFormat, Runtime};
+use fob_bundler::{BuildOptions, OutputFormat, Runtime};
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use runtime::NativeRuntime;

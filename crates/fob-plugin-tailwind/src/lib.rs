@@ -234,7 +234,7 @@ impl Plugin for FobTailwindPlugin {
     /// - `Err(e)` - Processing error
     fn transform(
         &self,
-        ctx: SharedTransformPluginContext,
+        _ctx: SharedTransformPluginContext,
         args: &HookTransformArgs<'_>,
     ) -> impl std::future::Future<Output = HookTransformReturn> + Send {
         let id = args.id.to_string();

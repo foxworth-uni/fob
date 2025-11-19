@@ -13,15 +13,6 @@ mod tests {
             dts: true,
             dts_bundle: Some(true),
             external: vec!["react".to_string()],
-            docs: true,
-            docs_format: Some(DocsFormat::Json),
-            docs_dir: Some(PathBuf::from("docs/api")),
-            docs_include_internal: true,
-            docs_enhance: false,
-            docs_llm: None,
-            docs_write_back: false,
-            docs_merge_strategy: None,
-            docs_no_backup: false,
             platform: Platform::Browser,
             sourcemap: Some(SourceMapMode::External),
             minify: true,
@@ -119,44 +110,6 @@ mod tests {
             .validate()
             .is_ok());
         }
-
-        assert!(FobConfig {
-            entry: vec!["src/index.ts".to_string()],
-            docs: false,
-            docs_format: Some(DocsFormat::Markdown),
-            ..FobConfig::default_config()
-        }
-        .validate()
-        .is_err());
-
-        assert!(FobConfig {
-            entry: vec!["src/index.ts".to_string()],
-            docs: false,
-            docs_dir: Some(PathBuf::from("docs")),
-            ..FobConfig::default_config()
-        }
-        .validate()
-        .is_err());
-
-        assert!(FobConfig {
-            entry: vec!["src/index.ts".to_string()],
-            docs: false,
-            docs_include_internal: true,
-            ..FobConfig::default_config()
-        }
-        .validate()
-        .is_err());
-
-        assert!(FobConfig {
-            entry: vec!["src/index.ts".to_string()],
-            docs: true,
-            docs_format: Some(DocsFormat::Json),
-            docs_dir: Some(PathBuf::from("docs")),
-            docs_include_internal: true,
-            ..FobConfig::default_config()
-        }
-        .validate()
-        .is_ok());
     }
 
     #[test]
@@ -165,10 +118,6 @@ mod tests {
 
         assert_eq!(Format::from(crate::cli::Format::Esm), Format::Esm);
         assert_eq!(Format::from(crate::cli::Format::Cjs), Format::Cjs);
-        assert_eq!(
-            DocsFormat::from(crate::cli::DocsFormat::Markdown),
-            DocsFormat::Markdown
-        );
         assert_eq!(
             Platform::from(crate::cli::Platform::Browser),
             Platform::Browser
@@ -197,7 +146,6 @@ mod tests {
         assert_eq!(config.entry.len(), 2);
         assert!(config.dts && config.minify && config.splitting);
         assert_eq!(config.dts_bundle, Some(true));
-        assert!(config.docs);
     }
 }
 

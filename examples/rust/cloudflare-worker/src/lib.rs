@@ -131,7 +131,7 @@ async fn bundle_files(
 
     // NOTE: If this were possible, the code would look like:
     //
-    // use fob_core::{BuildOptions, OutputFormat};
+    // use fob_bundler::{BuildOptions, OutputFormat};
     //
     // let mut options = BuildOptions::new_multiple(entries);
     // options = options.format(match format.as_deref() {
@@ -163,11 +163,14 @@ async fn bundle_files(
 /// rather than raw template strings.
 fn render_html(result: &BundleResult, duration: f64) -> String {
     // Build HTML structure programmatically for type safety and maintainability
+    let assets_str = result.assets_count.to_string();
+    let time_str = format!("{:.0}ms", duration);
+    let modules_str = result.modules_analyzed.to_string();
     let stats_cards = vec![
         ("Bundle Status", "✅ Success"),
-        ("Assets Generated", &result.assets_count.to_string()),
-        ("Bundle Time", &format!("{:.0}ms", duration)),
-        ("Modules Analyzed", &result.modules_analyzed.to_string()),
+        ("Assets Generated", &assets_str),
+        ("Bundle Time", &time_str),
+        ("Modules Analyzed", &modules_str),
     ];
     
     let mut html = String::new();

@@ -5,6 +5,7 @@
 use fob_cli::dev::{DevConfig, DevServerState};
 use fob_cli::cli::DevArgs;
 use std::fs;
+use std::net::TcpListener;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tempfile::TempDir;
@@ -129,9 +130,18 @@ async fn test_dev_config_from_args() {
     )
     .unwrap();
 
+    let requested_port = match pick_available_port() {
+        Some(port) => port,
+        None => {
+            eprintln!(
+                "Skipping test_dev_config_from_args: unable to reserve an available port"
+            );
+            return;
+        }
+    };
     let args = DevArgs {
         entry: Some(PathBuf::from("src/index.ts")),
-        port: 3000,
+        port: requested_port,
         https: false,
         open: false,
         cwd: Some(project_dir.to_path_buf()),
@@ -140,7 +150,7 @@ async fn test_dev_config_from_args() {
     let config = DevConfig::from_args(&args).unwrap();
     
     assert_eq!(config.base.entry, vec!["src/index.ts"]);
-    assert_eq!(config.addr.port(), 3000);
+    assert_eq!(config.addr.port(), requested_port);
     assert_eq!(config.https, false);
     assert_eq!(config.open, false);
 }
@@ -169,9 +179,18 @@ async fn test_dev_config_loads_from_file() {
     )
     .unwrap();
 
+    let requested_port = match pick_available_port() {
+        Some(port) => port,
+        None => {
+            eprintln!(
+                "Skipping test_dev_config_loads_from_file: unable to reserve an available port"
+            );
+            return;
+        }
+    };
     let args = DevArgs {
         entry: None, // Should load from config file
-        port: 3000,
+        port: requested_port,
         https: false,
         open: false,
         cwd: Some(project_dir.to_path_buf()),
@@ -180,5 +199,11 @@ async fn test_dev_config_loads_from_file() {
     let config = DevConfig::from_args(&args).unwrap();
     
     assert_eq!(config.base.entry, vec!["src/main.ts"]);
+    assert_eq!(config.addr.port(), requested_port);
 }
 
+fn pick_available_port() -> Option<u16> {
+    TcpListener::bind(("127.0.0.1", 0))
+        .ok()
+        .and_then(|listener| listener.local_addr().ok().map(|addr| addr.port()))
+}

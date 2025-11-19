@@ -10,16 +10,18 @@ use fob_cli::cli;
 use fob_cli::config;
 use std::fs;
 use std::path::PathBuf;
+use serial_test::serial;
 use tempfile::TempDir;
 
 #[test]
+#[serial]
 fn test_config_cli_overrides_file() {
     let temp = TempDir::new().unwrap();
-    let project_dir = temp.path();
+    let cwd = temp.path();
 
-    // Create config file
+    // Create config file inside cwd
     fs::write(
-        project_dir.join("fob.config.json"),
+        cwd.join("fob.config.json"),
         r#"{
             "entry": ["src/file.ts"],
             "outDir": "file-dist",
@@ -56,11 +58,11 @@ fn test_config_cli_overrides_file() {
         splitting: false,
         no_treeshake: false,
         clean: false,
-        cwd: Some(project_dir.to_path_buf()),
+        cwd: Some(cwd.to_path_buf()),
         bundle: true,
     };
 
-    let config = FobConfig::load(&args, None).unwrap();
+    let config = FobConfig::load(&args, Some(&cwd.join("fob.config.json"))).unwrap();
 
     // CLI entry should override file entry
     assert_eq!(config.entry, vec!["src/cli.ts"]);
@@ -69,13 +71,14 @@ fn test_config_cli_overrides_file() {
 }
 
 #[test]
+#[serial]
 fn test_config_file_fallback_when_cli_empty() {
     let temp = TempDir::new().unwrap();
-    let project_dir = temp.path();
+    let cwd = temp.path();
 
-    // Create config file
+    // Create config file inside cwd
     fs::write(
-        project_dir.join("fob.config.json"),
+        cwd.join("fob.config.json"),
         r#"{
             "entry": ["src/file.ts"],
             "outDir": "file-dist",
@@ -112,23 +115,24 @@ fn test_config_file_fallback_when_cli_empty() {
         splitting: false,
         no_treeshake: false,
         clean: false,
-        cwd: Some(project_dir.to_path_buf()),
+        cwd: Some(cwd.to_path_buf()),
         bundle: true,
     };
 
-    let config = FobConfig::load(&args, None).unwrap();
+    let config = FobConfig::load(&args, Some(&cwd.join("fob.config.json"))).unwrap();
 
     // File entry should be used when CLI entry is empty
     assert_eq!(config.entry, vec!["src/file.ts"]);
-    assert_eq!(config.out_dir, PathBuf::from("file-dist"));
-    // CLI format should still override (non-entry fields)
+    // Non-entry CLI flags should still override config file values
+    assert_eq!(config.out_dir, PathBuf::from("dist"));
     assert_eq!(config.format, config::Format::Esm);
 }
 
 #[test]
+#[serial]
 fn test_config_defaults_when_no_file() {
     let temp = TempDir::new().unwrap();
-    let project_dir = temp.path();
+    let cwd = temp.path();
 
     // No config file - should use defaults
     let args = BuildArgs {
@@ -158,7 +162,7 @@ fn test_config_defaults_when_no_file() {
         splitting: false,
         no_treeshake: false,
         clean: false,
-        cwd: Some(project_dir.to_path_buf()),
+        cwd: Some(cwd.to_path_buf()),
         bundle: true,
     };
 
@@ -171,9 +175,10 @@ fn test_config_defaults_when_no_file() {
 }
 
 #[test]
+#[serial]
 fn test_config_environment_variables() {
     let temp = TempDir::new().unwrap();
-    let project_dir = temp.path();
+    let cwd = temp.path();
 
     // Set environment variables
     std::env::set_var("FOB_OUT_DIR", "env-dist");
@@ -181,7 +186,7 @@ fn test_config_environment_variables() {
 
     // Create config file
     fs::write(
-        project_dir.join("fob.config.json"),
+        cwd.join("fob.config.json"),
         r#"{
             "entry": ["src/index.ts"],
             "outDir": "file-dist",
@@ -217,7 +222,7 @@ fn test_config_environment_variables() {
         splitting: false,
         no_treeshake: false,
         clean: false,
-        cwd: Some(project_dir.to_path_buf()),
+        cwd: Some(cwd.to_path_buf()),
         bundle: true,
     };
 
@@ -232,4 +237,3 @@ fn test_config_environment_variables() {
     std::env::remove_var("FOB_OUT_DIR");
     std::env::remove_var("FOB_FORMAT");
 }
-

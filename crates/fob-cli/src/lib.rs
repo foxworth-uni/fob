@@ -1,7 +1,7 @@
 //! Fob CLI - Modern JavaScript bundler with Rust performance.
 //!
 //! This crate provides the command-line interface for the Fob bundler, exposing
-//! all functionality from `fob-core` through an intuitive CLI with excellent
+//! all functionality from `fob-bundler` through an intuitive CLI with excellent
 //! error messages and user experience.
 //!
 //! # Architecture

@@ -8,7 +8,7 @@
 use crate::config::FobConfig;
 use crate::dev::BundleCache;
 use crate::error::Result;
-use fob_core::builders::asset_processor;
+use fob_bundler::builders::asset_processor;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
@@ -52,7 +52,7 @@ impl DevBuilder {
     /// # Errors
     ///
     /// Returns errors from the underlying build process
-    pub async fn initial_build(&self) -> Result<(u64, BundleCache, Option<std::sync::Arc<fob_core::builders::asset_registry::AssetRegistry>>)> {
+    pub async fn initial_build(&self) -> Result<(u64, BundleCache, Option<std::sync::Arc<fob_bundler::builders::asset_registry::AssetRegistry>>)> {
         let start = Instant::now();
 
         let result = crate::commands::build::build_with_result(&self.config, &self.cwd).await?;
@@ -82,7 +82,7 @@ impl DevBuilder {
     /// # Errors
     ///
     /// Returns errors from the build process
-    pub async fn rebuild(&self) -> Result<(u64, BundleCache, Option<std::sync::Arc<fob_core::builders::asset_registry::AssetRegistry>>)> {
+    pub async fn rebuild(&self) -> Result<(u64, BundleCache, Option<std::sync::Arc<fob_bundler::builders::asset_registry::AssetRegistry>>)> {
         let start = Instant::now();
 
         // For now, delegate to unified build since we're using the production
@@ -208,7 +208,7 @@ impl DevBuilder {
     /// Result containing rewritten cache
     async fn build_cache_with_rewriting(
         &self,
-        registry: &Arc<fob_core::builders::asset_registry::AssetRegistry>,
+        registry: &Arc<fob_bundler::builders::asset_registry::AssetRegistry>,
     ) -> Result<BundleCache> {
         use tokio::fs;
 

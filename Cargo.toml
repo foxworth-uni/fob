@@ -3,10 +3,26 @@ resolver = "2"
 members = [
     "crates/fob-wasm",
     "crates/fob-config",
-    "crates/fob-core",
+    "crates/fob",
+    "crates/fob-store",
+    "crates/fob-bundler",
     "crates/fob-native",
     "crates/fob-cli",
-    "crates/fob-docs",
+    "crates/fob-plugin-css",
+    "crates/fob-plugin-mdx",
+    "crates/fob-plugin-tailwind",
+    "crates/fob-gen",
+    "crates/fob-browser-test",
+    "examples/rust/*",
+]
+# Exclude WASM crate from default build (requires --target wasm32-wasip1)
+default-members = [
+    "crates/fob-config",
+    "crates/fob",
+    "crates/fob-store",
+    "crates/fob-bundler",
+    "crates/fob-native",
+    "crates/fob-cli",
     "crates/fob-plugin-css",
     "crates/fob-plugin-mdx",
     "crates/fob-plugin-tailwind",
@@ -141,7 +157,7 @@ surrealdb = { version = "2", default-features = false }
 getrandom = { version = "0.3", features = ["wasm_js"] }
 
 # Note: uuid with js feature is handled via workspace.dependencies
-# fob-core declares uuid as a direct dependency (inheriting workspace features)
+# fob crates declare uuid as a direct dependency (inheriting workspace features)
 # This triggers feature unification, forcing rolldown's transitive uuid to use js feature
 
 [profile.release]
@@ -156,8 +172,14 @@ opt-level = 1
 [profile.dev.package."*"]
 opt-level = 2
 
-# Workspace-level lints for WASM compatibility
+# Workspace-level lints for WASM compatibility and code quality
 [workspace.lints.clippy]
 # Enforce Runtime trait usage instead of std::fs
 disallowed_methods = "deny"
+
+[workspace.lints.rust]
+# Allow async fn in traits - we use async-trait crate which handles this properly
+async_fn_in_trait = "allow"
+# Missing docs warnings are tracked separately per crate
+missing_docs = "allow"
 

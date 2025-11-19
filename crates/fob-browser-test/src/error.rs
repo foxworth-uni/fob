@@ -21,7 +21,9 @@ pub enum BrowserError {
     /// or when there are permission issues with the executable.
     #[error("failed to launch browser: {reason}")]
     LaunchFailed {
+        /// Human-readable reason for the launch failure
         reason: String,
+        /// Optional underlying error that caused the failure
         #[source]
         source: Option<Box<dyn std::error::Error + Send + Sync>>,
     },
@@ -37,14 +39,21 @@ pub enum BrowserError {
     ///
     /// Includes the URL that failed and the underlying reason.
     #[error("navigation to '{url}' failed: {reason}")]
-    NavigationFailed { url: String, reason: String },
+    NavigationFailed {
+        /// The URL that failed to load
+        url: String,
+        /// Reason for the navigation failure
+        reason: String
+    },
 
     /// A wait condition was not satisfied within the timeout.
     ///
     /// This is used for operations like wait_for_load, wait_for_selector, etc.
     #[error("wait condition '{condition}' timed out after {timeout:?}")]
     WaitTimeout {
+        /// Description of the condition that timed out
         condition: String,
+        /// How long we waited before timing out
         timeout: Duration,
     },
 

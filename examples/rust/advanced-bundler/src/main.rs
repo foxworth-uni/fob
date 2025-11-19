@@ -32,7 +32,7 @@
 //! relative paths like `../../lib/math`.
 
 use anyhow::Result;
-use fob_core::{BuildOptions, NativeRuntime, OutputFormat};
+use fob_bundler::{BuildOptions, NativeRuntime, OutputFormat};
 use std::sync::Arc;
 
 #[tokio::main]

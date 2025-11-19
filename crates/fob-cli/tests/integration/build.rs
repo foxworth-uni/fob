@@ -67,8 +67,7 @@ async fn test_build_successful_single_entry() {
     };
 
     // Note: cwd parameter above handles directory context - no need to change process directory
-    let result = build::execute(args).await;
-    assert!(result.is_ok(), "Build should succeed");
+    build::execute(args).await.expect("Build should succeed");
 
     // Verify output files exist
     let dist_dir = project_dir.join("dist");
@@ -198,8 +197,7 @@ async fn test_build_clean_output_dir() {
         bundle: true,
     };
 
-    let result = build::execute(args).await;
-    assert!(result.is_ok(), "Build should succeed");
+    build::execute(args).await.expect("Build should succeed");
 
     // Verify old files are gone
     assert!(!dist_dir.join("old.js").exists(), "Old JS file should be removed");
@@ -266,4 +264,3 @@ async fn test_build_empty_entry_list() {
         "Error should mention entry point requirement"
     );
 }
-

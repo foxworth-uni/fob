@@ -151,6 +151,7 @@ pub fn get_cwd() -> Result<PathBuf> {
 ///
 /// Package manager name ("pnpm", "yarn", or "npm")
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(not(test), allow(dead_code))]
 pub enum PackageManager {
     Npm,
     Yarn,
@@ -166,7 +167,7 @@ impl PackageManager {
     /// 2. `yarn.lock` → yarn
     /// 3. `bun.lockb` → bun
     /// 4. Default to npm (also covers package-lock.json)
-    #[allow(dead_code)]
+    #[cfg_attr(not(test), allow(dead_code))]
     pub fn detect(project_dir: &Path) -> Self {
         if project_dir.join("pnpm-lock.yaml").exists() {
             PackageManager::Pnpm

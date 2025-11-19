@@ -102,9 +102,9 @@ pub struct AssetInfo {
     pub format: Option<String>,
 }
 
-/// Convert from fob_core types to NAPI types
-impl From<fob_core::BuildResult> for BundleResult {
-    fn from(result: fob_core::BuildResult) -> Self {
+/// Convert from fob_bundler types to NAPI types
+impl From<fob_bundler::BuildResult> for BundleResult {
+    fn from(result: fob_bundler::BuildResult) -> Self {
         let manifest = result.manifest();
         let stats = result.build_stats();
 

@@ -63,14 +63,14 @@ pub fn init_logger(verbose: bool, quiet: bool, no_color: bool) {
     // Determine the filter level based on flags and environment
     let filter = if verbose {
         // Verbose mode: debug level for fob crates, info for dependencies
-        EnvFilter::new("fob=debug,fob_core=debug,fob_config=debug,fob_cli=debug")
+        EnvFilter::new("fob=debug,fob_bundler=debug,fob_config=debug,fob_cli=debug")
     } else if quiet {
         // Quiet mode: only errors
         EnvFilter::new("fob=error")
     } else {
         // Try to read from RUST_LOG env var, fallback to info level
         EnvFilter::try_from_default_env()
-            .unwrap_or_else(|_| EnvFilter::new("fob=info,fob_core=info,fob_config=info"))
+            .unwrap_or_else(|_| EnvFilter::new("fob=info,fob_bundler=info,fob_config=info"))
     };
 
     // Configure the formatter
@@ -179,7 +179,7 @@ mod tests {
     #[test]
     fn test_env_filter_verbose() {
         // Just verify we can create the filter without panicking
-        let _filter = EnvFilter::new("fob=debug,fob_core=debug,fob_config=debug,fob_cli=debug");
+        let _filter = EnvFilter::new("fob=debug,fob_bundler=debug,fob_config=debug,fob_cli=debug");
         // The internal format of EnvFilter isn't guaranteed, so we just verify creation
     }
 

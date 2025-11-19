@@ -39,7 +39,7 @@ pub struct FileWatcher {
     /// Root directory being watched
     root: PathBuf,
     /// Patterns to ignore (e.g., "node_modules", "*.log")
-    #[allow(dead_code)]
+    #[cfg_attr(not(test), allow(dead_code))]
     ignore_patterns: Vec<String>,
 }
 

@@ -3,7 +3,7 @@
 //! Provides thread-safe access to build artifacts, client connections,
 //! and build status using parking_lot RwLock for better performance.
 
-use fob_core::builders::asset_registry::AssetRegistry;
+use fob_bundler::builders::asset_registry::AssetRegistry;
 use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::path::PathBuf;

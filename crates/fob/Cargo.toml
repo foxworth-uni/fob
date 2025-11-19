@@ -1,0 +1,66 @@
+[package]
+name = "fob"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Fob foundation - Graph analysis and runtime abstraction"
+
+[dependencies]
+# Code generation and AST utilities
+fob-gen = { path = "../fob-gen", features = ["parser", "query-api", "fob_internal"] }
+
+# MDX compilation support from Bunny (WASM-compatible)
+bunny-mdx = { path = "../../../bunny/crates/bunny-mdx" }
+fob-plugin-mdx = { path = "../fob-plugin-mdx" }
+
+# Core dependencies (all WASM-compatible)
+thiserror.workspace = true
+serde = { workspace = true, features = ["derive"] }
+async-trait.workspace = true
+path-clean.workspace = true
+rustc-hash.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+
+# Asset handling dependencies
+oxc_parser.workspace = true
+oxc_ast.workspace = true
+oxc_ast_visit.workspace = true
+oxc_allocator.workspace = true
+oxc_span.workspace = true
+oxc_semantic.workspace = true
+parking_lot.workspace = true
+sha2.workspace = true
+regex.workspace = true
+
+# UUID for WASM compatibility
+uuid.workspace = true
+
+[features]
+default = []
+
+# Storage backend integration
+# Note: When using storage feature, also depend on fob-store crate
+storage = []
+
+# Test utilities (for integration tests)
+test-utils = []
+
+# Platform-specific dependencies for native runtime
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+tokio = { workspace = true, features = ["rt", "fs"] }
+
+[dev-dependencies]
+tempfile.workspace = true
+
+# Platform-specific dev dependencies for native tests
+[target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+
+# Lints - inherit workspace configuration
+[lints]
+workspace = true
+

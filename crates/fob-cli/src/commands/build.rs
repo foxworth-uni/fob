@@ -5,14 +5,13 @@
 
 use crate::cli::BuildArgs;
 use crate::commands::utils;
-use crate::config::{DocsFormat, FobConfig};
+use crate::config::FobConfig;
 use crate::error::{BuildError, CliError, Result};
 use crate::ui;
-use fob_core::{DocsEmitPlugin, DocsEmitPluginOptions, DocsPluginOutputFormat, NativeRuntime};
+use fob_bundler::NativeRuntime;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Instant;
-use tracing;
 
 /// Execute the build command.
 ///
@@ -72,12 +71,6 @@ pub async fn execute(args: BuildArgs) -> Result<()> {
         utils::validate_entry(&entry_path)?;
     }
 
-    // Step 3.5: Write back enhanced documentation to source files (if requested)
-    #[cfg(feature = "llm-docs")]
-    if config.docs_enhance && config.docs_write_back {
-        perform_docs_writeback(&config, &cwd).await?;
-    }
-
     // Step 4: Execute build
     build(&config, &cwd).await?;
 
@@ -98,7 +91,7 @@ pub async fn execute(args: BuildArgs) -> Result<()> {
 /// - Applies bundle, splitting, platform, etc. from config
 ///
 /// This version returns the BuildResult for dev server use.
-pub(crate) async fn build_with_result(config: &FobConfig, cwd: &std::path::Path) -> Result<fob_core::BuildResult> {
+pub(crate) async fn build_with_result(config: &FobConfig, cwd: &std::path::Path) -> Result<fob_bundler::BuildResult> {
     validate_output_dir(&config.out_dir, cwd)?;
 
     // Display build info
@@ -119,9 +112,9 @@ pub(crate) async fn build_with_result(config: &FobConfig, cwd: &std::path::Path)
 
     // Create builder based on entry count
     let mut builder = if config.entry.len() == 1 {
-        fob_core::BuildOptions::new(&config.entry[0])
+        fob_bundler::BuildOptions::new(&config.entry[0])
     } else {
-        fob_core::BuildOptions::new_multiple(&config.entry)
+        fob_bundler::BuildOptions::new_multiple(&config.entry)
     };
 
     // Apply configuration
@@ -153,9 +146,6 @@ pub(crate) async fn build_with_result(config: &FobConfig, cwd: &std::path::Path)
         builder = builder.globals_map([("__self__".to_string(), name.clone())]);
     }
 
-    // Apply docs plugin if requested
-    builder = apply_docs_plugin(builder, config);
-
     // TypeScript declarations
     #[cfg(feature = "dts-generation")]
     {
@@ -171,7 +161,8 @@ pub(crate) async fn build_with_result(config: &FobConfig, cwd: &std::path::Path)
         .map_err(|e| CliError::Build(BuildError::Custom(format!("Build failed: {}", e))))?;
 
     // Write output (force overwrite for build command)
-    result.write_to_force(&config.out_dir).map_err(|e| {
+    let resolved_out_dir = utils::resolve_path(&config.out_dir, cwd);
+    result.write_to_force(&resolved_out_dir).map_err(|e| {
         CliError::Build(BuildError::Custom(format!("Failed to write output: {}", e)))
     })?;
 
@@ -204,13 +195,14 @@ pub(crate) async fn build(config: &FobConfig, cwd: &std::path::Path) -> Result<(
 ///
 /// Returns `OutputNotWritable` if the directory is unsafe.
 fn validate_output_dir(out_dir: &Path, cwd: &Path) -> Result<()> {
-    let canonical_out = if out_dir.exists() {
-        out_dir.canonicalize()?
+    let resolved_out_dir = utils::resolve_path(out_dir, cwd);
+    let canonical_out = if resolved_out_dir.exists() {
+        resolved_out_dir.canonicalize()?
     } else {
-        let parent = out_dir
+        let parent = resolved_out_dir
             .parent()
-            .ok_or_else(|| CliError::Build(BuildError::OutputNotWritable(out_dir.to_path_buf())))?;
-        parent.canonicalize()?.join(out_dir.file_name().unwrap())
+            .ok_or_else(|| CliError::Build(BuildError::OutputNotWritable(resolved_out_dir.clone())))?;
+        parent.canonicalize()?.join(resolved_out_dir.file_name().unwrap())
     };
 
     let canonical_cwd = cwd.canonicalize()?;
@@ -222,7 +214,7 @@ fn validate_output_dir(out_dir: &Path, cwd: &Path) -> Result<()> {
         .unwrap_or(false);
 
     if !is_within_project && !is_sibling {
-        return Err(CliError::Build(BuildError::OutputNotWritable(out_dir.to_path_buf())).into());
+        return Err(CliError::Build(BuildError::OutputNotWritable(resolved_out_dir)).into());
     }
 
     const DANGEROUS_PATHS: &[&str] = &[
@@ -263,218 +255,19 @@ fn validate_output_dir(out_dir: &Path, cwd: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Convert CLI format enum to fob-core OutputFormat
-fn convert_format(format: crate::config::Format) -> fob_core::OutputFormat {
+/// Convert CLI format enum to fob-bundler OutputFormat
+fn convert_format(format: crate::config::Format) -> fob_bundler::OutputFormat {
     match format {
-        crate::config::Format::Esm => fob_core::OutputFormat::Esm,
-        crate::config::Format::Cjs => fob_core::OutputFormat::Cjs,
-        crate::config::Format::Iife => fob_core::OutputFormat::Iife,
+        crate::config::Format::Esm => fob_bundler::OutputFormat::Esm,
+        crate::config::Format::Cjs => fob_bundler::OutputFormat::Cjs,
+        crate::config::Format::Iife => fob_bundler::OutputFormat::Iife,
     }
 }
 
-/// Convert CLI platform enum to fob-core Platform
-fn convert_platform(platform: crate::config::Platform) -> fob_core::Platform {
+/// Convert CLI platform enum to fob-bundler Platform
+fn convert_platform(platform: crate::config::Platform) -> fob_bundler::Platform {
     match platform {
-        crate::config::Platform::Browser => fob_core::Platform::Browser,
-        crate::config::Platform::Node => fob_core::Platform::Node,
+        crate::config::Platform::Browser => fob_bundler::Platform::Browser,
+        crate::config::Platform::Node => fob_bundler::Platform::Node,
     }
-}
-
-fn apply_docs_plugin(
-    builder: fob_core::BuildOptions,
-    config: &FobConfig,
-) -> fob_core::BuildOptions {
-    if !config.docs {
-        return builder;
-    }
-
-    let mut options = DocsEmitPluginOptions::default();
-    if let Some(dir) = &config.docs_dir {
-        options.output_dir = Some(dir.clone());
-    }
-    options.include_internal = config.docs_include_internal;
-    let format = config.docs_format.unwrap_or(DocsFormat::Markdown);
-    options.output_format = convert_docs_format(format);
-
-    // Add LLM configuration if enhancement is enabled
-    #[cfg(feature = "llm-docs")]
-    if config.docs_enhance {
-        if let Some(ref llm_config_data) = config.docs_llm {
-            use fob_core::{EnhancementMode, LlmConfig};
-
-            let enhancement_mode = match llm_config_data.mode.as_str() {
-                "incomplete" => EnhancementMode::Incomplete,
-                "all" => EnhancementMode::All,
-                _ => EnhancementMode::Missing,
-            };
-
-            let mut llm_config = LlmConfig::default()
-                .with_model(&llm_config_data.model)
-                .with_mode(enhancement_mode);
-
-            if !llm_config_data.cache {
-                llm_config = llm_config.without_cache();
-            }
-
-            if let Some(ref url) = llm_config_data.url {
-                llm_config = llm_config.with_url(url);
-            }
-
-            options.llm_config = Some(llm_config);
-        }
-    }
-
-    let plugin = DocsEmitPlugin::new(options);
-    builder.plugin(fob_core::plugin(plugin))
-}
-
-fn convert_docs_format(format: DocsFormat) -> DocsPluginOutputFormat {
-    match format {
-        DocsFormat::Markdown => DocsPluginOutputFormat::Markdown,
-        DocsFormat::Json => DocsPluginOutputFormat::Json,
-        DocsFormat::Both => DocsPluginOutputFormat::Both,
-    }
-}
-
-/// Performs documentation extraction, LLM enhancement, and writeback to source files.
-#[cfg(feature = "llm-docs")]
-async fn perform_docs_writeback(config: &FobConfig, cwd: &std::path::Path) -> Result<()> {
-    use fob_core::{EnhancementMode, LlmConfig, LlmEnhancer};
-    use fob_docs::{DocsExtractor, ExtractOptions, MergeStrategy, DocsWriteback};
-
-    ui::info("Extracting documentation from source files...");
-
-    // Extract documentation from all entry files
-    let options = ExtractOptions {
-        include_internal: config.docs_include_internal,
-    };
-    let extractor = DocsExtractor::new(options);
-    let mut all_docs = vec![];
-
-    for entry in &config.entry {
-        let entry_path = utils::resolve_path(std::path::Path::new(entry), cwd);
-
-        match extractor.extract_from_path(&entry_path) {
-            Ok(module_doc) => {
-                all_docs.push(module_doc);
-            }
-            Err(e) => {
-                tracing::warn!("Failed to extract docs from {}: {}", entry, e);
-            }
-        }
-    }
-
-    if all_docs.is_empty() {
-        ui::info("No documentation found in source files.");
-        return Ok(());
-    }
-
-    let mut documentation = fob_core::Documentation {
-        modules: all_docs,
-    };
-
-    ui::info(&format!("Extracted documentation from {} modules", documentation.modules.len()));
-
-    // Enhance with LLM
-    if let Some(ref llm_config_data) = config.docs_llm {
-        let enhancement_mode = match llm_config_data.mode.as_str() {
-            "incomplete" => EnhancementMode::Incomplete,
-            "all" => EnhancementMode::All,
-            _ => EnhancementMode::Missing,
-        };
-
-        let mut llm_config = LlmConfig::default()
-            .with_model(&llm_config_data.model)
-            .with_mode(enhancement_mode);
-
-        if !llm_config_data.cache {
-            llm_config = llm_config.without_cache();
-        }
-
-        if let Some(ref url) = llm_config_data.url {
-            llm_config = llm_config.with_url(url);
-        }
-
-        ui::info(&format!("Enhancing documentation with LLM (model: {})...", llm_config_data.model));
-
-        let enhancer = match LlmEnhancer::new(llm_config).await {
-            Ok(enhancer) => enhancer,
-            Err(e) => {
-                tracing::warn!("Failed to initialize LLM enhancer: {}", e);
-                ui::info("Continuing without LLM enhancement...");
-                // Continue with original documentation
-                return perform_writeback(config, documentation);
-            }
-        };
-
-        let total_symbols: usize =
-            documentation.modules.iter().map(|m| m.symbols.len()).sum();
-
-        documentation = match enhancer
-            .enhance_documentation(documentation, |current, total| {
-                if current % 5 == 0 || current == total {
-                    tracing::debug!("[LLM] Progress: {}/{}", current, total);
-                }
-            })
-            .await
-        {
-            Ok(enhanced) => {
-                ui::info("LLM enhancement complete!");
-                enhanced
-            }
-            Err(e) => {
-                tracing::warn!("LLM enhancement failed: {}", e);
-                ui::info("Unable to continue with original documentation after enhancement failure.");
-                // Since documentation was moved, we can't recover
-                return Ok(());
-            }
-        };
-    }
-
-    perform_writeback(config, documentation)
-}
-
-/// Helper function to perform the actual writeback.
-#[cfg(feature = "llm-docs")]
-fn perform_writeback(config: &FobConfig, documentation: fob_core::Documentation) -> Result<()> {
-    use fob_docs::{MergeStrategy, DocsWriteback};
-
-    ui::info("Writing enhanced documentation back to source files...");
-
-    let merge_strategy = match config.docs_merge_strategy.as_deref() {
-        Some("replace") => MergeStrategy::Replace,
-        Some("skip") => MergeStrategy::Skip,
-        _ => MergeStrategy::Merge, // default
-    };
-
-    let writeback = DocsWriteback::new(
-        !config.docs_no_backup,  // create_backups
-        true,                    // skip_node_modules
-        merge_strategy,
-    );
-
-    match writeback.write_documentation(&documentation) {
-        Ok(report) => {
-            ui::success("Documentation writeback complete!");
-            ui::info(&format!("  Files modified: {}", report.files_modified));
-            ui::info(&format!("  Symbols updated: {}", report.symbols_updated));
-            if report.files_backed_up > 0 {
-                ui::info(&format!("  Backups created: {} (.bak files)", report.files_backed_up));
-            }
-            if report.symbols_skipped > 0 {
-                ui::info(&format!("  Symbols skipped: {}", report.symbols_skipped));
-            }
-            if !report.errors.is_empty() {
-                tracing::warn!("Errors during writeback: {}", report.errors.len());
-                for error in &report.errors {
-                    tracing::warn!("  - {}", error);
-                }
-            }
-        }
-        Err(e) => {
-            return Err(CliError::Build(BuildError::Custom(format!("Documentation writeback failed: {}", e))));
-        }
-    }
-
-    Ok(())
 }

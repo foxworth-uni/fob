@@ -1,7 +1,7 @@
-use fob_core::analysis::{AnalysisResult, TransformationTrace};
-use fob_core::graph::{GraphStatistics, ModuleGraph};
-use fob_core::output::Bundle as LibraryBuild;
-use fob_core::CacheAnalysis;
+use fob_bundler::analysis::{AnalysisResult, TransformationTrace};
+use fob_bundler::graph::{GraphStatistics, ModuleGraph};
+use fob_bundler::output::Bundle as LibraryBuild;
+use fob_bundler::CacheAnalysis;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

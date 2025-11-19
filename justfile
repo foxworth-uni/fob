@@ -9,7 +9,7 @@ export CARGO_TERM_COLOR := "always"
 # Paths
 repo_root := justfile_directory()
 target_dir := repo_root + "/target"
-wasm_wasi_target := "wasm32-wasip1-threads"
+wasm_wasi_target := "wasm32-wasip1"
 
 # Default recipe (show available commands)
 default:
@@ -348,6 +348,86 @@ install-gumbo:
 test-gumbo:
     @cargo test --package gumbo-core
     @cargo test --package gumbo-cli
+
+# =============================================================================
+# fob-plugin-css (CSS Plugin)
+# =============================================================================
+
+# Test CSS plugin
+test-plugin-css:
+    @cargo test --package fob-plugin-css --all-features
+
+# Check CSS plugin compiles
+check-plugin-css:
+    @cargo check --package fob-plugin-css --all-features
+
+# =============================================================================
+# fob-plugin-mdx (MDX Plugin)
+# =============================================================================
+
+# Test MDX plugin
+test-plugin-mdx:
+    @cargo test --package fob-plugin-mdx --all-features
+
+# Check MDX plugin compiles
+check-plugin-mdx:
+    @cargo check --package fob-plugin-mdx --all-features
+
+# =============================================================================
+# fob-plugin-tailwind (Tailwind Plugin)
+# =============================================================================
+
+# Test Tailwind plugin
+test-plugin-tailwind:
+    @cargo test --package fob-plugin-tailwind --all-features
+
+# Check Tailwind plugin compiles
+check-plugin-tailwind:
+    @cargo check --package fob-plugin-tailwind --all-features
+
+# =============================================================================
+# fob-gen (Code Generation)
+# =============================================================================
+
+# Test fob-gen
+test-gen:
+    @cargo test --package fob-gen --all-features
+
+# Check fob-gen compiles
+check-gen:
+    @cargo check --package fob-gen --all-features
+
+# Build fob-gen documentation
+docs-gen:
+    @cargo doc --package fob-gen --all-features --no-deps --open
+
+# =============================================================================
+# fob-browser-test (Browser Testing)
+# =============================================================================
+
+# Test browser-test
+test-browser:
+    @cargo test --package fob-browser-test
+
+# Check browser-test compiles
+check-browser:
+    @cargo check --package fob-browser-test
+
+# =============================================================================
+# Plugin Development Workflows
+# =============================================================================
+
+# Test all plugins together
+test-plugins: test-plugin-css test-plugin-mdx test-plugin-tailwind
+    @echo "✓ All plugin tests passed!"
+
+# Check all plugins compile
+check-plugins: check-plugin-css check-plugin-mdx check-plugin-tailwind
+    @echo "✓ All plugins check passed!"
+
+# Full plugin development workflow
+dev-plugins: check-plugins test-plugins
+    @echo "✓ Plugin development checks complete!"
 
 # =============================================================================
 # Verification & Quality

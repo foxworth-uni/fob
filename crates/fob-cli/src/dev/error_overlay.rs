@@ -43,26 +43,35 @@ pub fn generate_error_overlay(error: &str) -> Result<String, String> {
 /// - `"` -> `&quot;`
 /// - `'` -> `&#x27;`
 ///
-/// # Security
-///
-/// This is critical for preventing XSS when displaying error messages
-/// that might contain user input or file paths with special characters.
-fn html_escape(s: &str) -> String {
-    s.chars()
-        .map(|c| match c {
-            '&' => "&amp;".to_string(),
-            '<' => "&lt;".to_string(),
-            '>' => "&gt;".to_string(),
-            '"' => "&quot;".to_string(),
-            '\'' => "&#x27;".to_string(),
-            _ => c.to_string(),
-        })
-        .collect()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Escape HTML special characters to prevent XSS attacks.
+    ///
+    /// Converts the following characters:
+    /// - `&` -> `&amp;`
+    /// - `<` -> `&lt;`
+    /// - `>` -> `&gt;`
+    /// - `"` -> `&quot;`
+    /// - `'` -> `&#x27;`
+    ///
+    /// # Security
+    ///
+    /// This is critical for preventing XSS when displaying error messages
+    /// that might contain user input or file paths with special characters.
+    fn html_escape(s: &str) -> String {
+        s.chars()
+            .map(|c| match c {
+                '&' => "&amp;".to_string(),
+                '<' => "&lt;".to_string(),
+                '>' => "&gt;".to_string(),
+                '"' => "&quot;".to_string(),
+                '\'' => "&#x27;".to_string(),
+                _ => c.to_string(),
+            })
+            .collect()
+    }
 
     #[test]
     fn test_html_escape_ampersand() {

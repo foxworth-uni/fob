@@ -11,7 +11,7 @@
 //! route as a separate entry point with shared code extracted into chunks.
 
 use anyhow::{Context, Result};
-use fob_core::{BuildOptions, NativeRuntime};
+use fob_bundler::{BuildOptions, NativeRuntime};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
