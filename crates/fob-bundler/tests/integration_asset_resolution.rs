@@ -18,9 +18,9 @@
 // Only run these tests on native platforms (not WASM)
 #![cfg(not(target_family = "wasm"))]
 
+use async_trait::async_trait;
 use fob_bundler::builders::asset_resolver;
 use fob_bundler::{FileMetadata, Runtime, RuntimeError, RuntimeResult};
-use async_trait::async_trait;
 use std::fs;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
@@ -88,7 +88,11 @@ impl Runtime for TestRuntime {
     async fn read_dir(&self, path: &Path) -> RuntimeResult<Vec<String>> {
         let entries: Vec<String> = std::fs::read_dir(path)
             .map_err(|e| RuntimeError::Io(e.to_string()))?
-            .filter_map(|entry| entry.ok().and_then(|e| e.file_name().to_str().map(String::from)))
+            .filter_map(|entry| {
+                entry
+                    .ok()
+                    .and_then(|e| e.file_name().to_str().map(String::from))
+            })
             .collect();
         Ok(entries)
     }
@@ -160,9 +164,10 @@ async fn test_parent_directory_asset_resolution() {
     fs::write(&asset_path, b"PNG data").unwrap();
 
     // Resolve with parent traversal
-    let resolved = asset_resolver::resolve_asset("../assets/logo.png", &module_path, &cwd, &runtime)
-        .await
-        .expect("Failed to resolve asset with parent traversal");
+    let resolved =
+        asset_resolver::resolve_asset("../assets/logo.png", &module_path, &cwd, &runtime)
+            .await
+            .expect("Failed to resolve asset with parent traversal");
 
     assert_eq!(
         resolved.canonicalize().unwrap(),
@@ -305,10 +310,7 @@ async fn test_security_directory_traversal_prevention() {
         asset_resolver::resolve_asset("../../secret.txt", &module_path, &cwd, &runtime).await;
 
     // Should return security violation error
-    assert!(
-        result.is_err(),
-        "Directory traversal should be prevented"
-    );
+    assert!(result.is_err(), "Directory traversal should be prevented");
 
     if let Err(e) = result {
         let error_msg = e.to_string();
@@ -339,13 +341,9 @@ async fn test_security_absolute_path_restriction() {
     fs::write(&module_path, b"// app").unwrap();
 
     // Try to use absolute path to outside file (should fail)
-    let result = asset_resolver::resolve_asset(
-        outside_file.to_str().unwrap(),
-        &module_path,
-        &cwd,
-        &runtime,
-    )
-    .await;
+    let result =
+        asset_resolver::resolve_asset(outside_file.to_str().unwrap(), &module_path, &cwd, &runtime)
+            .await;
 
     assert!(result.is_err(), "Absolute path outside project should fail");
 }
@@ -459,7 +457,8 @@ async fn test_asset_size_validation() {
     assert_eq!(size, 1024);
 
     // Large asset should fail with small limit
-    let result = asset_resolver::validate_asset_size(&large_asset, Some(1024 * 1024), &runtime).await;
+    let result =
+        asset_resolver::validate_asset_size(&large_asset, Some(1024 * 1024), &runtime).await;
     assert!(result.is_err(), "Large asset should fail size check");
 
     // Large asset should pass with large limit
@@ -522,10 +521,9 @@ async fn test_nested_node_modules_resolution() {
     fs::write(&module_path, b"// component").unwrap();
 
     // Should walk up and find in root node_modules
-    let resolved =
-        asset_resolver::resolve_asset("pkg/asset.wasm", &module_path, &cwd, &runtime)
-            .await
-            .expect("Should find asset in root node_modules");
+    let resolved = asset_resolver::resolve_asset("pkg/asset.wasm", &module_path, &cwd, &runtime)
+        .await
+        .expect("Should find asset in root node_modules");
 
     assert_eq!(
         resolved.canonicalize().unwrap(),

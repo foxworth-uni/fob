@@ -31,8 +31,8 @@
 use anyhow::{Context, Result};
 use parking_lot::Mutex;
 use rolldown_plugin::{
-    HookTransformArgs, HookTransformReturn, HookTransformOutput,
-    Plugin, SharedTransformPluginContext
+    HookTransformArgs, HookTransformOutput, HookTransformReturn, Plugin,
+    SharedTransformPluginContext,
 };
 use rustc_hash::FxHashSet;
 use std::borrow::Cow;
@@ -131,7 +131,9 @@ impl FobTailwindPlugin {
                         "bun" => PackageManager::Bun,
                         "deno" => PackageManager::Deno,
                         _ => {
-                            return Err(GeneratorError::cli_not_found(vec![self.project_root.join("package.json")]));
+                            return Err(GeneratorError::cli_not_found(vec![self
+                                .project_root
+                                .join("package.json")]));
                         }
                     };
                     TailwindGenerator::with_package_manager(pm, self.project_root.clone())
@@ -259,7 +261,10 @@ impl Plugin for FobTailwindPlugin {
                 let classes_set = class_registry.lock().clone();
                 let classes: Vec<String> = classes_set.into_iter().collect();
 
-                eprintln!("[fob-tailwind] Processing CSS with {} classes", classes.len());
+                eprintln!(
+                    "[fob-tailwind] Processing CSS with {} classes",
+                    classes.len()
+                );
 
                 // Reconstruct plugin from captured fields
                 let plugin = FobTailwindPlugin {
@@ -269,7 +274,9 @@ impl Plugin for FobTailwindPlugin {
                     project_root,
                 };
 
-                let processed = plugin.process_css(&code, &classes).await
+                let processed = plugin
+                    .process_css(&code, &classes)
+                    .await
                     .with_context(|| format!("Failed to process Tailwind CSS in: {}", id))?;
 
                 eprintln!(

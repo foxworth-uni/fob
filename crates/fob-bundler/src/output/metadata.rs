@@ -23,8 +23,8 @@
 
 use serde::{Deserialize, Serialize};
 
-use fob::graph::{ExportKind, ModuleGraph};
 use crate::Result;
+use fob::graph::{ExportKind, ModuleGraph};
 
 /// Comprehensive metadata about a bundle's contents.
 ///
@@ -88,7 +88,11 @@ impl BundleMetadata {
     /// * `graph` - The module graph to analyze
     /// * `total_size` - Total size of all assets in bytes
     /// * `asset_count` - Number of assets in the bundle
-    pub async fn from_graph(graph: &ModuleGraph, total_size: usize, asset_count: usize) -> Result<Self> {
+    pub async fn from_graph(
+        graph: &ModuleGraph,
+        total_size: usize,
+        asset_count: usize,
+    ) -> Result<Self> {
         let exports = extract_exports(graph).await?;
         let imports = extract_imports(graph).await?;
         let module_count = graph.len().await?;

@@ -26,11 +26,11 @@ pub async fn validate_asset_size(
         },
         RuntimeError::Io(msg) => Error::IoError {
             message: format!("Failed to read asset metadata: {}", path.display()),
-            source: std::io::Error::new(std::io::ErrorKind::Other, msg),
+            source: std::io::Error::other(msg),
         },
         _ => Error::IoError {
             message: format!("Failed to read asset metadata: {}", path.display()),
-            source: std::io::Error::new(std::io::ErrorKind::Other, format!("{}", e)),
+            source: std::io::Error::other(format!("{e}")),
         },
     })?;
 
@@ -46,4 +46,3 @@ pub async fn validate_asset_size(
 
     Ok(size)
 }
-

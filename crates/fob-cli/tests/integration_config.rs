@@ -3,14 +3,14 @@
 //! Tests verify multi-source configuration loading with priority ordering:
 //! CLI > Environment > File > Defaults
 
-use fob_cli::config::FobConfig;
 use fob_cli::cli::BuildArgs;
+use fob_cli::config::FobConfig;
 // BuildArgs uses CLI types, so we need both CLI and config types
 use fob_cli::cli;
 use fob_cli::config;
+use serial_test::serial;
 use std::fs;
 use std::path::PathBuf;
-use serial_test::serial;
 use tempfile::TempDir;
 
 #[test]
@@ -227,12 +227,12 @@ fn test_config_environment_variables() {
     };
 
     let config = FobConfig::load(&args, None).unwrap();
-    
+
     // Environment variables should override file config
     // (but CLI args override everything)
     // Note: CLI args are merged, so out_dir from CLI should win
     assert_eq!(config.out_dir, PathBuf::from("dist")); // CLI wins
-    
+
     // Clean up
     std::env::remove_var("FOB_OUT_DIR");
     std::env::remove_var("FOB_FORMAT");

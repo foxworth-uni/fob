@@ -30,6 +30,17 @@ pub enum CollectionError {
     ModuleNotFound(String),
 }
 
+/// Import kind detected during parsing
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CollectedImportKind {
+    /// Regular static import: `import { foo } from './bar'`
+    Static,
+    /// Dynamic import expression: `import('./dynamic')`
+    Dynamic,
+    /// Type-only import: `import type { Type } from './types'`
+    TypeOnly,
+}
+
 /// Represents a collected module with all its metadata
 #[derive(Debug, Clone)]
 pub struct CollectedModule {
@@ -47,7 +58,7 @@ pub struct CollectedModule {
 pub struct CollectedImport {
     pub source: String,
     pub specifiers: Vec<CollectedImportSpecifier>,
-    pub is_dynamic: bool,
+    pub kind: CollectedImportKind,
     /// Resolved path to the target module (relative to cwd, same format as module IDs).
     /// None for external dependencies or unresolved imports.
     pub resolved_path: Option<String>,
@@ -63,9 +74,14 @@ pub enum CollectedImportSpecifier {
 /// Represents an export declaration in a module
 #[derive(Debug, Clone)]
 pub enum CollectedExport {
-    Named { exported: String, local: Option<String> },
+    Named {
+        exported: String,
+        local: Option<String>,
+    },
     Default,
-    All { source: String },
+    All {
+        source: String,
+    },
 }
 
 /// Shared state for collecting module information during bundling or analysis
@@ -135,15 +151,15 @@ impl CollectionState {
 pub fn parse_module_structure(
     code: &str,
 ) -> Result<(Vec<CollectedImport>, Vec<CollectedExport>, bool), CollectionError> {
+    use fob_gen::{parse, ParseOptions, QueryBuilder};
     use oxc_allocator::Allocator;
     use oxc_ast::ast::{Declaration, ModuleDeclaration};
-    use fob_gen::{parse, ParseOptions, QueryBuilder};
 
     let allocator = Allocator::default();
 
     // Infer source type from code patterns - use ParseOptions helpers
     let parse_opts = if code.contains("import ") || code.contains("export ") {
-        if code.contains(": ") || code.contains("interface ") {
+        if code.contains(": ") || code.contains("interface ") || code.contains("import type ") || code.contains("export type ") {
             ParseOptions::tsx() // TypeScript with JSX
         } else {
             ParseOptions::jsx() // JavaScript with JSX
@@ -166,7 +182,7 @@ pub fn parse_module_structure(
 
     // Use QueryBuilder to extract imports and exports
     let query = QueryBuilder::new(&allocator, parsed.ast());
-    
+
     // Extract imports
     let _import_query = query.find_imports(None);
     // Note: QueryBuilder doesn't expose the actual ImportDeclaration nodes yet,
@@ -203,10 +219,16 @@ pub fn parse_module_structure(
                             }
                         }
                     }
+                    // Determine import kind based on OXC's import_kind field
+                    let kind = match import.import_kind {
+                        oxc_ast::ast::ImportOrExportKind::Value => CollectedImportKind::Static,
+                        oxc_ast::ast::ImportOrExportKind::Type => CollectedImportKind::TypeOnly,
+                    };
+
                     imports.push(CollectedImport {
                         source: import.source.value.to_string(),
                         specifiers,
-                        is_dynamic: false,
+                        kind,
                         resolved_path: None, // Will be populated during graph walking
                     });
                 }
@@ -232,7 +254,10 @@ pub fn parse_module_structure(
                             }
                             Declaration::VariableDeclaration(var) => {
                                 for decl in &var.declarations {
-                                    if let oxc_ast::ast::BindingPatternKind::BindingIdentifier(ident) = &decl.id.kind {
+                                    if let oxc_ast::ast::BindingPatternKind::BindingIdentifier(
+                                        ident,
+                                    ) = &decl.id.kind
+                                    {
                                         exports.push(CollectedExport::Named {
                                             exported: ident.name.to_string(),
                                             local: Some(ident.name.to_string()),
@@ -264,4 +289,3 @@ pub fn parse_module_structure(
 
     Ok((imports, exports, has_side_effects))
 }
-

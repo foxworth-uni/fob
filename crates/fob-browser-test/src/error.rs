@@ -28,7 +28,7 @@ pub enum BrowserError {
         source: Option<Box<dyn std::error::Error + Send + Sync>>,
     },
 
-    /// Failed to establish Chrome DevTools Protocol connection.
+    /// Failed to establish Chrome `DevTools` Protocol connection.
     ///
     /// This can happen if the browser crashes immediately after launch
     /// or if the WebSocket connection is rejected.
@@ -43,12 +43,12 @@ pub enum BrowserError {
         /// The URL that failed to load
         url: String,
         /// Reason for the navigation failure
-        reason: String
+        reason: String,
     },
 
     /// A wait condition was not satisfied within the timeout.
     ///
-    /// This is used for operations like wait_for_load, wait_for_selector, etc.
+    /// This is used for operations like `wait_for_load`, `wait_for_selector`, etc.
     #[error("wait condition '{condition}' timed out after {timeout:?}")]
     WaitTimeout {
         /// Description of the condition that timed out

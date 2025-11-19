@@ -7,9 +7,8 @@
 //! - integration_tests: End-to-end scenarios
 //! - test_helpers: Shared test utilities
 
-mod resolver_tests;
-mod walker_tests;
 mod analyzer_tests;
 mod integration_tests;
+mod resolver_tests;
 mod test_helpers;
-
+mod walker_tests;

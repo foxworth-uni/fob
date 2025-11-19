@@ -81,14 +81,14 @@ pub use runtime::{FileMetadata, Runtime, RuntimeError, RuntimeResult};
 
 // Re-export graph types
 pub use graph::{
-    Export, ExportKind, Import, ImportKind, ImportSpecifier, Module, ModuleGraph, ModuleId, ModuleIdError,
-    SourceSpan, SourceType,
+    Export, ExportKind, Import, ImportKind, ImportSpecifier, Module, ModuleGraph, ModuleId,
+    ModuleIdError, SourceSpan, SourceType,
 };
 
 // Re-export analysis types
 pub use analysis::{
-    AnalysisResult, AnalyzeError, CacheAnalysis, CacheEffectiveness,
-    ImportOutcome, ImportResolution, RenameEvent, RenamePhase, TransformationTrace,
+    AnalysisResult, AnalyzeError, CacheAnalysis, CacheEffectiveness, ImportOutcome,
+    ImportResolution, RenameEvent, RenamePhase, TransformationTrace,
 };
 
 // Re-export MDX plugin (WASM-compatible)
@@ -114,4 +114,3 @@ pub enum Error {
 
 /// Result type alias for fob operations.
 pub type Result<T> = std::result::Result<T, Error>;
-

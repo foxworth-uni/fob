@@ -5,9 +5,9 @@
 
 use std::path::{Path, PathBuf};
 
-use path_clean::PathClean;
-use crate::runtime::{Runtime, RuntimeError};
 use super::types::{AnalyzerConfig, ResolveResult};
+use crate::runtime::{Runtime, RuntimeError};
+use path_clean::PathClean;
 
 /// Module resolver for standalone analysis.
 pub struct ModuleResolver {
@@ -48,10 +48,10 @@ impl ModuleResolver {
                 cwd.as_path()
             };
             let candidate = base.join(&resolved).clean();
-            
+
             // Try with extensions
             let extensions = ["ts", "tsx", "js", "jsx", "mjs", "json"];
-            
+
             // First, try the path as-is
             if runtime.exists(&candidate) {
                 if let Ok(metadata) = runtime.metadata(&candidate).await {
@@ -60,7 +60,7 @@ impl ModuleResolver {
                     }
                 }
             }
-            
+
             // Try with each extension
             for ext in &extensions {
                 let with_ext = candidate.with_extension(ext);
@@ -72,7 +72,7 @@ impl ModuleResolver {
                     }
                 }
             }
-            
+
             // Try as directory with index files
             if runtime.exists(&candidate) {
                 if let Ok(metadata) = runtime.metadata(&candidate).await {
@@ -124,7 +124,7 @@ impl ModuleResolver {
                 let rest = &specifier[alias.len()..];
                 // Remove leading slash if present
                 let rest = rest.strip_prefix('/').unwrap_or(rest);
-                
+
                 // Build resolved path - ensure it starts with ./ for relative resolution
                 let resolved = if target.starts_with('/') {
                     // Absolute path - shouldn't happen but handle it
@@ -144,7 +144,7 @@ impl ModuleResolver {
                         format!("./{target}/{rest}")
                     }
                 };
-                
+
                 return Some(resolved);
             }
         }
@@ -160,7 +160,9 @@ impl ModuleResolver {
     ) -> Result<ResolveResult, RuntimeError> {
         let base = if specifier.starts_with('/') {
             // Absolute path - use cwd as base if available
-            self.config.cwd.as_ref().map(|cwd| cwd.as_path())
+            self.config
+                .cwd
+                .as_deref()
                 .unwrap_or_else(|| from.parent().unwrap_or(Path::new("")))
         } else {
             // Relative path
@@ -169,10 +171,10 @@ impl ModuleResolver {
 
         // Join and normalize the path to handle . and .. components
         let candidate = base.join(specifier).clean();
-        
+
         // Try with extensions
         let extensions = ["ts", "tsx", "js", "jsx", "mjs", "json"];
-        
+
         // First, try the path as-is (might already have extension)
         if runtime.exists(&candidate) {
             // Check if it's a file (not a directory)
@@ -186,7 +188,7 @@ impl ModuleResolver {
         // Try with each extension
         for ext in &extensions {
             let with_ext = candidate.with_extension(ext);
-            
+
             if runtime.exists(&with_ext) {
                 if let Ok(metadata) = runtime.metadata(&with_ext).await {
                     if metadata.is_file {
@@ -251,7 +253,10 @@ mod tests {
             Ok(())
         }
 
-        async fn metadata(&self, path: &Path) -> Result<crate::runtime::FileMetadata, RuntimeError> {
+        async fn metadata(
+            &self,
+            path: &Path,
+        ) -> Result<crate::runtime::FileMetadata, RuntimeError> {
             if self.files.iter().any(|f| f == path) {
                 Ok(crate::runtime::FileMetadata {
                     is_file: true,
@@ -289,14 +294,14 @@ mod tests {
     async fn test_resolve_relative() {
         let mut config = AnalyzerConfig::default();
         config.cwd = Some(PathBuf::from("/test"));
-        
+
         let runtime = MockRuntime {
             files: vec![PathBuf::from("/test/src/utils.ts")],
         };
-        
+
         let resolver = ModuleResolver::new(config);
         let from = PathBuf::from("/test/src/index.ts");
-        
+
         let result = resolver.resolve("./utils", &from, &runtime).await.unwrap();
         assert!(matches!(result, ResolveResult::Local(_)));
     }
@@ -305,13 +310,12 @@ mod tests {
     async fn test_resolve_external() {
         let mut config = AnalyzerConfig::default();
         config.external = vec!["react".to_string()];
-        
+
         let runtime = MockRuntime { files: vec![] };
         let resolver = ModuleResolver::new(config);
         let from = PathBuf::from("/test/src/index.ts");
-        
+
         let result = resolver.resolve("react", &from, &runtime).await.unwrap();
         assert!(matches!(result, ResolveResult::External(_)));
     }
 }
-

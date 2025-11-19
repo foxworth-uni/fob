@@ -48,22 +48,19 @@ impl<'a> JsxBuilder<'a> {
         self_closing: bool,
     ) -> JSXElement<'a> {
         let name_atom = name.into();
-        
+
         // Create opening element name
-        let opening_ident = self.ast.jsx_identifier(SPAN, name_atom.clone());
+        let opening_ident = self.ast.jsx_identifier(SPAN, name_atom);
         let opening_name = JSXElementName::Identifier(self.ast.alloc(opening_ident));
-        
+
         let attrs_vec = self.ast.vec_from_iter(attributes);
-        
+
         // Build JSXOpeningElement using AstBuilder
         // Note: self_closing is inferred from absence of closing_element
-        let opening_element = self.ast.jsx_opening_element(
-            SPAN,
-            opening_name,
-            NONE,
-            attrs_vec,
-        );
-        
+        let opening_element = self
+            .ast
+            .jsx_opening_element(SPAN, opening_name, NONE, attrs_vec);
+
         // Create closing element if not self-closing (None = self-closing)
         let closing_element: Option<JSXClosingElement> = if self_closing {
             None
@@ -74,15 +71,17 @@ impl<'a> JsxBuilder<'a> {
         };
 
         let children_vec = self.ast.vec_from_iter(children);
-        self.ast.jsx_element(SPAN, opening_element, children_vec, closing_element.map(|e| self.ast.alloc(e)))
+        self.ast.jsx_element(
+            SPAN,
+            opening_element,
+            children_vec,
+            closing_element.map(|e| self.ast.alloc(e)),
+        )
     }
 
     /// Create a JSX closing element
     fn closing_element(&self, name: JSXElementName<'a>) -> JSXClosingElement<'a> {
-        JSXClosingElement {
-            span: SPAN,
-            name,
-        }
+        JSXClosingElement { span: SPAN, name }
     }
 
     /// Create a JSX attribute: `name="value"`
@@ -98,9 +97,7 @@ impl<'a> JsxBuilder<'a> {
 
     /// Create a string attribute value: `"value"`
     pub fn string_attr(&self, value: impl Into<Atom<'a>>) -> JSXAttributeValue<'a> {
-        JSXAttributeValue::StringLiteral(self.ast.alloc(
-            self.ast.string_literal(SPAN, value, None)
-        ))
+        JSXAttributeValue::StringLiteral(self.ast.alloc(self.ast.string_literal(SPAN, value, None)))
     }
 
     /// Create an expression attribute value: `{expr}`
@@ -114,7 +111,9 @@ impl<'a> JsxBuilder<'a> {
     /// Create a JSX text child
     pub fn text(&self, value: impl Into<Atom<'a>>) -> JSXChild<'a> {
         let value_atom = value.into();
-        let text = self.ast.jsx_text(SPAN, value_atom.clone(), Some(value_atom));
+        let text = self
+            .ast
+            .jsx_text(SPAN, value_atom, Some(value_atom));
         JSXChild::Text(self.ast.alloc(text))
     }
 
@@ -151,4 +150,3 @@ impl<'a> JsxBuilder<'a> {
         Expression::JSXFragment(self.ast.alloc(fragment))
     }
 }
-

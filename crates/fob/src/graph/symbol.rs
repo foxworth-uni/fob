@@ -153,7 +153,8 @@ impl Symbol {
 
     /// Get maximum nesting depth from code quality metadata
     pub fn max_nesting_depth(&self) -> Option<usize> {
-        self.code_quality_metadata().and_then(|m| m.max_nesting_depth)
+        self.code_quality_metadata()
+            .and_then(|m| m.max_nesting_depth)
     }
 
     /// Get return count from code quality metadata (for functions)

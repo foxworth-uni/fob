@@ -15,7 +15,6 @@ use surrealdb::engine::any::Any;
 use surrealdb::Surreal;
 use thiserror::Error;
 
-
 pub use queries::GraphQueries;
 
 /// Storage backend for module graph.
@@ -114,4 +113,3 @@ impl GraphStorage {
 }
 
 // GraphQueries implementation is in impl_queries.rs
-

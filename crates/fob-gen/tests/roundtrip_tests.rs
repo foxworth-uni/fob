@@ -2,7 +2,7 @@
 
 #[cfg(feature = "parser")]
 mod roundtrip_impl {
-    use fob_gen::{ParseOptions, JsBuilder};
+    use fob_gen::{JsBuilder, ParseOptions};
     use oxc_allocator::Allocator as OxcAllocator;
     use std::fs;
     use std::path::PathBuf;
@@ -53,7 +53,7 @@ mod roundtrip_impl {
 
     fn test_roundtrip(source: &str, filename: &str) {
         let allocator = OxcAllocator::default();
-        
+
         // Parse original source
         let parse_opts = ParseOptions::from_path(filename);
         let parsed = fob_gen::parse(&allocator, source, parse_opts)
@@ -93,12 +93,12 @@ mod roundtrip_impl {
             js.const_decl("x", js.number(42.0)),
             js.const_decl("y", js.string("hello")),
         ];
-        
+
         let statements2 = vec![
             js.const_decl("x", js.number(42.0)),
             js.const_decl("y", js.string("hello")),
         ];
-        
+
         let statements3 = vec![
             js.const_decl("x", js.number(42.0)),
             js.const_decl("y", js.string("hello")),
@@ -114,4 +114,3 @@ mod roundtrip_impl {
         assert_eq!(second, third, "Second and third generation differ");
     }
 }
-

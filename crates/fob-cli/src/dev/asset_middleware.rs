@@ -38,12 +38,10 @@ pub async fn handle_asset(
         .ok_or_else(|| not_found(&asset_path))?;
 
     // Read file from filesystem
-    let content = tokio::fs::read(&asset.source_path)
-        .await
-        .map_err(|e| {
-            tracing::error!("Error reading asset {}: {}", asset.source_path.display(), e);
-            internal_error("Failed to read asset".to_string())
-        })?;
+    let content = tokio::fs::read(&asset.source_path).await.map_err(|e| {
+        tracing::error!("Error reading asset {}: {}", asset.source_path.display(), e);
+        internal_error("Failed to read asset".to_string())
+    })?;
 
     // Build response with appropriate headers
     Ok(Response::builder()
@@ -105,12 +103,9 @@ mod tests {
         let shared_state = Arc::new(state);
 
         // Make request
-        let _response = handle_asset(
-            State(shared_state),
-            Path("test.wasm".to_string()),
-        )
-        .await
-        .unwrap();
+        let _response = handle_asset(State(shared_state), Path("test.wasm".to_string()))
+            .await
+            .unwrap();
 
         // Response assertions removed for now - would need to be adjusted
         // for the actual response structure
@@ -122,12 +117,9 @@ mod tests {
         let state = DevServerState::new_with_registry(registry);
         let shared_state = Arc::new(state);
 
-        let response = handle_asset(
-            State(shared_state),
-            Path("nonexistent.wasm".to_string()),
-        )
-        .await
-        .unwrap_err();
+        let response = handle_asset(State(shared_state), Path("nonexistent.wasm".to_string()))
+            .await
+            .unwrap_err();
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
     }

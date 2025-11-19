@@ -232,14 +232,14 @@ unsafe impl<F> Send for SendWrapper<F> {}
 #[cfg(not(target_family = "wasm"))]
 #[allow(dead_code)] // Used conditionally based on target
 type SendWrapper<F> = F;
+use rolldown_common::{EmittedAsset, ModuleType};
+use rolldown_plugin::{
+    HookTransformArgs, HookTransformOutput, HookTransformReturn, HookUsage, Plugin,
+    SharedTransformPluginContext,
+};
 use std::borrow::Cow;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use rolldown_plugin::{
-    HookUsage, Plugin, SharedTransformPluginContext,
-    HookTransformArgs, HookTransformReturn, HookTransformOutput
-};
-use rolldown_common::{EmittedAsset, ModuleType};
 
 /// Rolldown plugin that detects and emits asset references during bundling.
 ///
@@ -274,7 +274,7 @@ impl AssetDetectionPlugin {
         registry: Arc<AssetRegistry>,
         cwd: impl AsRef<Path>,
         extensions: Vec<String>,
-        runtime: Arc<dyn crate::Runtime>
+        runtime: Arc<dyn crate::Runtime>,
     ) -> Self {
         Self {
             registry,
@@ -283,7 +283,6 @@ impl AssetDetectionPlugin {
             runtime,
         }
     }
-
 }
 
 impl Plugin for AssetDetectionPlugin {
@@ -312,8 +311,16 @@ impl Plugin for AssetDetectionPlugin {
         {
             SendWrapper::new(async move {
                 Self::transform_impl(
-                    module_id, code, module_type, registry, cwd, should_process, runtime, ctx
-                ).await
+                    module_id,
+                    code,
+                    module_type,
+                    registry,
+                    cwd,
+                    should_process,
+                    runtime,
+                    ctx,
+                )
+                .await
             })
         }
 
@@ -321,8 +328,16 @@ impl Plugin for AssetDetectionPlugin {
         {
             async move {
                 Self::transform_impl(
-                    module_id, code, module_type, registry, cwd, should_process, runtime, ctx
-                ).await
+                    module_id,
+                    code,
+                    module_type,
+                    registry,
+                    cwd,
+                    should_process,
+                    runtime,
+                    ctx,
+                )
+                .await
             }
         }
     }
@@ -349,89 +364,93 @@ impl AssetDetectionPlugin {
         runtime: Arc<dyn crate::Runtime>,
         ctx: SharedTransformPluginContext,
     ) -> HookTransformReturn {
-            // Only process JavaScript/TypeScript
-            if !matches!(module_type, ModuleType::Js | ModuleType::Jsx | ModuleType::Ts | ModuleType::Tsx) {
+        // Only process JavaScript/TypeScript
+        if !matches!(
+            module_type,
+            ModuleType::Js | ModuleType::Jsx | ModuleType::Ts | ModuleType::Tsx
+        ) {
+            return Ok(None);
+        }
+
+        // Detect assets in the code
+        let assets = match detect_assets(&code, &module_id, &cwd, runtime.as_ref()).await {
+            Some(assets) if !assets.is_empty() => assets,
+            _ => {
                 return Ok(None);
             }
+        };
 
-            // Detect assets in the code
-            let assets = match detect_assets(&code, &module_id, &cwd, runtime.as_ref()).await {
-                Some(assets) if !assets.is_empty() => assets,
-                _ => {
-                    return Ok(None);
+        let mut modified_code = code.clone();
+        let mut modified = false;
+
+        for (specifier, resolved_path) in assets {
+            // Check if this is an asset we want to handle
+            if !should_process.iter().any(|ext| specifier.ends_with(ext)) {
+                continue;
+            }
+
+            // Register in registry
+            registry.register(resolved_path.clone(), module_id.clone(), specifier.clone());
+
+            // Read asset content using runtime
+            let content = match runtime.read_file(&resolved_path).await {
+                Ok(c) => c,
+                Err(e) => {
+                    ctx.warn(rolldown_common::LogWithoutPlugin {
+                        message: format!("Failed to read asset {:?}: {}", resolved_path, e),
+                        ..Default::default()
+                    });
+                    continue;
                 }
             };
 
-            let mut modified_code = code.clone();
-            let mut modified = false;
+            // Emit asset through Rolldown
+            let reference_id = ctx.emit_file(
+                EmittedAsset {
+                    name: resolved_path
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .map(|s| s.to_string()),
+                    original_file_name: Some(resolved_path.to_string_lossy().into_owned()),
+                    file_name: None, // Let Rolldown generate with hash
+                    source: content.into(),
+                },
+                None,
+                None,
+            );
 
-            for (specifier, resolved_path) in assets {
-                // Check if this is an asset we want to handle
-                if !should_process.iter().any(|ext| specifier.ends_with(ext)) {
+            // Get final filename from Rolldown
+            let final_filename = match ctx.get_file_name(&reference_id) {
+                Ok(name) => name,
+                Err(e) => {
+                    ctx.warn(rolldown_common::LogWithoutPlugin {
+                        message: format!("Failed to get filename for asset: {}", e),
+                        ..Default::default()
+                    });
                     continue;
                 }
+            };
 
-                // Register in registry
-                registry.register(resolved_path.clone(), module_id.clone(), specifier.clone());
+            // Update registry with final URL
+            let url_path = format!("/{}", final_filename);
+            registry.set_url_path(&resolved_path, url_path.clone());
 
-                // Read asset content using runtime
-                let content = match runtime.read_file(&resolved_path).await {
-                    Ok(c) => c,
-                    Err(e) => {
-                        ctx.warn(rolldown_common::LogWithoutPlugin {
-                            message: format!("Failed to read asset {:?}: {}", resolved_path, e),
-                            ..Default::default()
-                        });
-                        continue;
-                    }
-                };
+            // Rewrite the URL in code (try both single and double quotes)
+            let patterns = vec![
+                format!("new URL('{}', import.meta.url)", specifier),
+                format!("new URL(\"{}\", import.meta.url)", specifier),
+                format!("new URL(`{}`, import.meta.url)", specifier),
+            ];
 
-                // Emit asset through Rolldown
-                let reference_id = ctx.emit_file(
-                    EmittedAsset {
-                        name: resolved_path.file_name()
-                            .and_then(|n| n.to_str())
-                            .map(|s| s.to_string()),
-                        original_file_name: Some(resolved_path.to_string_lossy().into_owned()),
-                        file_name: None,  // Let Rolldown generate with hash
-                        source: content.into(),
-                    },
-                    None,
-                    None,
-                );
-
-                // Get final filename from Rolldown
-                let final_filename = match ctx.get_file_name(&reference_id) {
-                    Ok(name) => name,
-                    Err(e) => {
-                        ctx.warn(rolldown_common::LogWithoutPlugin {
-                            message: format!("Failed to get filename for asset: {}", e),
-                            ..Default::default()
-                        });
-                        continue;
-                    }
-                };
-
-                // Update registry with final URL
-                let url_path = format!("/{}", final_filename);
-                registry.set_url_path(&resolved_path, url_path.clone());
-
-                // Rewrite the URL in code (try both single and double quotes)
-                let patterns = vec![
-                    format!("new URL('{}', import.meta.url)", specifier),
-                    format!("new URL(\"{}\", import.meta.url)", specifier),
-                    format!("new URL(`{}`, import.meta.url)", specifier),
-                ];
-
-                for pattern in patterns {
-                    if modified_code.contains(&pattern) {
-                        let new_pattern = pattern.replace(&specifier, &final_filename);
-                        modified_code = modified_code.replace(&pattern, &new_pattern);
-                        modified = true;
-                        break;
-                    }
+            for pattern in patterns {
+                if modified_code.contains(&pattern) {
+                    let new_pattern = pattern.replace(&specifier, &final_filename);
+                    modified_code = modified_code.replace(&pattern, &new_pattern);
+                    modified = true;
+                    break;
                 }
             }
+        }
 
         if modified {
             Ok(Some(HookTransformOutput {
@@ -464,7 +483,8 @@ async fn detect_assets(
     use regex::Regex;
 
     // Pattern: new URL('...', import.meta.url) or new URL("...", import.meta.url)
-    let re = Regex::new(r#"new\s+URL\s*\(\s*['"`]([^'"`]+)['"`]\s*,\s*import\.meta\.url\s*\)"#).ok()?;
+    let re =
+        Regex::new(r#"new\s+URL\s*\(\s*['"`]([^'"`]+)['"`]\s*,\s*import\.meta\.url\s*\)"#).ok()?;
 
     let mut assets = Vec::new();
     let module_path = Path::new(module_id);
@@ -476,7 +496,9 @@ async fn detect_assets(
             let specifier = specifier_match.as_str();
 
             // Try to resolve the asset
-            if let Ok(resolved) = asset_resolver::resolve_asset(specifier, module_path, cwd, runtime).await {
+            if let Ok(resolved) =
+                asset_resolver::resolve_asset(specifier, module_path, cwd, runtime).await
+            {
                 assets.push((specifier.to_string(), resolved));
             }
         }
@@ -597,7 +619,7 @@ mod tests {
         // Create asset files
         fs::write(cwd.join("module.wasm"), b"wasm content").unwrap();
         fs::write(cwd.join("logo.png"), b"png content").unwrap();
-        
+
         let fonts_dir = cwd.join("fonts");
         fs::create_dir(&fonts_dir).unwrap();
         fs::write(fonts_dir.join("font.woff2"), b"font content").unwrap();
@@ -610,7 +632,7 @@ mod tests {
 
         let assets = assets.unwrap();
         assert_eq!(assets.len(), 3, "Should detect all 3 assets");
-        
+
         // Verify all assets were resolved correctly
         let specifiers: Vec<_> = assets.iter().map(|(s, _)| s.as_str()).collect();
         assert!(specifiers.contains(&"./module.wasm"));
@@ -619,8 +641,16 @@ mod tests {
 
         // Verify paths are absolute and exist
         for (_specifier, resolved_path) in &assets {
-            assert!(resolved_path.is_absolute(), "Resolved path should be absolute: {}", resolved_path.display());
-            assert!(runtime.exists(resolved_path), "Asset should exist: {}", resolved_path.display());
+            assert!(
+                resolved_path.is_absolute(),
+                "Resolved path should be absolute: {}",
+                resolved_path.display()
+            );
+            assert!(
+                runtime.exists(resolved_path),
+                "Asset should exist: {}",
+                resolved_path.display()
+            );
         }
     }
 }

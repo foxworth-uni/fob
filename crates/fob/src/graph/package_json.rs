@@ -66,28 +66,29 @@ impl PackageJson {
         Self::validate_path(path)?;
 
         // Check file size before reading
-        let metadata = runtime
-            .metadata(path)
-            .await
-            .map_err(|e| crate::Error::InvalidConfig(format!("Cannot read package.json metadata: {e}")))?;
+        let metadata = runtime.metadata(path).await.map_err(|e| {
+            crate::Error::InvalidConfig(format!("Cannot read package.json metadata: {e}"))
+        })?;
 
         if metadata.size > MAX_PACKAGE_JSON_SIZE {
-            return Err(crate::Error::InvalidConfig(
-                format!("package.json exceeds maximum size of {}MB", MAX_PACKAGE_JSON_SIZE / 1024 / 1024)
-            ));
+            return Err(crate::Error::InvalidConfig(format!(
+                "package.json exceeds maximum size of {}MB",
+                MAX_PACKAGE_JSON_SIZE / 1024 / 1024
+            )));
         }
 
         // Read and parse the file
-        let content_bytes = runtime
-            .read_file(path)
-            .await
-            .map_err(|e| crate::Error::InvalidConfig(format!("Failed to read package.json: {e}")))?;
+        let content_bytes = runtime.read_file(path).await.map_err(|e| {
+            crate::Error::InvalidConfig(format!("Failed to read package.json: {e}"))
+        })?;
 
-        let content = String::from_utf8(content_bytes)
-            .map_err(|e| crate::Error::InvalidConfig(format!("package.json contains invalid UTF-8: {e}")))?;
+        let content = String::from_utf8(content_bytes).map_err(|e| {
+            crate::Error::InvalidConfig(format!("package.json contains invalid UTF-8: {e}"))
+        })?;
 
-        let mut pkg: PackageJson = serde_json::from_str(&content)
-            .map_err(|e| crate::Error::InvalidConfig(format!("Invalid package.json format: {e}")))?;
+        let mut pkg: PackageJson = serde_json::from_str(&content).map_err(|e| {
+            crate::Error::InvalidConfig(format!("Invalid package.json format: {e}"))
+        })?;
 
         pkg.path = path.to_path_buf();
         Ok(pkg)
@@ -112,7 +113,9 @@ impl PackageJson {
     /// # }
     /// ```
     #[cfg(not(target_family = "wasm"))]
-    #[deprecated(note = "Use from_path with explicit runtime parameter for better platform compatibility")]
+    #[deprecated(
+        note = "Use from_path with explicit runtime parameter for better platform compatibility"
+    )]
     pub async fn from_path_native(path: &Path) -> Result<Self> {
         use crate::NativeRuntime;
         let runtime = NativeRuntime::new();
@@ -151,7 +154,7 @@ impl PackageJson {
                 current = parent.to_path_buf();
             } else {
                 return Err(crate::Error::InvalidConfig(
-                    "No package.json found in directory tree".to_string()
+                    "No package.json found in directory tree".to_string(),
                 ));
             }
         }
@@ -176,7 +179,9 @@ impl PackageJson {
     /// # }
     /// ```
     #[cfg(not(target_family = "wasm"))]
-    #[deprecated(note = "Use find_from_dir with explicit runtime parameter for better platform compatibility")]
+    #[deprecated(
+        note = "Use find_from_dir with explicit runtime parameter for better platform compatibility"
+    )]
     pub async fn find_from_dir_native(start_dir: &Path) -> Result<Self> {
         use crate::NativeRuntime;
         let runtime = NativeRuntime::new();
@@ -222,7 +227,7 @@ impl PackageJson {
         // Reject paths with suspicious patterns
         if path_str.contains("..") {
             return Err(crate::Error::InvalidConfig(
-                "Path contains '..' (potential directory traversal)".to_string()
+                "Path contains '..' (potential directory traversal)".to_string(),
             ));
         }
 

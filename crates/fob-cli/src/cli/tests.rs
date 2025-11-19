@@ -67,8 +67,8 @@ mod tests {
     #[test]
     fn test_format_enum_values() {
         // Verify enum values match expected strings
-        use clap::ValueEnum;
         use crate::cli::enums::Format;
+        use clap::ValueEnum;
 
         let formats: Vec<_> = Format::value_variants()
             .iter()
@@ -79,8 +79,8 @@ mod tests {
 
     #[test]
     fn test_platform_enum_values() {
-        use clap::ValueEnum;
         use crate::cli::enums::Platform;
+        use clap::ValueEnum;
 
         let platforms: Vec<_> = Platform::value_variants()
             .iter()
@@ -91,8 +91,8 @@ mod tests {
 
     #[test]
     fn test_sourcemap_enum_values() {
-        use clap::ValueEnum;
         use crate::cli::enums::SourceMapMode;
+        use clap::ValueEnum;
 
         let modes: Vec<_> = SourceMapMode::value_variants()
             .iter()
@@ -103,8 +103,8 @@ mod tests {
 
     #[test]
     fn test_estarget_enum_values() {
-        use clap::ValueEnum;
         use crate::cli::enums::EsTarget;
+        use clap::ValueEnum;
 
         let targets: Vec<_> = EsTarget::value_variants()
             .iter()
@@ -129,8 +129,8 @@ mod tests {
 
     #[test]
     fn test_build_args_defaults() {
-        use clap::Parser;
         use crate::cli::enums::{EsTarget, Format, Platform};
+        use clap::Parser;
 
         let args = Cli::try_parse_from(&["joy", "build", "src/index.ts"]).unwrap();
 
@@ -200,4 +200,3 @@ mod tests {
         assert!(result.is_ok());
     }
 }
-

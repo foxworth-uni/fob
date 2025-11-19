@@ -12,12 +12,9 @@ use std::sync::Arc;
 
 use rustc_hash::FxHashMap;
 
-use crate::runtime::Runtime;
+use crate::analysis::{result::AnalysisResult, stats::compute_stats};
 use crate::graph::ModuleGraph;
-use crate::analysis::{
-    stats::compute_stats,
-    result::AnalysisResult,
-};
+use crate::runtime::Runtime;
 use crate::{Error, Result};
 
 use super::types::AnalyzerConfig;
@@ -62,13 +59,17 @@ impl Analyzer {
 
     /// Add multiple entry points.
     pub fn entries(mut self, paths: impl IntoIterator<Item = impl Into<PathBuf>>) -> Self {
-        self.config.entries.extend(paths.into_iter().map(|p| p.into()));
+        self.config
+            .entries
+            .extend(paths.into_iter().map(|p| p.into()));
         self
     }
 
     /// Mark packages as external (not analyzed).
     pub fn external(mut self, packages: impl IntoIterator<Item = impl Into<String>>) -> Self {
-        self.config.external.extend(packages.into_iter().map(|p| p.into()));
+        self.config
+            .external
+            .extend(packages.into_iter().map(|p| p.into()));
         self
     }
 
@@ -154,9 +155,10 @@ impl Analyzer {
 
         // Create walker and traverse graph
         let walker = GraphWalker::new(config);
-        let collection = walker.walk(runtime.clone()).await.map_err(|e| {
-            Error::Operation(format!("Graph walker failed: {}", e))
-        })?;
+        let collection = walker
+            .walk(runtime.clone())
+            .await
+            .map_err(|e| Error::Operation(format!("Graph walker failed: {}", e)))?;
 
         // Build module graph from collected data
         let graph = ModuleGraph::from_collected_data(collection)
@@ -187,7 +189,7 @@ impl Analyzer {
             #[cfg(not(target_family = "wasm"))]
             {
                 use crate::NativeRuntime;
-                Ok(Arc::new(NativeRuntime::default()))
+                Ok(Arc::new(NativeRuntime))
             }
             #[cfg(target_family = "wasm")]
             {
@@ -227,7 +229,7 @@ mod tests {
     async fn test_analyzer_requires_entry() {
         let analyzer = Analyzer::new();
         let result = analyzer.analyze().await;
-        
+
         assert!(result.is_err());
         if let Err(crate::Error::InvalidConfig(msg)) = result {
             assert!(msg.contains("entry"));
@@ -236,4 +238,3 @@ mod tests {
         }
     }
 }
-

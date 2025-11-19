@@ -98,8 +98,8 @@ impl FobConfig {
 
     /// Generate example fob.config.json content.
     pub fn example_config() -> String {
-        use types::*;
         use std::path::PathBuf;
+        use types::*;
 
         serde_json::to_string_pretty(&Self {
             entry: vec!["src/index.ts".to_string(), "src/cli.ts".to_string()],
@@ -122,4 +122,3 @@ impl FobConfig {
         .expect("Example config serialization should never fail")
     }
 }
-

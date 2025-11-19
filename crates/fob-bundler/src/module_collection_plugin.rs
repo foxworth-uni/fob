@@ -1,11 +1,10 @@
 use rolldown_plugin::{
-    HookResolveIdArgs, HookResolveIdReturn, HookUsage,
-    HookTransformArgs, HookTransformReturn, Plugin, PluginContext,
-    TransformPluginContext,
+    HookResolveIdArgs, HookResolveIdReturn, HookTransformArgs, HookTransformReturn, HookUsage,
+    Plugin, PluginContext, TransformPluginContext,
 };
 use std::sync::{Arc, Mutex};
 
-use fob::graph::collection::{CollectionState, CollectedModule, parse_module_structure};
+use fob::graph::collection::{parse_module_structure, CollectedModule, CollectionState};
 
 /// Plugin that collects module information during the bundling process
 #[derive(Debug)]
@@ -72,8 +71,8 @@ impl Plugin for ModuleCollectionPlugin {
         async move {
             // Parse the module to extract imports/exports
             // If parsing fails, treat as having side effects and no imports/exports
-            let (imports, exports, has_side_effects) = parse_module_structure(&code)
-                .unwrap_or_else(|_| (vec![], vec![], true));
+            let (imports, exports, has_side_effects) =
+                parse_module_structure(&code).unwrap_or_else(|_| (vec![], vec![], true));
 
             let is_entry = {
                 let state = state.lock().unwrap();

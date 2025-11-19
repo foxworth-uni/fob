@@ -56,7 +56,7 @@ pub async fn execute(args: DevArgs) -> Result<()> {
             .base
             .entry
             .first()
-            .map(|e| e.clone())
+            .cloned()
             .unwrap_or_else(|| "unknown".to_string())
     };
     ui::info(&format!("Entry point: {}", entry_display));

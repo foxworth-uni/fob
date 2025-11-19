@@ -34,14 +34,10 @@ fn test_arrays() {
     let allocator = Allocator::default();
     let js = JsBuilder::new(&allocator);
 
-    let arr = js.array(vec![
-        js.number(1.0),
-        js.number(2.0),
-        js.number(3.0),
-    ]);
+    let arr = js.array(vec![js.number(1.0), js.number(2.0), js.number(3.0)]);
     let stmt = js.const_decl("nums", arr);
     let code = js.program(vec![stmt]).unwrap();
-    
+
     // Just verify it contains the basic structure
     assert!(code.contains("const nums"));
     assert!(code.contains("["));
@@ -61,7 +57,7 @@ fn test_objects() {
     ]);
     let stmt = js.const_decl("person", obj);
     let code = js.program(vec![stmt]).unwrap();
-    
+
     assert!(code.contains("const person"));
     assert!(code.contains(r#"name: "John""#));
     assert!(code.contains("age: 30"));
@@ -77,7 +73,7 @@ fn test_member_access() {
     let call = js.call(member, vec![js.arg(js.string("test"))]);
     let stmt = js.expr_stmt(call);
     let code = js.program(vec![stmt]).unwrap();
-    
+
     assert!(code.contains("console.log"));
     assert!(code.contains(r#""test""#));
 }
@@ -91,7 +87,7 @@ fn test_computed_member() {
     let computed = js.computed_member(js.ident("arr"), js.number(0.0));
     let stmt = js.const_decl("first", computed);
     let code = js.program(vec![stmt]).unwrap();
-    
+
     assert!(code.contains("const first = arr[0]"));
 }
 
@@ -111,7 +107,7 @@ fn test_arrow_functions() {
     );
     let stmt = js.const_decl("double", arrow);
     let code = js.program(vec![stmt]).unwrap();
-    
+
     assert!(code.contains("const double"));
     assert!(code.contains("=>"));
     assert!(code.contains("x * 2"));
@@ -126,7 +122,7 @@ fn test_imports() {
     let import_decl = js.import_default("React", "react");
     let stmt = Statement::from(import_decl);
     let code = js.program(vec![stmt]).unwrap();
-    
+
     assert!(code.contains("import React from"));
     assert!(code.contains(r#""react""#));
 }
@@ -140,7 +136,7 @@ fn test_named_imports() {
     let import_decl = js.import_named(vec!["useState", "useEffect"], "react");
     let stmt = Statement::from(import_decl);
     let code = js.program(vec![stmt]).unwrap();
-    
+
     assert!(code.contains("import"));
     assert!(code.contains("useState"));
     assert!(code.contains("useEffect"));
@@ -156,7 +152,7 @@ fn test_exports() {
     let export_decl = js.export_const("greeting", js.string("Hello"));
     let stmt = Statement::from(export_decl);
     let code = js.program(vec![stmt]).unwrap();
-    
+
     assert!(code.contains("export"));
     assert!(code.contains("const greeting"));
     assert!(code.contains(r#""Hello""#));
@@ -171,7 +167,7 @@ fn test_export_default() {
     let export_decl = js.export_default(js.number(42.0));
     let stmt = Statement::from(export_decl);
     let code = js.program(vec![stmt]).unwrap();
-    
+
     assert!(code.contains("export default 42"));
 }
 
@@ -181,17 +177,13 @@ fn test_if_statement() {
     let js = JsBuilder::new(&allocator);
 
     // if (x > 0) { return true; } else { return false; }
-    let test = js.binary(
-        js.ident("x"),
-        BinaryOperator::GreaterThan,
-        js.number(0.0),
-    );
+    let test = js.binary(js.ident("x"), BinaryOperator::GreaterThan, js.number(0.0));
     let consequent = vec![js.return_stmt(Some(js.bool(true)))];
     let alternate = vec![js.return_stmt(Some(js.bool(false)))];
-    
+
     let if_stmt = js.if_stmt(test, consequent, Some(alternate));
     let code = js.program(vec![if_stmt]).unwrap();
-    
+
     assert!(code.contains("if"));
     assert!(code.contains("x > 0"));
     assert!(code.contains("return true"));
@@ -205,17 +197,13 @@ fn test_logical_operators() {
 
     // const result = a && b || c
     let expr = js.logical(
-        js.logical(
-            js.ident("a"),
-            LogicalOperator::And,
-            js.ident("b"),
-        ),
+        js.logical(js.ident("a"), LogicalOperator::And, js.ident("b")),
         LogicalOperator::Or,
         js.ident("c"),
     );
     let stmt = js.const_decl("result", expr);
     let code = js.program(vec![stmt]).unwrap();
-    
+
     assert!(code.contains("const result"));
     assert!(code.contains("a && b"));
     assert!(code.contains("||"));
@@ -228,19 +216,11 @@ fn test_conditional_expression() {
     let js = JsBuilder::new(&allocator);
 
     // const result = x > 0 ? "positive" : "negative"
-    let test = js.binary(
-        js.ident("x"),
-        BinaryOperator::GreaterThan,
-        js.number(0.0),
-    );
-    let conditional = js.conditional(
-        test,
-        js.string("positive"),
-        js.string("negative"),
-    );
+    let test = js.binary(js.ident("x"), BinaryOperator::GreaterThan, js.number(0.0));
+    let conditional = js.conditional(test, js.string("positive"), js.string("negative"));
     let stmt = js.const_decl("result", conditional);
     let code = js.program(vec![stmt]).unwrap();
-    
+
     assert!(code.contains("const result"));
     assert!(code.contains("x > 0"));
     assert!(code.contains("?"));
@@ -254,13 +234,10 @@ fn test_new_expression() {
     let js = JsBuilder::new(&allocator);
 
     // const err = new Error("Failed")
-    let new_expr = js.new_expr(
-        js.ident("Error"),
-        vec![js.arg(js.string("Failed"))],
-    );
+    let new_expr = js.new_expr(js.ident("Error"), vec![js.arg(js.string("Failed"))]);
     let stmt = js.const_decl("err", new_expr);
     let code = js.program(vec![stmt]).unwrap();
-    
+
     assert!(code.contains("const err = new Error"));
     assert!(code.contains(r#""Failed""#));
 }
@@ -274,7 +251,7 @@ fn test_not_operator() {
     let not_expr = js.not(js.ident("flag"));
     let stmt = js.const_decl("result", not_expr);
     let code = js.program(vec![stmt]).unwrap();
-    
+
     assert!(code.contains("const result = !flag"));
 }
 
@@ -294,12 +271,10 @@ fn test_complex_program() {
     );
     let expr_stmt = js.expr_stmt(console_log);
 
-    let code = js.program(vec![
-        import_stmt,
-        const_decl,
-        expr_stmt,
-    ]).unwrap();
-    
+    let code = js
+        .program(vec![import_stmt, const_decl, expr_stmt])
+        .unwrap();
+
     assert!(code.contains("import React"));
     assert!(code.contains("const greeting"));
     assert!(code.contains("console.log"));
@@ -327,13 +302,10 @@ fn test_throw_statement() {
     let js = JsBuilder::new(&allocator);
 
     // throw new Error("Oops")
-    let error = js.new_expr(
-        js.ident("Error"),
-        vec![js.arg(js.string("Oops"))],
-    );
+    let error = js.new_expr(js.ident("Error"), vec![js.arg(js.string("Oops"))]);
     let stmt = js.throw(error);
     let code = js.program(vec![stmt]).unwrap();
-    
+
     assert!(code.contains("throw new Error"));
     assert!(code.contains(r#""Oops""#));
 }
@@ -344,13 +316,10 @@ fn test_template_literal() {
     let js = JsBuilder::new(&allocator);
 
     // const msg = `Hello, ${name}!`
-    let template = js.template_literal(
-        vec!["Hello, ", "!"],
-        vec![js.ident("name")],
-    );
+    let template = js.template_literal(vec!["Hello, ", "!"], vec![js.ident("name")]);
     let stmt = js.const_decl("msg", template);
     let code = js.program(vec![stmt]).unwrap();
-    
+
     assert!(code.contains("const msg"));
     assert!(code.contains("`"));
     assert!(code.contains("Hello"));
@@ -369,7 +338,7 @@ fn test_template_literal_multiple_expressions() {
     );
     let stmt = js.const_decl("msg", template);
     let code = js.program(vec![stmt]).unwrap();
-    
+
     assert!(code.contains("const msg"));
     assert!(code.contains("greeting"));
     assert!(code.contains("name"));
@@ -383,20 +352,17 @@ fn test_arrow_fn_with_block() {
     // const fn = (x) => { return x * 2; }
     let arrow = js.arrow_fn_block(
         vec!["x"],
-        vec![js.return_stmt(Some(
-            js.binary(
-                js.ident("x"),
-                BinaryOperator::Multiplication,
-                js.number(2.0),
-            ),
-        ))],
+        vec![js.return_stmt(Some(js.binary(
+            js.ident("x"),
+            BinaryOperator::Multiplication,
+            js.number(2.0),
+        )))],
     );
     let stmt = js.const_decl("fn", arrow);
     let code = js.program(vec![stmt]).unwrap();
-    
+
     assert!(code.contains("const fn"));
     assert!(code.contains("=>"));
     assert!(code.contains("return"));
     assert!(code.contains("x * 2"));
 }
-

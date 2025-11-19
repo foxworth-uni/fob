@@ -84,4 +84,3 @@ impl FobConfig {
         Ok(())
     }
 }
-

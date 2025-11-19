@@ -151,4 +151,3 @@ impl Default for TypeScriptConfig {
         }
     }
 }
-

@@ -106,7 +106,10 @@ impl BunnyMdxPlugin {
     /// let plugin = BunnyMdxPlugin::with_options(opts, PathBuf::from("/path/to/project"));
     /// ```
     pub fn with_options(options: MdxCompileOptions, project_root: PathBuf) -> Self {
-        Self { options, project_root }
+        Self {
+            options,
+            project_root,
+        }
     }
 }
 

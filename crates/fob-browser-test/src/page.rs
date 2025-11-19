@@ -16,7 +16,7 @@ use tracing::warn;
 
 /// Represents a browser page (tab) with testing capabilities.
 ///
-/// This type wraps chromiumoxide::page::Page and adds:
+/// This type wraps `chromiumoxide::page::Page` and adds:
 /// - Console message capture
 /// - Type-safe navigation
 /// - Wait helpers
@@ -31,9 +31,10 @@ pub struct Page {
 impl Page {
     /// Creates a new Page wrapper and starts console capture.
     ///
-    /// This is called internally by TestBrowser; users don't construct
+    /// This is called internally by `TestBrowser`; users don't construct
     /// Pages directly.
-    pub(crate) async fn new(page: ChromePage) -> Result<Self> {
+    #[allow(clippy::result_large_err)]
+    pub(crate) fn new(page: ChromePage) -> Self {
         let console = ConsoleCapture::new();
         let console_clone = console.clone();
         let page_arc = Arc::new(page);
@@ -53,17 +54,18 @@ impl Page {
             }
         });
 
-        Ok(Self {
+        Self {
             inner: page_arc,
             console,
             _console_task: console_task,
-        })
+        }
     }
 
     /// Returns a handle to the console message capture.
     ///
     /// This allows querying accumulated console messages during or after
     /// test execution.
+    #[must_use]
     pub fn console(&self) -> &ConsoleCapture {
         &self.console
     }
@@ -74,7 +76,7 @@ impl Page {
     ///
     /// # Errors
     ///
-    /// Returns NavigationFailed if the page fails to load or times out.
+    /// Returns `NavigationFailed` if the page fails to load or times out.
     pub async fn navigate(&self, url: &str) -> Result<()> {
         self.inner
             .goto(url)
@@ -98,6 +100,10 @@ impl Page {
     /// ```ignore
     /// page.navigate_to(&my_server, "/dashboard").await?;
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if navigation fails or times out.
     pub async fn navigate_to(&self, server: &dyn DevServer, path: &str) -> Result<()> {
         // Health check first to fail fast
         server.health_check().await?;
@@ -106,10 +112,14 @@ impl Page {
         self.navigate(&url).await
     }
 
-    /// Waits for the page load event (DOMContentLoaded).
+    /// Waits for the page load event (`DOMContentLoaded`).
     ///
-    /// This is automatically called by navigate(), but can be called
+    /// This is automatically called by `navigate()`, but can be called
     /// manually if you trigger navigation via JavaScript.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the wait times out or script execution fails.
     pub async fn wait_for_load(&self, config: WaitConfig) -> Result<()> {
         wait_for_result(
             || {
@@ -124,8 +134,7 @@ impl Page {
                     let ready = result
                         .value()
                         .and_then(|v| v.as_str())
-                        .map(|s| s == "complete")
-                        .unwrap_or(false);
+                        .is_some_and(|s| s == "complete");
 
                     Ok(ready)
                 }
@@ -143,13 +152,17 @@ impl Page {
     /// # Security
     ///
     /// Do not pass unsanitized user input to this function. Use parameterized
-    /// queries via evaluate_function() instead.
+    /// queries via `evaluate_function()` instead.
     ///
     /// # Example
     ///
     /// ```ignore
     /// let title: String = page.evaluate("document.title").await?;
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if script execution fails or the result cannot be deserialized.
     pub async fn evaluate<T>(&self, script: &str) -> Result<T>
     where
         T: serde::de::DeserializeOwned,
@@ -168,6 +181,10 @@ impl Page {
     /// Waits for a CSS selector to appear in the DOM.
     ///
     /// This repeatedly queries the page until the element exists or timeout.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the wait times out or script execution fails.
     pub async fn wait_for_selector(&self, selector: &str, config: WaitConfig) -> Result<()> {
         let selector_owned = selector.to_string();
 
@@ -180,33 +197,38 @@ impl Page {
                     // This prevents injection via backticks, newlines, and other special chars
                     let escaped = serde_json::to_string(&sel)
                         .map_err(|e| BrowserError::ScriptExecutionFailed(e.to_string()))?;
-                    let script = format!("!!document.querySelector({})", escaped);
+                    let script = format!("!!document.querySelector({escaped})");
                     // evaluate() expects &str, not &String
                     let result = page
                         .evaluate(script.as_str())
                         .await
                         .map_err(|e| BrowserError::ScriptExecutionFailed(e.to_string()))?;
 
-                    let exists = result
-                        .value()
-                        .and_then(|v| v.as_bool())
-                        .unwrap_or(false);
+                    let exists = result.value().and_then(serde_json::Value::as_bool).unwrap_or(false);
 
                     Ok(exists)
                 }
             },
             config,
-            &format!("selector '{}'", selector),
+            &format!("selector '{selector}'"),
         )
         .await
     }
 
     /// Returns the current page URL.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if script execution fails.
     pub async fn url(&self) -> Result<String> {
         self.evaluate("window.location.href").await
     }
 
     /// Returns the page title.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if script execution fails.
     pub async fn title(&self) -> Result<String> {
         self.evaluate("document.title").await
     }
@@ -214,6 +236,10 @@ impl Page {
     /// Takes a screenshot of the page and returns PNG bytes.
     ///
     /// Useful for debugging test failures in CI.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if screenshot capture fails.
     pub async fn screenshot(&self) -> Result<Vec<u8>> {
         self.inner
             .screenshot(chromiumoxide::page::ScreenshotParams::default())
@@ -228,14 +254,14 @@ impl Page {
     ///
     /// # Design Note
     ///
-    /// Since our Page wraps ChromePage in Arc for console event sharing,
-    /// we use Arc::try_unwrap to extract the inner page. If other Arc clones
+    /// Since our Page wraps `ChromePage` in Arc for console event sharing,
+    /// we use `Arc::try_unwrap` to extract the inner page. If other Arc clones
     /// exist (e.g., the console event listener task is still running), this
     /// will fail silently and return Ok(()).
     ///
     /// # Behavior on Failure
     ///
-    /// If Arc::try_unwrap fails (other references exist), the page is NOT closed
+    /// If `Arc::try_unwrap` fails (other references exist), the page is NOT closed
     /// explicitly. Instead, cleanup relies on:
     /// 1. The console event listener task completing (releases its Arc clone)
     /// 2. Chromiumoxide's Drop implementation eventually closing the page
@@ -243,14 +269,16 @@ impl Page {
     /// This is acceptable for a testing library, as resources will be cleaned up
     /// when the browser is closed or the test completes. For production use cases,
     /// consider implementing retry logic or a timeout-based close mechanism.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if closing the page fails.
     pub async fn close(self) -> Result<()> {
         // Try to extract the inner page from the Arc
         // This will only succeed if we're the only owner
         match Arc::try_unwrap(self.inner) {
             Ok(page) => {
-                page.close()
-                    .await
-                    .map_err(BrowserError::ChromiumOxide)?;
+                page.close().await.map_err(BrowserError::ChromiumOxide)?;
                 Ok(())
             }
             Err(_arc) => {

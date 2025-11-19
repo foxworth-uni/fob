@@ -36,11 +36,13 @@ pub fn process_assets(
     let assets_output = out_dir.join(assets_dir);
 
     // Create assets directory
-    std::fs::create_dir_all(&assets_output)
-        .map_err(|e| Error::IoError {
-            message: format!("Failed to create assets directory: {}", assets_output.display()),
-            source: e,
-        })?;
+    std::fs::create_dir_all(&assets_output).map_err(|e| Error::IoError {
+        message: format!(
+            "Failed to create assets directory: {}",
+            assets_output.display()
+        ),
+        source: e,
+    })?;
 
     let mut url_map = HashMap::new();
 
@@ -50,10 +52,11 @@ pub fn process_assets(
 
         // Build public URL
         let public_url = format!(
-            "{}{}{}",
+            "{}{}{}/{}",
             public_path.trim_end_matches('/'),
             if public_path.ends_with('/') { "" } else { "/" },
-            format!("{}/{}", assets_dir, processed.filename)
+            assets_dir,
+            processed.filename
         );
 
         // Update registry with hash
@@ -78,16 +81,12 @@ struct ProcessedAsset {
 /// Process a single asset file.
 ///
 /// Reads the file, computes hash, copies to output with hashed name.
-fn process_single_asset(
-    asset: &AssetInfo,
-    output_dir: &Path,
-) -> Result<ProcessedAsset> {
+fn process_single_asset(asset: &AssetInfo, output_dir: &Path) -> Result<ProcessedAsset> {
     // Read asset content
-    let content = std::fs::read(&asset.source_path)
-        .map_err(|e| Error::IoError {
-            message: format!("Failed to read asset: {}", asset.source_path.display()),
-            source: e,
-        })?;
+    let content = std::fs::read(&asset.source_path).map_err(|e| Error::IoError {
+        message: format!("Failed to read asset: {}", asset.source_path.display()),
+        source: e,
+    })?;
 
     // Compute content hash
     let hash = hash_content(&content);
@@ -97,16 +96,12 @@ fn process_single_asset(
 
     // Write to output directory
     let output_path = output_dir.join(&filename);
-    std::fs::write(&output_path, &content)
-        .map_err(|e| Error::IoError {
-            message: format!("Failed to write asset: {}", output_path.display()),
-            source: e,
-        })?;
+    std::fs::write(&output_path, &content).map_err(|e| Error::IoError {
+        message: format!("Failed to write asset: {}", output_path.display()),
+        source: e,
+    })?;
 
-    Ok(ProcessedAsset {
-        hash,
-        filename,
-    })
+    Ok(ProcessedAsset { hash, filename })
 }
 
 /// Hash asset content using SHA-256.
@@ -124,17 +119,11 @@ fn hash_content(data: &[u8]) -> String {
 ///
 /// Example: `file.wasm` with hash `abcd1234...` → `file-abcd1234.wasm`
 fn generate_filename(path: &Path, hash: &str) -> Result<String> {
-    let stem = path
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .ok_or_else(|| Error::InvalidConfig(
-            format!("Invalid asset filename: {}", path.display())
-        ))?;
+    let stem = path.file_stem().and_then(|s| s.to_str()).ok_or_else(|| {
+        Error::InvalidConfig(format!("Invalid asset filename: {}", path.display()))
+    })?;
 
-    let ext = path
-        .extension()
-        .and_then(|s| s.to_str())
-        .unwrap_or("");
+    let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("");
 
     // Use first 8 characters of hash
     let hash_short = &hash[..8.min(hash.len())];
@@ -169,7 +158,7 @@ impl RewriteReport {
 
 /// Rewrite URLs in bundled JavaScript code using regex-based pattern matching.
 ///
-/// Replaces `new URL(specifier, import.meta.url)` (optionally with `.href`) 
+/// Replaces `new URL(specifier, import.meta.url)` (optionally with `.href`)
 /// with the mapped public URL from the url_map.
 ///
 /// This function uses regex patterns that handle whitespace variations,
@@ -207,7 +196,7 @@ pub fn rewrite_urls_ast(
     // Escape special regex characters in specifiers
     for (specifier, public_url) in url_map {
         let escaped_specifier = regex::escape(specifier);
-        
+
         // Pattern 1: new URL('specifier', import.meta.url) - single quotes, no .href
         let pattern1 = format!(
             r#"new\s+URL\s*\(\s*'({})'\s*,\s*import\.meta\.url\s*\)"#,
@@ -215,7 +204,9 @@ pub fn rewrite_urls_ast(
         );
         if let Ok(re) = Regex::new(&pattern1) {
             if re.is_match(&rewritten) {
-                rewritten = re.replace_all(&rewritten, format!("'{}'", public_url)).to_string();
+                rewritten = re
+                    .replace_all(&rewritten, format!("'{}'", public_url))
+                    .to_string();
                 report.replacements += 1;
                 report.rewritten_specifiers.push(specifier.clone());
             }
@@ -228,7 +219,9 @@ pub fn rewrite_urls_ast(
         );
         if let Ok(re) = Regex::new(&pattern2) {
             if re.is_match(&rewritten) {
-                rewritten = re.replace_all(&rewritten, format!("\"{}\"", public_url)).to_string();
+                rewritten = re
+                    .replace_all(&rewritten, format!("\"{}\"", public_url))
+                    .to_string();
                 report.replacements += 1;
                 if !report.rewritten_specifiers.contains(specifier) {
                     report.rewritten_specifiers.push(specifier.clone());
@@ -243,7 +236,9 @@ pub fn rewrite_urls_ast(
         );
         if let Ok(re) = Regex::new(&pattern3) {
             if re.is_match(&rewritten) {
-                rewritten = re.replace_all(&rewritten, format!("`{}`", public_url)).to_string();
+                rewritten = re
+                    .replace_all(&rewritten, format!("`{}`", public_url))
+                    .to_string();
                 report.replacements += 1;
                 if !report.rewritten_specifiers.contains(specifier) {
                     report.rewritten_specifiers.push(specifier.clone());
@@ -258,7 +253,9 @@ pub fn rewrite_urls_ast(
         );
         if let Ok(re) = Regex::new(&pattern4) {
             if re.is_match(&rewritten) {
-                rewritten = re.replace_all(&rewritten, format!("'{}'", public_url)).to_string();
+                rewritten = re
+                    .replace_all(&rewritten, format!("'{}'", public_url))
+                    .to_string();
                 report.replacements += 1;
                 if !report.rewritten_specifiers.contains(specifier) {
                     report.rewritten_specifiers.push(specifier.clone());
@@ -273,7 +270,9 @@ pub fn rewrite_urls_ast(
         );
         if let Ok(re) = Regex::new(&pattern5) {
             if re.is_match(&rewritten) {
-                rewritten = re.replace_all(&rewritten, format!("\"{}\"", public_url)).to_string();
+                rewritten = re
+                    .replace_all(&rewritten, format!("\"{}\"", public_url))
+                    .to_string();
                 report.replacements += 1;
                 if !report.rewritten_specifiers.contains(specifier) {
                     report.rewritten_specifiers.push(specifier.clone());
@@ -288,7 +287,9 @@ pub fn rewrite_urls_ast(
         );
         if let Ok(re) = Regex::new(&pattern6) {
             if re.is_match(&rewritten) {
-                rewritten = re.replace_all(&rewritten, format!("`{}`", public_url)).to_string();
+                rewritten = re
+                    .replace_all(&rewritten, format!("`{}`", public_url))
+                    .to_string();
                 report.replacements += 1;
                 if !report.rewritten_specifiers.contains(specifier) {
                     report.rewritten_specifiers.push(specifier.clone());
@@ -413,9 +414,18 @@ mod tests {
         "#;
 
         let mut url_map = HashMap::new();
-        url_map.insert("./file.wasm".to_string(), "/assets/file-abc123.wasm".to_string());
-        url_map.insert("./image.png".to_string(), "/assets/image-def456.png".to_string());
-        url_map.insert("./font.woff2".to_string(), "/assets/font-ghi789.woff2".to_string());
+        url_map.insert(
+            "./file.wasm".to_string(),
+            "/assets/file-abc123.wasm".to_string(),
+        );
+        url_map.insert(
+            "./image.png".to_string(),
+            "/assets/image-def456.png".to_string(),
+        );
+        url_map.insert(
+            "./font.woff2".to_string(),
+            "/assets/font-ghi789.woff2".to_string(),
+        );
 
         let rewritten = rewrite_urls(code, &url_map);
 
@@ -440,10 +450,22 @@ mod tests {
         "#;
 
         let mut url_map = HashMap::new();
-        url_map.insert("../wasm/web/joy_bundler_wasm.js".to_string(), "/__fob_assets__/joy_bundler_wasm.js".to_string());
-        url_map.insert("./file.wasm".to_string(), "/__fob_assets__/file.wasm".to_string());
-        url_map.insert("./image.png".to_string(), "/__fob_assets__/image.png".to_string());
-        url_map.insert("./font.woff2".to_string(), "/__fob_assets__/font.woff2".to_string());
+        url_map.insert(
+            "../wasm/web/joy_bundler_wasm.js".to_string(),
+            "/__fob_assets__/joy_bundler_wasm.js".to_string(),
+        );
+        url_map.insert(
+            "./file.wasm".to_string(),
+            "/__fob_assets__/file.wasm".to_string(),
+        );
+        url_map.insert(
+            "./image.png".to_string(),
+            "/__fob_assets__/image.png".to_string(),
+        );
+        url_map.insert(
+            "./font.woff2".to_string(),
+            "/__fob_assets__/font.woff2".to_string(),
+        );
 
         let rewritten = rewrite_urls(code, &url_map);
 
@@ -466,7 +488,10 @@ mod tests {
         let code = r#"const url=new URL('../wasm/web/joy_bundler_wasm.js',import.meta.url).href;"#;
 
         let mut url_map = HashMap::new();
-        url_map.insert("../wasm/web/joy_bundler_wasm.js".to_string(), "/__fob_assets__/joy_bundler_wasm.js".to_string());
+        url_map.insert(
+            "../wasm/web/joy_bundler_wasm.js".to_string(),
+            "/__fob_assets__/joy_bundler_wasm.js".to_string(),
+        );
 
         let (rewritten, report) = rewrite_urls_ast(code, &url_map).unwrap();
 
@@ -478,10 +503,14 @@ mod tests {
     #[test]
     fn test_rewrite_urls_ast_spaced() {
         // Test code with extra spaces
-        let code = r#"const url = new URL ( '../wasm/web/joy_bundler_wasm.js' , import.meta.url ) .href;"#;
+        let code =
+            r#"const url = new URL ( '../wasm/web/joy_bundler_wasm.js' , import.meta.url ) .href;"#;
 
         let mut url_map = HashMap::new();
-        url_map.insert("../wasm/web/joy_bundler_wasm.js".to_string(), "/__fob_assets__/joy_bundler_wasm.js".to_string());
+        url_map.insert(
+            "../wasm/web/joy_bundler_wasm.js".to_string(),
+            "/__fob_assets__/joy_bundler_wasm.js".to_string(),
+        );
 
         let (rewritten, report) = rewrite_urls_ast(code, &url_map).unwrap();
 
@@ -495,7 +524,10 @@ mod tests {
         let code = r#"const url = new URL(`../wasm/web/joy_bundler_wasm.js`, import.meta.url);"#;
 
         let mut url_map = HashMap::new();
-        url_map.insert("../wasm/web/joy_bundler_wasm.js".to_string(), "/__fob_assets__/joy_bundler_wasm.js".to_string());
+        url_map.insert(
+            "../wasm/web/joy_bundler_wasm.js".to_string(),
+            "/__fob_assets__/joy_bundler_wasm.js".to_string(),
+        );
 
         let (rewritten, report) = rewrite_urls_ast(code, &url_map).unwrap();
 
@@ -539,7 +571,9 @@ mod tests {
         assert_eq!(report.replacements, 1);
         assert_eq!(report.rewritten_specifiers.len(), 1);
         assert_eq!(report.unused_specifiers.len(), 1);
-        assert!(report.unused_specifiers.contains(&"./unused.png".to_string()));
+        assert!(report
+            .unused_specifiers
+            .contains(&"./unused.png".to_string()));
     }
 
     #[test]
@@ -557,8 +591,8 @@ mod tests {
 
     #[test]
     fn test_process_single_asset() {
-        use tempfile::TempDir;
         use std::fs;
+        use tempfile::TempDir;
 
         let temp = TempDir::new().unwrap();
         let source_file = temp.path().join("test.wasm");

@@ -4,10 +4,8 @@
 //! (line count, parameter count, complexity, etc.) from JavaScript/TypeScript
 //! AST nodes and attaching them to symbols.
 
-use oxc_ast::ast::{
-    Class, ClassElement, Function, Program, Statement,
-};
-use oxc_ast_visit::{Visit, walk};
+use oxc_ast::ast::{Class, ClassElement, Function, Program, Statement};
+use oxc_ast_visit::{walk, Visit};
 use oxc_semantic::ScopeFlags;
 use std::collections::HashMap;
 
@@ -17,11 +15,7 @@ use super::symbol::{CodeQualityMetadata, SymbolMetadata, SymbolTable};
 ///
 /// This uses an AST visitor to analyze all function and class declarations,
 /// calculating metrics like line count, parameter count, complexity, etc.
-pub fn calculate_quality_metrics(
-    program: &Program,
-    source_text: &str,
-    table: &mut SymbolTable,
-) {
+pub fn calculate_quality_metrics(program: &Program, source_text: &str, table: &mut SymbolTable) {
     let mut calculator = QualityCalculator {
         source_text,
         metrics: HashMap::new(),
@@ -108,27 +102,31 @@ impl<'a> QualityCalculator<'a> {
         let line_count = self.calculate_line_count(class.span.start, class.span.end);
 
         // Count methods in the class
-        let method_count = class.body.body.iter()
+        let method_count = class
+            .body
+            .body
+            .iter()
             .filter(|element| matches!(element, ClassElement::MethodDefinition(_)))
             .count();
 
         // Count fields (properties) in the class
-        let field_count = class.body.body.iter()
-            .filter(|element| matches!(
-                element,
-                ClassElement::PropertyDefinition(_) | ClassElement::AccessorProperty(_)
-            ))
+        let field_count = class
+            .body
+            .body
+            .iter()
+            .filter(|element| {
+                matches!(
+                    element,
+                    ClassElement::PropertyDefinition(_) | ClassElement::AccessorProperty(_)
+                )
+            })
             .count();
 
-        CodeQualityMetadata::for_class(
-            Some(line_count),
-            Some(method_count),
-            Some(field_count),
-        )
+        CodeQualityMetadata::for_class(Some(line_count), Some(method_count), Some(field_count))
     }
 
     /// Calculate cyclomatic complexity (simplified version)
-    /// 
+    ///
     /// Counts decision points: if, while, for, case, catch, &&, ||, ?:
     /// Starts at 1 (one path through the code)
     fn calculate_complexity(&self, statements: &oxc_allocator::Vec<Statement>) -> usize {
@@ -148,7 +146,7 @@ impl<'a> QualityCalculator<'a> {
         match stmt {
             Statement::IfStatement(if_stmt) => {
                 count += 1; // The if itself
-                
+
                 // Check consequent
                 if let Statement::BlockStatement(block) = &if_stmt.consequent {
                     count += self.calculate_complexity(&block.body).saturating_sub(1);
@@ -209,16 +207,22 @@ impl<'a> QualityCalculator<'a> {
                 // Each case adds a decision point
                 count += switch.cases.len();
                 for case in &switch.cases {
-                    count += self.calculate_complexity(&case.consequent).saturating_sub(1);
+                    count += self
+                        .calculate_complexity(&case.consequent)
+                        .saturating_sub(1);
                 }
             }
             Statement::TryStatement(try_stmt) => {
                 if try_stmt.handler.is_some() {
                     count += 1; // catch adds a decision point
                 }
-                count += self.calculate_complexity(&try_stmt.block.body).saturating_sub(1);
+                count += self
+                    .calculate_complexity(&try_stmt.block.body)
+                    .saturating_sub(1);
                 if let Some(handler) = &try_stmt.handler {
-                    count += self.calculate_complexity(&handler.body.body).saturating_sub(1);
+                    count += self
+                        .calculate_complexity(&handler.body.body)
+                        .saturating_sub(1);
                 }
                 if let Some(finalizer) = &try_stmt.finalizer {
                     count += self.calculate_complexity(&finalizer.body).saturating_sub(1);
@@ -234,7 +238,11 @@ impl<'a> QualityCalculator<'a> {
     }
 
     /// Calculate maximum nesting depth in a block of statements
-    fn calculate_nesting_depth(&self, statements: &oxc_allocator::Vec<Statement>, current_depth: usize) -> usize {
+    fn calculate_nesting_depth(
+        &self,
+        statements: &oxc_allocator::Vec<Statement>,
+        current_depth: usize,
+    ) -> usize {
         let mut max_depth = current_depth;
 
         for stmt in statements {
@@ -252,11 +260,12 @@ impl<'a> QualityCalculator<'a> {
         match stmt {
             Statement::IfStatement(if_stmt) => {
                 let mut max = next_depth;
-                
+
                 if let Statement::BlockStatement(block) = &if_stmt.consequent {
                     max = max.max(self.calculate_nesting_depth(&block.body, next_depth));
                 } else {
-                    max = max.max(self.calculate_nesting_for_statement(&if_stmt.consequent, next_depth));
+                    max = max
+                        .max(self.calculate_nesting_for_statement(&if_stmt.consequent, next_depth));
                 }
 
                 if let Some(alternate) = &if_stmt.alternate {
@@ -266,7 +275,7 @@ impl<'a> QualityCalculator<'a> {
                         max = max.max(self.calculate_nesting_for_statement(alternate, next_depth));
                     }
                 }
-                
+
                 max
             }
             Statement::WhileStatement(while_stmt) => {
@@ -432,7 +441,10 @@ impl<'a, 'ast> Visit<'ast> for QualityCalculator<'a> {
     }
 
     /// Visit arrow function expressions
-    fn visit_arrow_function_expression(&mut self, expr: &oxc_ast::ast::ArrowFunctionExpression<'ast>) {
+    fn visit_arrow_function_expression(
+        &mut self,
+        expr: &oxc_ast::ast::ArrowFunctionExpression<'ast>,
+    ) {
         // Arrow functions are typically assigned to variables, but we can't easily
         // get the variable name here. The symbol table will already have the variable
         // entry from the semantic analysis.
@@ -472,14 +484,14 @@ function longFunction() {
 }
         "#;
 
-        let mut table = analyze_symbols(source, "test.js", SourceType::JavaScript)
-            .expect("analysis failed");
+        let mut table =
+            analyze_symbols(source, "test.js", SourceType::JavaScript).expect("analysis failed");
 
         // Parse again to get the program for quality metrics
         let allocator = oxc_allocator::Allocator::default();
         let source_type = oxc_span::SourceType::default();
         let ret = oxc_parser::Parser::new(&allocator, source, source_type).parse();
-        
+
         calculate_quality_metrics(&ret.program, source, &mut table);
 
         // Find the function symbol
@@ -503,13 +515,13 @@ function manyParams(a, b, c, d, e) {
 }
         "#;
 
-        let mut table = analyze_symbols(source, "test.js", SourceType::JavaScript)
-            .expect("analysis failed");
+        let mut table =
+            analyze_symbols(source, "test.js", SourceType::JavaScript).expect("analysis failed");
 
         let allocator = oxc_allocator::Allocator::default();
         let source_type = oxc_span::SourceType::default();
         let ret = oxc_parser::Parser::new(&allocator, source, source_type).parse();
-        
+
         calculate_quality_metrics(&ret.program, source, &mut table);
 
         let func_symbols = table.symbols_by_name("manyParams");
@@ -532,13 +544,13 @@ class MyClass {
 }
         "#;
 
-        let mut table = analyze_symbols(source, "test.js", SourceType::JavaScript)
-            .expect("analysis failed");
+        let mut table =
+            analyze_symbols(source, "test.js", SourceType::JavaScript).expect("analysis failed");
 
         let allocator = oxc_allocator::Allocator::default();
         let source_type = oxc_span::SourceType::default();
         let ret = oxc_parser::Parser::new(&allocator, source, source_type).parse();
-        
+
         calculate_quality_metrics(&ret.program, source, &mut table);
 
         let class_symbols = table.symbols_by_name("MyClass");
@@ -565,13 +577,13 @@ function complexFunction(x) {
 }
         "#;
 
-        let mut table = analyze_symbols(source, "test.js", SourceType::JavaScript)
-            .expect("analysis failed");
+        let mut table =
+            analyze_symbols(source, "test.js", SourceType::JavaScript).expect("analysis failed");
 
         let allocator = oxc_allocator::Allocator::default();
         let source_type = oxc_span::SourceType::default();
         let ret = oxc_parser::Parser::new(&allocator, source, source_type).parse();
-        
+
         calculate_quality_metrics(&ret.program, source, &mut table);
 
         let func_symbols = table.symbols_by_name("complexFunction");
@@ -583,4 +595,3 @@ function complexFunction(x) {
         assert!(metadata.complexity.unwrap() > 1);
     }
 }
-

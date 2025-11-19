@@ -110,12 +110,12 @@ impl FileWatcher {
                 }
             }
         })
-        .map_err(|e| CliError::Watch(e))?;
+        .map_err(CliError::Watch)?;
 
         // Start watching the root directory
         watcher
             .watch(&root, RecursiveMode::Recursive)
-            .map_err(|e| CliError::Watch(e))?;
+            .map_err(CliError::Watch)?;
 
         Ok((
             Self {

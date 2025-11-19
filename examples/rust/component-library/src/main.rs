@@ -36,7 +36,7 @@ async fn main() -> Result<()> {
     // Step 1: Build the component library
     // =========================================================================
     println!("📦 Building component library...");
-    
+
     // Configure library build with multiple entry points
     // This creates a tree-shakeable library structure where consumers
     // can import from specific paths: my-lib, my-lib/Button, my-lib/Card
@@ -52,7 +52,10 @@ async fn main() -> Result<()> {
 
     // Extract build statistics for reporting
     let stats = result.stats();
-    println!("   ✓ Library built: {} modules analyzed", stats.module_count);
+    println!(
+        "   ✓ Library built: {} modules analyzed",
+        stats.module_count
+    );
 
     // Write all generated assets to disk
     result.write_to_force("dist")?;
@@ -62,7 +65,7 @@ async fn main() -> Result<()> {
     // Step 2: Build the demo app
     // =========================================================================
     println!("\n🎨 Building demo app...");
-    
+
     // Build the demo as a browser application
     // This bundles the demo app with all its dependencies (including React)
     let demo_result = BuildOptions::app(["demo/app.tsx"])
@@ -74,8 +77,11 @@ async fn main() -> Result<()> {
         .await?;
 
     let demo_stats = demo_result.stats();
-    println!("   ✓ Demo built: {} modules analyzed", demo_stats.module_count);
-    
+    println!(
+        "   ✓ Demo built: {} modules analyzed",
+        demo_stats.module_count
+    );
+
     demo_result.write_to_force("demo/dist")?;
     println!("   ✓ Output written to demo/dist/");
 
@@ -83,21 +89,21 @@ async fn main() -> Result<()> {
     // Summary
     // =========================================================================
     println!("\n✅ Build complete!");
-    
+
     println!("\n📚 Library output:");
     println!("   • dist/index.js       - Main entry point");
     println!("   • dist/index.js.map   - Source map");
     println!("   • dist/index.d.ts     - TypeScript declarations");
-    
+
     println!("\n🎨 Demo output:");
     println!("   • demo/dist/app.js    - Bundled demo app");
     println!("   • demo/dist/app.js.map - Source map");
-    
+
     println!("\n📦 Components included:");
     println!("   • Button (primary, secondary, danger variants)");
     println!("   • Card (title + content)");
     println!("   • Badge (success, warning, error, info variants)");
-    
+
     println!("\n🌐 To see the demo:");
     println!("   npm install && npm start");
     println!("   Then visit http://localhost:3001");

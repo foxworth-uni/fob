@@ -77,7 +77,10 @@ async fn unused_exports_filters_consumed_symbols() {
     graph.add_module(utils.clone()).await.unwrap();
     graph.add_module(ui.clone()).await.unwrap();
 
-    graph.add_dependency(ui.id.clone(), utils.id.clone()).await.unwrap();
+    graph
+        .add_dependency(ui.id.clone(), utils.id.clone())
+        .await
+        .unwrap();
 
     let unused = graph.unused_exports().await.unwrap();
     assert_eq!(unused.len(), 1);
@@ -155,19 +158,22 @@ async fn statistics_reflects_graph_state() {
     ));
     graph.add_module(entry.clone()).await.unwrap();
     graph.add_module(util.clone()).await.unwrap();
-    graph.add_dependency(util.id.clone(), entry.id.clone()).await.unwrap();
+    graph
+        .add_dependency(util.id.clone(), entry.id.clone())
+        .await
+        .unwrap();
 
-    graph.add_external_dependency(ExternalDependency {
-        specifier: "legacy-lib".into(),
-        importers: vec![entry.id.clone()],
-    }).await.unwrap();
+    graph
+        .add_external_dependency(ExternalDependency {
+            specifier: "legacy-lib".into(),
+            importers: vec![entry.id.clone()],
+        })
+        .await
+        .unwrap();
 
     let unused_count = graph.unused_exports().await.unwrap().len();
     let stats = graph.statistics().await.unwrap();
-    assert_eq!(
-        stats,
-        GraphStatistics::new(2, 1, 1, 0, unused_count, 1)
-    );
+    assert_eq!(stats, GraphStatistics::new(2, 1, 1, 0, unused_count, 1));
 }
 
 #[tokio::test]
@@ -178,9 +184,9 @@ async fn star_reexport_doesnt_mark_all_exports_used() {
     // helpers.ts: export * from './validators' (star re-export)
     // demo.tsx: import { validateEmail } from './helpers'
     // Expected: validateZipCode should be unused
-    
+
     let graph = ModuleGraph::new().await.unwrap();
-    
+
     let validators_id = ModuleId::new_virtual("validators.ts");
     let validators = Module::builder(
         validators_id.clone(),
@@ -210,7 +216,7 @@ async fn star_reexport_doesnt_mark_all_exports_used() {
         ),
     ])
     .build();
-    
+
     let helpers_id = ModuleId::new_virtual("helpers.ts");
     let mut helpers = Module::builder(
         helpers_id.clone(),
@@ -241,30 +247,37 @@ async fn star_reexport_doesnt_mark_all_exports_used() {
     ])
     .build();
     helpers.imports.push(import_star_reexport("validators.ts"));
-    
+
     let mut demo = module_with_exports("demo.tsx", &[]);
     demo.mark_entry();
-    demo.imports.push(import_named("helpers.ts", "validateEmail"));
-    
+    demo.imports
+        .push(import_named("helpers.ts", "validateEmail"));
+
     graph.add_module(validators.clone()).await.unwrap();
     graph.add_module(helpers.clone()).await.unwrap();
     graph.add_module(demo.clone()).await.unwrap();
-    
-    graph.add_dependency(helpers_id.clone(), validators_id.clone()).await.unwrap();
-    graph.add_dependency(demo.id.clone(), helpers_id.clone()).await.unwrap();
-    
+
+    graph
+        .add_dependency(helpers_id.clone(), validators_id.clone())
+        .await
+        .unwrap();
+    graph
+        .add_dependency(demo.id.clone(), helpers_id.clone())
+        .await
+        .unwrap();
+
     let unused = graph.unused_exports().await.unwrap();
-    
+
     // validateZipCode should be unused (not marked as used by star re-export)
-    let unused_zipcode = unused.iter().find(|u| {
-        u.module_id == validators_id && u.export.name == "validateZipCode"
-    });
+    let unused_zipcode = unused
+        .iter()
+        .find(|u| u.module_id == validators_id && u.export.name == "validateZipCode");
     assert!(unused_zipcode.is_some(), "validateZipCode should be unused");
-    
+
     // validateEmail should NOT be unused (it's imported)
-    let unused_email = unused.iter().find(|u| {
-        u.module_id == validators_id && u.export.name == "validateEmail"
-    });
+    let unused_email = unused
+        .iter()
+        .find(|u| u.module_id == validators_id && u.export.name == "validateEmail");
     assert!(unused_email.is_none(), "validateEmail should be used");
 }
 
@@ -275,9 +288,9 @@ async fn namespace_import_marks_all_exports_used() {
     //           export const bar = 2;
     // app.ts: import * as utils from './utils';
     // Expected: Both foo and bar should be marked as used
-    
+
     let graph = ModuleGraph::new().await.unwrap();
-    
+
     let utils_id = ModuleId::new_virtual("utils.ts");
     let utils = Module::builder(
         utils_id.clone(),
@@ -307,22 +320,26 @@ async fn namespace_import_marks_all_exports_used() {
         ),
     ])
     .build();
-    
+
     let mut app = module_with_exports("app.ts", &[]);
     app.mark_entry();
     app.imports.push(import_namespace("utils.ts"));
-    
+
     graph.add_module(utils.clone()).await.unwrap();
     graph.add_module(app.clone()).await.unwrap();
-    
-    graph.add_dependency(app.id.clone(), utils_id.clone()).await.unwrap();
-    
+
+    graph
+        .add_dependency(app.id.clone(), utils_id.clone())
+        .await
+        .unwrap();
+
     let unused = graph.unused_exports().await.unwrap();
-    
+
     // Both foo and bar should be marked as used by namespace import
-    let unused_from_utils: Vec<_> = unused
-        .iter()
-        .filter(|u| u.module_id == utils_id)
-        .collect();
-    assert_eq!(unused_from_utils.len(), 0, "All exports should be used by namespace import");
+    let unused_from_utils: Vec<_> = unused.iter().filter(|u| u.module_id == utils_id).collect();
+    assert_eq!(
+        unused_from_utils.len(),
+        0,
+        "All exports should be used by namespace import"
+    );
 }

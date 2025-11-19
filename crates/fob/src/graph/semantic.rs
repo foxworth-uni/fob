@@ -6,14 +6,14 @@
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Statement;
-use oxc_ast_visit::{Visit, walk};
+use oxc_ast_visit::{walk, Visit};
 use oxc_parser::{Parser, ParserReturn};
 use oxc_semantic::SemanticBuilder;
-use oxc_span::{SourceType as OxcSourceType, GetSpan};
+use oxc_span::{GetSpan, SourceType as OxcSourceType};
 
 use super::symbol::{Symbol, SymbolKind, SymbolSpan, SymbolTable, UnreachableCode};
-use super::SourceType;
 use super::ModuleId;
+use super::SourceType;
 use crate::Result;
 
 /// Analyzes JavaScript/TypeScript source code to extract symbol information.
@@ -132,8 +132,7 @@ pub fn analyze_symbols(
     }
 
     // Build semantic information
-    let semantic_ret = SemanticBuilder::new()
-        .build(&program);
+    let semantic_ret = SemanticBuilder::new().build(&program);
 
     // Extract the semantic data
     let semantic = semantic_ret.semantic;
@@ -196,7 +195,9 @@ pub fn analyze_symbols(
 /// Convert Fob's SourceType to Oxc's SourceType.
 fn convert_source_type(source_type: SourceType, filename: &str) -> OxcSourceType {
     match source_type {
-        SourceType::JavaScript => OxcSourceType::from_path(filename).unwrap_or(OxcSourceType::mjs()),
+        SourceType::JavaScript => {
+            OxcSourceType::from_path(filename).unwrap_or(OxcSourceType::mjs())
+        }
         SourceType::TypeScript => OxcSourceType::ts(),
         SourceType::Jsx => OxcSourceType::jsx(),
         SourceType::Tsx => OxcSourceType::tsx(),
@@ -223,7 +224,8 @@ fn determine_symbol_kind(flags: oxc_semantic::SymbolFlags) -> SymbolKind {
         SymbolKind::Import
     } else if flags.contains(SymbolFlags::FunctionScopedVariable)
         || flags.contains(SymbolFlags::BlockScopedVariable)
-        || flags.contains(SymbolFlags::ConstVariable) {
+        || flags.contains(SymbolFlags::ConstVariable)
+    {
         SymbolKind::Variable
     } else {
         // Default to variable for unknown types
@@ -405,8 +407,8 @@ mod tests {
             console.log(used);
         "#;
 
-        let table = analyze_symbols(source, "test.js", SourceType::JavaScript)
-            .expect("analysis failed");
+        let table =
+            analyze_symbols(source, "test.js", SourceType::JavaScript).expect("analysis failed");
 
         // Should find 'used' and 'unused' variables
         assert!(table.symbols.len() >= 2);
@@ -431,8 +433,8 @@ mod tests {
             usedFunction();
         "#;
 
-        let table = analyze_symbols(source, "test.js", SourceType::JavaScript)
-            .expect("analysis failed");
+        let table =
+            analyze_symbols(source, "test.js", SourceType::JavaScript).expect("analysis failed");
 
         let used_fn = table.symbols_by_name("usedFunction");
         assert_eq!(used_fn.len(), 1);
@@ -456,8 +458,8 @@ mod tests {
             const user: User = { name: "test" };
         "#;
 
-        let table = analyze_symbols(source, "test.ts", SourceType::TypeScript)
-            .expect("analysis failed");
+        let table =
+            analyze_symbols(source, "test.ts", SourceType::TypeScript).expect("analysis failed");
 
         // Should find interface, type alias, and variable
         let interface_sym = table.symbols_by_name("User");
@@ -479,7 +481,10 @@ mod tests {
         let table = analyze_symbols(invalid_source, "invalid.js", SourceType::JavaScript)
             .expect("should handle parse errors gracefully");
 
-        assert!(table.is_empty(), "should return empty table for invalid syntax");
+        assert!(
+            table.is_empty(),
+            "should return empty table for invalid syntax"
+        );
     }
 
     #[test]
@@ -513,8 +518,8 @@ const x = 1;
 function f() {}
 "#;
 
-        let table = analyze_symbols(source, "test.js", SourceType::JavaScript)
-            .expect("analysis failed");
+        let table =
+            analyze_symbols(source, "test.js", SourceType::JavaScript).expect("analysis failed");
 
         // All symbols should have valid spans
         for symbol in &table.symbols {
@@ -534,8 +539,8 @@ function f() {}
             }
         "#;
 
-        let table = analyze_symbols(source, "test.js", SourceType::JavaScript)
-            .expect("analysis failed");
+        let table =
+            analyze_symbols(source, "test.js", SourceType::JavaScript).expect("analysis failed");
 
         // Should track multiple scopes
         assert!(table.scope_count > 1, "should detect multiple scopes");
@@ -551,8 +556,8 @@ function f() {}
             }
         "#;
 
-        let table = analyze_symbols(source, "test.js", SourceType::JavaScript)
-            .expect("analysis failed");
+        let table =
+            analyze_symbols(source, "test.js", SourceType::JavaScript).expect("analysis failed");
 
         // Find used and unused symbols
         let used = table.symbols_by_name("used");
@@ -575,8 +580,8 @@ function f() {}
             const x = helper();
         "#;
 
-        let table = analyze_symbols(source, "test.js", SourceType::JavaScript)
-            .expect("analysis failed");
+        let table =
+            analyze_symbols(source, "test.js", SourceType::JavaScript).expect("analysis failed");
 
         let helper = table.symbols_by_name("helper");
         assert_eq!(helper.len(), 1, "should find 'helper' function");
@@ -595,8 +600,8 @@ function f() {}
             const user: User = { name: "test" };
         "#;
 
-        let table = analyze_symbols(source, "test.ts", SourceType::TypeScript)
-            .expect("analysis failed");
+        let table =
+            analyze_symbols(source, "test.ts", SourceType::TypeScript).expect("analysis failed");
 
         // Check for interface
         let interface_sym = table.symbols_by_name("User");
@@ -624,8 +629,9 @@ function f() {}
         "#;
 
         let module_id = ModuleId::new("test.js").expect("valid module id");
-        let unreachable = detect_unreachable_code(source, "test.js", SourceType::JavaScript, module_id)
-            .expect("detection failed");
+        let unreachable =
+            detect_unreachable_code(source, "test.js", SourceType::JavaScript, module_id)
+                .expect("detection failed");
 
         assert!(unreachable.len() > 0, "should detect unreachable code");
 
@@ -644,10 +650,14 @@ function f() {}
         "#;
 
         let module_id = ModuleId::new("test.js").expect("valid module id");
-        let unreachable = detect_unreachable_code(source, "test.js", SourceType::JavaScript, module_id)
-            .expect("detection failed");
+        let unreachable =
+            detect_unreachable_code(source, "test.js", SourceType::JavaScript, module_id)
+                .expect("detection failed");
 
-        assert!(unreachable.len() > 0, "should detect unreachable code after throw");
+        assert!(
+            unreachable.len() > 0,
+            "should detect unreachable code after throw"
+        );
     }
 
     #[test]
@@ -660,10 +670,15 @@ function f() {}
         "#;
 
         let module_id = ModuleId::new("test.js").expect("valid module id");
-        let unreachable = detect_unreachable_code(source, "test.js", SourceType::JavaScript, module_id)
-            .expect("detection failed");
+        let unreachable =
+            detect_unreachable_code(source, "test.js", SourceType::JavaScript, module_id)
+                .expect("detection failed");
 
-        assert_eq!(unreachable.len(), 0, "should not detect unreachable code when none exists");
+        assert_eq!(
+            unreachable.len(),
+            0,
+            "should not detect unreachable code when none exists"
+        );
     }
 
     #[test]
@@ -674,8 +689,8 @@ function f() {}
             }
         "#;
 
-        let table = analyze_symbols(source, "test.js", SourceType::JavaScript)
-            .expect("analysis failed");
+        let table =
+            analyze_symbols(source, "test.js", SourceType::JavaScript).expect("analysis failed");
 
         let class_sym = table.symbols_by_name("MyClass");
         assert_eq!(class_sym.len(), 1);

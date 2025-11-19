@@ -102,9 +102,8 @@ impl Runtime for NativeRuntime {
         let content = content.to_vec();
 
         task::spawn_blocking(move || {
-            std::fs::write(&path, content).map_err(|e| {
-                RuntimeError::Io(format!("Failed to write {}: {}", path.display(), e))
-            })
+            std::fs::write(&path, content)
+                .map_err(|e| RuntimeError::Io(format!("Failed to write {}: {}", path.display(), e)))
         })
         .await
         .map_err(|e| RuntimeError::Other(format!("Task join error: {}", e)))?
@@ -119,7 +118,11 @@ impl Runtime for NativeRuntime {
                 if e.kind() == std::io::ErrorKind::NotFound {
                     RuntimeError::FileNotFound(path.clone())
                 } else {
-                    RuntimeError::Io(format!("Failed to get metadata for {}: {}", path.display(), e))
+                    RuntimeError::Io(format!(
+                        "Failed to get metadata for {}: {}",
+                        path.display(),
+                        e
+                    ))
                 }
             })?;
 
@@ -171,13 +174,13 @@ impl Runtime for NativeRuntime {
             let resolved = from_dir.join(specifier);
 
             // Canonicalize to resolve .. and symlinks
-            return resolved.canonicalize().map_err(|e| {
-                RuntimeError::ResolutionFailed {
+            return resolved
+                .canonicalize()
+                .map_err(|e| RuntimeError::ResolutionFailed {
                     specifier: specifier.to_string(),
                     from: from.to_path_buf(),
                     reason: format!("Canonicalization failed: {}", e),
-                }
-            });
+                });
         }
 
         // For bare specifiers, return as-is
@@ -197,7 +200,11 @@ impl Runtime for NativeRuntime {
             };
 
             result.map_err(|e| {
-                RuntimeError::Io(format!("Failed to create directory {}: {}", path.display(), e))
+                RuntimeError::Io(format!(
+                    "Failed to create directory {}: {}",
+                    path.display(),
+                    e
+                ))
             })
         })
         .await
@@ -230,7 +237,11 @@ impl Runtime for NativeRuntime {
                 if e.kind() == std::io::ErrorKind::NotFound {
                     RuntimeError::FileNotFound(path.clone())
                 } else {
-                    RuntimeError::Io(format!("Failed to read directory {}: {}", path.display(), e))
+                    RuntimeError::Io(format!(
+                        "Failed to read directory {}: {}",
+                        path.display(),
+                        e
+                    ))
                 }
             })?;
 

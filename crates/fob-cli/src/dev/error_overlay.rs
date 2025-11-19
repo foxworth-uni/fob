@@ -26,11 +26,12 @@
 /// - CSP-compatible (no eval, unsafe-inline limited to style)
 pub fn generate_error_overlay(error: &str) -> Result<String, String> {
     use fob_gen::{Allocator, HtmlBuilder};
-    
+
     let allocator = Allocator::default();
     let html_builder = HtmlBuilder::new(&allocator);
-    
-    html_builder.error_overlay(error)
+
+    html_builder
+        .error_overlay(error)
         .map_err(|e| format!("Failed to generate error overlay: {}", e))
 }
 

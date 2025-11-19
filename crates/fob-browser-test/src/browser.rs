@@ -1,13 +1,13 @@
 //! Browser lifecycle management and process control.
 //!
-//! This module provides TestBrowser, the main entry point for browser testing.
+//! This module provides `TestBrowser`, the main entry point for browser testing.
 //! It handles launching Chrome, managing the process lifecycle, and creating
 //! pages for navigation.
 //!
 //! # Resource Safety
 //!
-//! TestBrowser implements Drop to ensure the browser process is killed even
-//! if tests panic. However, explicit cleanup via close() is preferred for
+//! `TestBrowser` implements Drop to ensure the browser process is killed even
+//! if tests panic. However, explicit cleanup via `close()` is preferred for
 //! graceful shutdown.
 
 use crate::error::{BrowserError, Result};
@@ -39,6 +39,7 @@ pub struct TestBrowserConfig {
 
 impl TestBrowserConfig {
     /// Creates a new config with defaults for headless testing.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -46,25 +47,29 @@ impl TestBrowserConfig {
     /// Enables visible mode for debugging.
     ///
     /// When headless is false, you can watch the browser execute tests.
+    #[must_use]
     pub fn visible(mut self) -> Self {
         self.headless = false;
         self
     }
 
     /// Sets a custom window size.
+    #[must_use]
     pub fn with_window_size(mut self, width: u32, height: u32) -> Self {
         self.window_size = (width, height);
         self
     }
 
     /// Adds additional Chrome arguments.
+    #[must_use]
     pub fn with_args(mut self, args: Vec<String>) -> Self {
         self.args.extend(args);
         self
     }
 
-    /// Converts to chromiumoxide BrowserConfig.
-    fn to_browser_config(self) -> Result<BrowserConfig> {
+    /// Converts to chromiumoxide `BrowserConfig`.
+    #[allow(clippy::result_large_err)]
+    fn to_browser_config(&self) -> Result<BrowserConfig> {
         let mut config = BrowserConfig::builder();
 
         if self.headless {
@@ -81,19 +86,19 @@ impl TestBrowserConfig {
         // Using UUID v4 ensures uniqueness without risk of TOCTOU race conditions
         let temp_dir = std::env::temp_dir();
         let unique_id = uuid::Uuid::new_v4();
-        let user_data_dir = temp_dir.join(format!("fob-browser-test-{}", unique_id));
+        let user_data_dir = temp_dir.join(format!("fob-browser-test-{unique_id}"));
         config = config.arg(format!("--user-data-dir={}", user_data_dir.display()));
 
-        for arg in self.args {
-            config = config.arg(arg);
+        for arg in &self.args {
+            config = config.arg(arg.clone());
         }
 
-        if let Some(path) = self.chrome_path {
-            config = config.chrome_executable(path);
+        if let Some(path) = &self.chrome_path {
+            config = config.chrome_executable(path.clone());
         }
 
         config.build().map_err(|e| BrowserError::LaunchFailed {
-            reason: format!("invalid browser configuration: {}", e),
+            reason: format!("invalid browser configuration: {e}"),
             source: None,
         })
     }
@@ -135,7 +140,7 @@ impl Default for TestBrowserConfig {
 ///
 /// # Resource Management
 ///
-/// TestBrowser implements Drop to kill the browser process if not explicitly
+/// `TestBrowser` implements Drop to kill the browser process if not explicitly
 /// closed. However, relying on Drop is not ideal because:
 /// 1. Drop is synchronous; we can't await the close operation
 /// 2. Panics in Drop are usually hidden
@@ -153,19 +158,20 @@ impl TestBrowser {
     ///
     /// # Errors
     ///
-    /// Returns LaunchFailed if Chrome is not installed, not executable,
+    /// Returns `LaunchFailed` if Chrome is not installed, not executable,
     /// or fails to start.
     pub async fn launch(config: TestBrowserConfig) -> Result<Self> {
         debug!("Launching browser with config: {:?}", config);
 
         let browser_config = config.to_browser_config()?;
 
-        let (browser, mut handler) = Browser::launch(browser_config)
-            .await
-            .map_err(|e| BrowserError::LaunchFailed {
-                reason: "failed to launch Chrome process".to_string(),
-                source: Some(Box::new(e)),
-            })?;
+        let (browser, mut handler) =
+            Browser::launch(browser_config)
+                .await
+                .map_err(|e| BrowserError::LaunchFailed {
+                    reason: "failed to launch Chrome process".to_string(),
+                    source: Some(Box::new(e)),
+                })?;
 
         // Spawn a task to drive the browser handler
         // This is required for chromiumoxide to process CDP events
@@ -190,7 +196,7 @@ impl TestBrowser {
     ///
     /// # Errors
     ///
-    /// Returns AlreadyClosed if the browser has been closed.
+    /// Returns `AlreadyClosed` if the browser has been closed.
     pub async fn new_page(&self) -> Result<Page> {
         let browser = self.inner.lock().await;
 
@@ -201,13 +207,17 @@ impl TestBrowser {
             .await
             .map_err(|e| BrowserError::ConnectionFailed(e.to_string()))?;
 
-        Page::new(chrome_page).await
+        Ok(Page::new(chrome_page))
     }
 
     /// Closes the browser and kills the Chrome process.
     ///
     /// This should be called explicitly at the end of tests for graceful
     /// shutdown. If not called, Drop will kill the process forcefully.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the browser fails to close gracefully.
     pub async fn close(self) -> Result<()> {
         let mut browser_guard = self.inner.lock().await;
 

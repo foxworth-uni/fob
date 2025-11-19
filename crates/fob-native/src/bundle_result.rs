@@ -129,7 +129,7 @@ impl From<fob_bundler::BuildResult> for BundleResult {
                     .iter()
                     .map(|path| ModuleInfo {
                         path: path.to_string(),
-                        size: 0, // RenderedModule doesn't expose size
+                        size: 0,                 // RenderedModule doesn't expose size
                         has_side_effects: false, // RenderedModule doesn't expose side effects
                     })
                     .collect(),

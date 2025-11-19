@@ -5,10 +5,10 @@
 
 #[cfg(feature = "parser")]
 mod parser_impl {
+    use crate::error::{GenError, Result};
     use oxc_allocator::Allocator;
     use oxc_parser::Parser;
     use oxc_span::SourceType;
-    use crate::error::{GenError, Result};
 
     /// Parse options for reading source code
     #[derive(Debug, Clone)]
@@ -155,4 +155,3 @@ mod parser_impl {
 
 #[cfg(feature = "parser")]
 pub use parser_impl::*;
-

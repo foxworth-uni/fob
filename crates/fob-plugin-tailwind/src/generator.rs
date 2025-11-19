@@ -76,7 +76,8 @@ impl PackageManager {
         // This handles monorepo cases where lockfile is at workspace root
         let mut current = project_root.parent();
         while let Some(parent) = current {
-            if parent.join("pnpm-lock.yaml").exists() && parent.join("pnpm-workspace.yaml").exists() {
+            if parent.join("pnpm-lock.yaml").exists() && parent.join("pnpm-workspace.yaml").exists()
+            {
                 return Some(Self::Pnpm);
             }
             if parent.join("pnpm-lock.yaml").exists() {
@@ -89,7 +90,7 @@ impl PackageManager {
             if parent.join("bun.lockb").exists() {
                 return Some(Self::Bun);
             }
-            
+
             // Stop at filesystem root or after checking a few levels
             current = parent.parent();
             if current.is_none() {
@@ -160,14 +161,13 @@ impl TailwindGenerator {
     ///
     /// A new generator instance, or an error if no package manager is detected
     pub async fn new(project_root: PathBuf) -> Result<Self, GeneratorError> {
-        let package_manager = PackageManager::detect(&project_root)
-            .ok_or_else(|| {
-                GeneratorError::cli_not_found(vec![
-                    project_root.join("package.json"),
-                    project_root.join("pnpm-lock.yaml"),
-                    project_root.join("package-lock.json"),
-                ])
-            })?;
+        let package_manager = PackageManager::detect(&project_root).ok_or_else(|| {
+            GeneratorError::cli_not_found(vec![
+                project_root.join("package.json"),
+                project_root.join("pnpm-lock.yaml"),
+                project_root.join("package-lock.json"),
+            ])
+        })?;
 
         Ok(Self {
             package_manager,
@@ -186,10 +186,7 @@ impl TailwindGenerator {
     ///
     /// * `package_manager` - The package manager to use
     /// * `project_root` - Root directory of the project
-    pub fn with_package_manager(
-        package_manager: PackageManager,
-        project_root: PathBuf,
-    ) -> Self {
+    pub fn with_package_manager(package_manager: PackageManager, project_root: PathBuf) -> Self {
         Self {
             package_manager,
             project_root,
@@ -315,9 +312,7 @@ impl TailwindGenerator {
         cmd.current_dir(&self.project_root);
 
         // Spawn the process
-        let mut child = cmd
-            .spawn()
-            .map_err(GeneratorError::spawn_failed)?;
+        let mut child = cmd.spawn().map_err(GeneratorError::spawn_failed)?;
 
         // Get stdin handle
         let mut stdin = child.stdin.take().ok_or_else(|| {
@@ -336,10 +331,13 @@ impl TailwindGenerator {
         drop(stdin); // Close stdin to signal EOF
 
         // Wait for process with timeout
-        let output = timeout(Duration::from_secs(self.timeout_secs), child.wait_with_output())
-            .await
-            .map_err(|_| GeneratorError::timeout(self.timeout_secs))?
-            .map_err(GeneratorError::spawn_failed)?;
+        let output = timeout(
+            Duration::from_secs(self.timeout_secs),
+            child.wait_with_output(),
+        )
+        .await
+        .map_err(|_| GeneratorError::timeout(self.timeout_secs))?
+        .map_err(GeneratorError::spawn_failed)?;
 
         // Check exit status
         if !output.status.success() {
@@ -377,17 +375,20 @@ mod tests {
         let long_candidate = "a".repeat(300);
         let result = TailwindGenerator::validate_candidate(&long_candidate);
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), GeneratorError::InvalidCandidate { .. }));
+        assert!(matches!(
+            result.unwrap_err(),
+            GeneratorError::InvalidCandidate { .. }
+        ));
     }
 
     #[test]
     fn test_validate_candidate_path_traversal() {
         // Path traversal with .. should fail
         assert!(TailwindGenerator::validate_candidate("../etc/passwd").is_err());
-        
+
         // Forward slashes are allowed (for Tailwind arbitrary values like bg-[url('/image.jpg')])
         assert!(TailwindGenerator::validate_candidate("foo/bar").is_ok());
-        
+
         // Backslashes are also allowed (Windows paths in arbitrary values)
         assert!(TailwindGenerator::validate_candidate("foo\\bar").is_ok());
     }

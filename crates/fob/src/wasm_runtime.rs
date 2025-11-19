@@ -84,7 +84,7 @@ impl Runtime for WasmRuntime {
     /// For WASI, std::fs operations are available and execute synchronously.
     async fn read_file(&self, path: &Path) -> RuntimeResult<Vec<u8>> {
         let path = path.to_path_buf();
-        
+
         // WASI provides std::fs, so we can use it directly
         // Wrap in async block for trait compatibility
         async move {
@@ -105,9 +105,8 @@ impl Runtime for WasmRuntime {
         let content = content.to_vec();
 
         async move {
-            std::fs::write(&path, content).map_err(|e| {
-                RuntimeError::Io(format!("Failed to write {}: {}", path.display(), e))
-            })
+            std::fs::write(&path, content)
+                .map_err(|e| RuntimeError::Io(format!("Failed to write {}: {}", path.display(), e)))
         }
         .await
     }
@@ -163,13 +162,13 @@ impl Runtime for WasmRuntime {
             let resolved = from_dir.join(specifier);
 
             // On WASI, canonicalize may work, but we'll handle errors gracefully
-            resolved.canonicalize().map_err(|e| {
-                RuntimeError::ResolutionFailed {
+            resolved
+                .canonicalize()
+                .map_err(|e| RuntimeError::ResolutionFailed {
                     specifier: specifier.to_string(),
                     from: from.to_path_buf(),
                     reason: format!("Canonicalization failed: {}", e),
-                }
-            })
+                })
         } else {
             // For bare specifiers, return as-is
             Ok(PathBuf::from(specifier))
@@ -263,4 +262,3 @@ impl Runtime for WasmRuntime {
             })
     }
 }
-

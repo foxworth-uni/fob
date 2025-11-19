@@ -1,13 +1,13 @@
 //! Incremental program builder for streaming code generation
 
+use crate::error::Result;
+use crate::format::FormatOptions;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::*;
 use oxc_ast::AstBuilder;
 use oxc_codegen::Codegen;
 use oxc_span::{SourceType, SPAN};
 use std::io::Write;
-use crate::error::Result;
-use crate::format::FormatOptions;
 
 /// Incremental program builder for streaming code generation
 ///
@@ -69,7 +69,7 @@ impl<'a> ProgramBuilder<'a> {
     }
 
     /// Write the program to a writer with formatting options
-    /// 
+    ///
     /// Consumes the builder since statements are moved into the program.
     pub fn write_to<W: Write>(self, writer: &mut W, _opts: &FormatOptions) -> Result<()> {
         let body_vec = self.ast.vec_from_iter(self.body);
@@ -78,22 +78,23 @@ impl<'a> ProgramBuilder<'a> {
             self.source_type,
             "",
             self.ast.vec(), // imports/exports
-            None,          // hashbang
+            None,           // hashbang
             self.ast.vec(), // directives
             body_vec,
         );
 
         let codegen = Codegen::new();
         let result = codegen.build(&program);
-        
-        writer.write_all(result.code.as_bytes())
+
+        writer
+            .write_all(result.code.as_bytes())
             .map_err(|e| crate::error::GenError::CodegenFailed(format!("Write error: {}", e)))?;
-        
+
         Ok(())
     }
 
     /// Generate the complete program as a string
-    /// 
+    ///
     /// Consumes the builder since statements are moved into the program.
     pub fn generate(self, _opts: &FormatOptions) -> Result<String> {
         let body_vec = self.ast.vec_from_iter(self.body);
@@ -102,19 +103,19 @@ impl<'a> ProgramBuilder<'a> {
             self.source_type,
             "",
             self.ast.vec(), // imports/exports
-            None,          // hashbang
+            None,           // hashbang
             self.ast.vec(), // directives
             body_vec,
         );
 
         let codegen = Codegen::new();
         let result = codegen.build(&program);
-        
+
         Ok(result.code)
     }
 
     /// Build the program AST (for advanced usage)
-    /// 
+    ///
     /// Consumes the builder since statements are moved into the program.
     pub fn build_program(self) -> Program<'a> {
         let body_vec = self.ast.vec_from_iter(self.body);
@@ -123,10 +124,9 @@ impl<'a> ProgramBuilder<'a> {
             self.source_type,
             "",
             self.ast.vec(), // imports/exports
-            None,          // hashbang
+            None,           // hashbang
             self.ast.vec(), // directives
             body_vec,
         )
     }
 }
-

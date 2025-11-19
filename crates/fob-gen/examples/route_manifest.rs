@@ -22,13 +22,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             js.object(vec![
                 js.prop("path", js.string(path)),
                 js.prop("id", js.string(id)),
-                js.prop("component", js.call(
-                    js.ident("lazy"),
-                    vec![js.arg(js.arrow_fn(
-                        vec![],
-                        js.call(js.ident("import"), vec![js.arg(js.string(file))]),
-                    ))],
-                )),
+                js.prop(
+                    "component",
+                    js.call(
+                        js.ident("lazy"),
+                        vec![js.arg(js.arrow_fn(
+                            vec![],
+                            js.call(js.ident("import"), vec![js.arg(js.string(file))]),
+                        ))],
+                    ),
+                ),
             ])
         })
         .collect();
@@ -41,14 +44,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let export_default = js.export_default(js.ident("routes"));
 
     // Generate module
-    let code = js.program(vec![
-        routes_decl,
-        Statement::from(export_default),
-    ])?;
+    let code = js.program(vec![routes_decl, Statement::from(export_default)])?;
 
     println!("{}", code);
     Ok(())
 }
 
 use oxc_ast::ast::Statement;
-

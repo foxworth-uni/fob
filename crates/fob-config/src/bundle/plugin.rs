@@ -80,4 +80,3 @@ pub enum PluginBackend {
     // Extism support has been removed
     // Future plugin backends can be added here (e.g., Boa, Native)
 }
-

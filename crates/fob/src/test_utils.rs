@@ -141,7 +141,11 @@ impl Runtime for TestRuntime {
     async fn read_dir(&self, path: &Path) -> RuntimeResult<Vec<String>> {
         let entries: Vec<String> = std::fs::read_dir(path)
             .map_err(|e| RuntimeError::Io(e.to_string()))?
-            .filter_map(|entry| entry.ok().and_then(|e| e.file_name().to_str().map(String::from)))
+            .filter_map(|entry| {
+                entry
+                    .ok()
+                    .and_then(|e| e.file_name().to_str().map(String::from))
+            })
             .collect();
         Ok(entries)
     }

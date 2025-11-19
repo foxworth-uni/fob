@@ -264,4 +264,3 @@ pub struct InlineTransform {
     /// Function signature: (code: string, context: { path: string }) => string
     pub transform: String,
 }
-

@@ -4,11 +4,11 @@
 
 #[cfg(feature = "transform-engine")]
 mod transform_impl {
-    use oxc_allocator::Allocator;
-    use oxc_ast::ast::Program;
     use crate::error::{GenError, Result};
     use crate::format::FormatOptions;
     use crate::parser::{ParseOptions, ParsedProgram};
+    use oxc_allocator::Allocator;
+    use oxc_ast::ast::Program;
 
     /// Result of a transformation pass
     #[derive(Debug)]
@@ -89,7 +89,7 @@ mod transform_impl {
         /// Transform source code
         pub fn transform(&self, source: &'a str) -> Result<TransformOutput> {
             use crate::parser::parse;
-            
+
             // Parse the source
             let mut parsed = parse(self.allocator, source, self.parse_options.clone())?;
 
@@ -106,15 +106,10 @@ mod transform_impl {
             // Generate code
             use crate::JsBuilder;
             use oxc_ast::ast::Statement;
-            
+
             let js = JsBuilder::new(self.allocator);
-            let statements: Vec<Statement> = parsed
-                .program
-                .body
-                .iter()
-                .map(|s| *s)
-                .collect();
-            
+            let statements: Vec<Statement> = parsed.program.body.iter().map(|s| *s).collect();
+
             let code = js.program_with_format(statements, &self.format_options)?;
 
             Ok(TransformOutput {
@@ -139,4 +134,3 @@ mod transform_impl {
 
 #[cfg(feature = "transform-engine")]
 pub use transform_impl::*;
-

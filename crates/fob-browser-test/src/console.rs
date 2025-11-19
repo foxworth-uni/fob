@@ -1,7 +1,7 @@
 //! Console message capture and filtering.
 //!
 //! This module provides strongly-typed console messages that preserve the
-//! severity level, timestamp, and source location. The ConsoleCapture type
+//! severity level, timestamp, and source location. The `ConsoleCapture` type
 //! accumulates messages during test execution and provides filtering/querying.
 //!
 //! # Design Rationale
@@ -22,15 +22,15 @@ use std::time::SystemTime;
 /// Maps directly to JavaScript console methods.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ConsoleLevel {
-    /// console.log()
+    /// `console.log()`
     Log,
-    /// console.info()
+    /// `console.info()`
     Info,
-    /// console.warn()
+    /// `console.warn()`
     Warning,
-    /// console.error()
+    /// `console.error()`
     Error,
-    /// console.debug()
+    /// `console.debug()`
     Debug,
     /// Catch-all for other console APIs
     Other,
@@ -40,11 +40,13 @@ impl ConsoleLevel {
     /// Returns true if this is an error-level message.
     ///
     /// Useful for assertions: `assert!(console.has_errors() == false)`
+    #[must_use]
     pub fn is_error(&self) -> bool {
         matches!(self, ConsoleLevel::Error)
     }
 
     /// Returns true if this is a warning or error.
+    #[must_use]
     pub fn is_warning_or_error(&self) -> bool {
         matches!(self, ConsoleLevel::Warning | ConsoleLevel::Error)
     }
@@ -64,12 +66,12 @@ impl From<&str> for ConsoleLevel {
 }
 
 impl From<&EventConsoleApiCalled> for ConsoleLevel {
-    /// Converts from chromiumoxide's ConsoleApiCalledType to our ConsoleLevel.
+    /// Converts from chromiumoxide's `ConsoleApiCalledType` to our `ConsoleLevel`.
     ///
     /// # Design Note
     ///
-    /// The chromiumoxide_cdp types are serde-generated from the Chrome DevTools
-    /// Protocol PDL files. ConsoleApiCalledType is an enum, but the exact set of
+    /// The `chromiumoxide_cdp` types are serde-generated from the Chrome `DevTools`
+    /// Protocol PDL files. `ConsoleApiCalledType` is an enum, but the exact set of
     /// conversion methods varies by version. We pattern match directly on the variants
     /// to avoid depending on unstable API surface.
     fn from(event: &EventConsoleApiCalled) -> Self {
@@ -89,7 +91,7 @@ impl From<&EventConsoleApiCalled> for ConsoleLevel {
 /// A captured console message with metadata.
 ///
 /// Includes the severity level, formatted message text, timestamp,
-/// and optional source location (file:line:column).
+/// and optional source location (`<file:line:column>`).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsoleMessage {
     /// Severity level (log, warn, error, etc.)
@@ -107,6 +109,7 @@ pub struct ConsoleMessage {
 
 impl ConsoleMessage {
     /// Creates a new console message.
+    #[must_use]
     pub fn new(level: ConsoleLevel, text: String) -> Self {
         Self {
             level,
@@ -117,6 +120,7 @@ impl ConsoleMessage {
     }
 
     /// Creates a message with source location.
+    #[must_use]
     pub fn with_source(mut self, source: String) -> Self {
         self.source = Some(source);
         self
@@ -144,6 +148,7 @@ pub struct ConsoleCapture {
 
 impl ConsoleCapture {
     /// Creates a new, empty console capture.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             messages: Arc::new(Mutex::new(Vec::new())),
@@ -179,14 +184,16 @@ impl ConsoleCapture {
     ///
     /// This clones the message vector to avoid holding the lock.
     /// For large test suites, consider using iterators instead.
+    #[must_use]
     pub fn messages(&self) -> Vec<ConsoleMessage> {
         self.messages
             .lock()
-            .unwrap_or_else(|e| e.into_inner())
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
             .clone()
     }
 
     /// Returns messages filtered by level.
+    #[must_use]
     pub fn messages_with_level(&self, level: ConsoleLevel) -> Vec<ConsoleMessage> {
         self.messages()
             .into_iter()
@@ -195,11 +202,13 @@ impl ConsoleCapture {
     }
 
     /// Returns all error-level messages.
+    #[must_use]
     pub fn errors(&self) -> Vec<ConsoleMessage> {
         self.messages_with_level(ConsoleLevel::Error)
     }
 
     /// Returns all warning-level messages.
+    #[must_use]
     pub fn warnings(&self) -> Vec<ConsoleMessage> {
         self.messages_with_level(ConsoleLevel::Warning)
     }
@@ -207,26 +216,29 @@ impl ConsoleCapture {
     /// Returns the count of error messages.
     ///
     /// More efficient than `errors().len()` as it doesn't clone.
+    #[must_use]
     pub fn error_count(&self) -> usize {
         self.messages
             .lock()
-            .unwrap_or_else(|e| e.into_inner())
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
             .iter()
             .filter(|m| m.level.is_error())
             .count()
     }
 
     /// Returns the count of warning or error messages.
+    #[must_use]
     pub fn warning_or_error_count(&self) -> usize {
         self.messages
             .lock()
-            .unwrap_or_else(|e| e.into_inner())
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
             .iter()
             .filter(|m| m.level.is_warning_or_error())
             .count()
     }
 
     /// Returns true if any error messages were captured.
+    #[must_use]
     pub fn has_errors(&self) -> bool {
         self.error_count() > 0
     }
@@ -241,14 +253,16 @@ impl ConsoleCapture {
     }
 
     /// Returns the total number of messages captured.
+    #[must_use]
     pub fn len(&self) -> usize {
         self.messages
             .lock()
-            .unwrap_or_else(|e| e.into_inner())
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
             .len()
     }
 
     /// Returns true if no messages have been captured.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -260,16 +274,16 @@ impl Default for ConsoleCapture {
     }
 }
 
-/// Parses a CDP EventConsoleApiCalled into a ConsoleMessage.
+/// Parses a CDP `EventConsoleApiCalled` into a `ConsoleMessage`.
 ///
 /// This function handles the conversion from chromiumoxide's protocol types
 /// to our domain types. Arguments are formatted and joined with spaces.
 ///
 /// # Design Note
 ///
-/// In chromiumoxide 0.7.0, EventConsoleApiCalled contains the event fields directly
+/// In chromiumoxide 0.7.0, `EventConsoleApiCalled` contains the event fields directly
 /// as public members, rather than wrapping them in a separate `params` field.
-/// The event structure includes: type, args, execution_context_id, timestamp, etc.
+/// The event structure includes: type, args, `execution_context_id`, timestamp, etc.
 pub(crate) fn parse_console_event(event: &EventConsoleApiCalled) -> ConsoleMessage {
     let level = ConsoleLevel::from(event);
 

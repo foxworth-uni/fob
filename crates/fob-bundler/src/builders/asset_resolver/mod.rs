@@ -139,8 +139,8 @@ use std::path::{Path, PathBuf};
 
 pub use validation::validate_asset_size;
 
-use security::validate_asset_security;
 use security::canonicalize_path;
+use security::validate_asset_security;
 
 /// Resolve an asset specifier to an absolute filesystem path.
 ///
@@ -194,8 +194,8 @@ pub async fn resolve_asset(
     eprintln!("[ASSET_RESOLVE]   Type: bare specifier");
 
     // Check if it's a simple filename (no path separators except possibly in @scope)
-    let is_simple_filename = !specifier.contains('/') ||
-        (specifier.starts_with('@') && specifier.matches('/').count() == 1);
+    let is_simple_filename = !specifier.contains('/')
+        || (specifier.starts_with('@') && specifier.matches('/').count() == 1);
 
     if !is_simple_filename {
         eprintln!("[ASSET_RESOLVE]   Looks like package path, trying node_modules");
@@ -263,13 +263,20 @@ async fn resolve_from_node_modules(
         referrer
     };
 
-    eprintln!("[ASSET_RESOLVE]   Starting search from: {}", current.display());
+    eprintln!(
+        "[ASSET_RESOLVE]   Starting search from: {}",
+        current.display()
+    );
 
     // Walk up the directory tree
     let mut attempts = 0;
     loop {
         let candidate = current.join("node_modules").join(specifier);
-        eprintln!("[ASSET_RESOLVE]   Attempt {}: checking {}", attempts, candidate.display());
+        eprintln!(
+            "[ASSET_RESOLVE]   Attempt {}: checking {}",
+            attempts,
+            candidate.display()
+        );
 
         if runtime.exists(&candidate) {
             eprintln!("[ASSET_RESOLVE]   ✓ Found!");
@@ -329,8 +336,10 @@ async fn validate_and_canonicalize(
     validate_asset_security(&canonical, cwd, runtime).await?;
 
     eprintln!("[ASSET_RESOLVE]   ✓ Security validation passed");
-    eprintln!("[ASSET_RESOLVE]   Final resolved path: {}", canonical.display());
+    eprintln!(
+        "[ASSET_RESOLVE]   Final resolved path: {}",
+        canonical.display()
+    );
 
     Ok(canonical)
 }
-

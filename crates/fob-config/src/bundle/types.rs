@@ -158,4 +158,3 @@ impl Default for HtmlTemplateType {
         Self::Spa
     }
 }
-

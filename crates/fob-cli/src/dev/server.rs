@@ -155,12 +155,16 @@ async fn handle_request(
 
     // If build failed, show error overlay
     if let Some(error) = status.error() {
-        let html = error_overlay::generate_error_overlay(error)
-            .map_err(|e| Response::builder()
+        let html = error_overlay::generate_error_overlay(error).map_err(|e| {
+            Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .header(header::CONTENT_TYPE, "text/plain")
-                .body(Body::from(format!("Failed to generate error overlay: {}", e)))
-                .unwrap())?;
+                .body(Body::from(format!(
+                    "Failed to generate error overlay: {}",
+                    e
+                )))
+                .unwrap()
+        })?;
 
         return Ok(Response::builder()
             .status(StatusCode::OK)
@@ -194,7 +198,11 @@ async fn handle_request(
                     .unwrap());
             }
             Err(e) => {
-                crate::ui::warning(&format!("Failed to read file {}: {}", file_path.display(), e));
+                crate::ui::warning(&format!(
+                    "Failed to read file {}: {}",
+                    file_path.display(),
+                    e
+                ));
             }
         }
     }
@@ -216,12 +224,13 @@ async fn handle_request(
         // Fallback: serve minimal HTML that loads the bundle
         // Find the first JavaScript file in the cache as the entry point
         let entry_point = find_entry_point_from_cache(&state);
-        let html = generate_index_html(entry_point.as_deref())
-            .map_err(|e| Response::builder()
+        let html = generate_index_html(entry_point.as_deref()).map_err(|e| {
+            Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .header(header::CONTENT_TYPE, "text/plain")
                 .body(Body::from(format!("Failed to generate HTML: {}", e)))
-                .unwrap())?;
+                .unwrap()
+        })?;
 
         return Ok(Response::builder()
             .status(StatusCode::OK)
@@ -264,7 +273,7 @@ fn inject_reload_script(content: &[u8], content_type: &str) -> Vec<u8> {
 
     // Fallback: append at end
     let mut result = html.to_string();
-    result.push_str("\n");
+    result.push('\n');
     result.push_str(script_tag);
     result.into_bytes()
 }
@@ -289,18 +298,19 @@ fn find_entry_point_from_cache(state: &SharedState) -> Option<String> {
 /// # Arguments
 ///
 /// * `entry_point` - Optional entry point script path (e.g., "/index.js")
-///                    If None, falls back to "/virtual_gumbo-client-entry.js"
+///   If None, falls back to "/virtual_gumbo-client-entry.js"
 ///
 /// # Errors
 ///
 /// Returns an error if HTML generation fails. This should be treated as a bug.
 fn generate_index_html(entry_point: Option<&str>) -> Result<String, String> {
     use fob_gen::{Allocator, HtmlBuilder};
-    
+
     let allocator = Allocator::default();
     let html_builder = HtmlBuilder::new(&allocator);
-    
-    html_builder.index_html(entry_point)
+
+    html_builder
+        .index_html(entry_point)
         .map_err(|e| format!("Failed to generate index.html: {}", e))
 }
 
@@ -382,6 +392,7 @@ mod tests {
         let html = generate_index_html(None).expect("HTML generation should succeed");
 
         assert!(html.contains("<!DOCTYPE html>"));
-        assert!(html.contains(r#"<script type="module" src="/virtual_gumbo-client-entry.js"></script>"#));
+        assert!(html
+            .contains(r#"<script type="module" src="/virtual_gumbo-client-entry.js"></script>"#));
     }
 }

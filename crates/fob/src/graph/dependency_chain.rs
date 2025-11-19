@@ -24,11 +24,7 @@ pub struct DependencyChain {
 impl DependencyChain {
     /// Create a new dependency chain from a path.
     pub fn new(path: Vec<ModuleId>) -> Self {
-        let depth = if path.len() > 0 {
-            path.len() - 1
-        } else {
-            0
-        };
+        let depth = if !path.is_empty() { path.len() - 1 } else { 0 };
 
         Self { path, depth }
     }

@@ -1,13 +1,13 @@
 //! Implementation of GraphQueries trait for GraphStorage.
 
+use serde_json::json;
 use surrealdb::engine::any::Any;
 use surrealdb::Surreal;
-use serde_json::json;
 
-use fob::graph::{ExternalDependency, Import, Export, Module, ModuleId, SourceType};
+use super::queries::{EntryPointRecord, ExternalDepRecord, ModuleRecord};
+use super::GraphStorage;
 use crate::storage::{GraphQueries, StorageError};
-use super::{GraphStorage};
-use super::queries::{ModuleRecord, EntryPointRecord, ExternalDepRecord};
+use fob::graph::{Export, ExternalDependency, Import, Module, ModuleId, SourceType};
 
 impl GraphQueries for GraphStorage {
     fn db(&self) -> &Surreal<Any> {
@@ -88,7 +88,7 @@ impl GraphQueries for GraphStorage {
             "bundled_size": module.bundled_size.map(|n| n as i64),
             "symbol_table": symbol_table_json
         });
-        
+
         self.db()
             .query(query)
             .bind(params)
@@ -150,7 +150,11 @@ impl GraphQueries for GraphStorage {
         Ok(modules)
     }
 
-    async fn add_dependency(&self, from: &ModuleId, to: &ModuleId) -> std::result::Result<(), StorageError> {
+    async fn add_dependency(
+        &self,
+        from: &ModuleId,
+        to: &ModuleId,
+    ) -> std::result::Result<(), StorageError> {
         self.ensure_context().await?;
 
         let from_str: String = from.path_string().to_string();
@@ -174,7 +178,10 @@ impl GraphQueries for GraphStorage {
         Ok(())
     }
 
-    async fn get_dependencies(&self, id: &ModuleId) -> std::result::Result<Vec<ModuleId>, StorageError> {
+    async fn get_dependencies(
+        &self,
+        id: &ModuleId,
+    ) -> std::result::Result<Vec<ModuleId>, StorageError> {
         self.ensure_context().await?;
 
         let id_str: String = id.path_string().to_string();
@@ -209,7 +216,10 @@ impl GraphQueries for GraphStorage {
         Ok(module_ids)
     }
 
-    async fn get_dependents(&self, id: &ModuleId) -> std::result::Result<Vec<ModuleId>, StorageError> {
+    async fn get_dependents(
+        &self,
+        id: &ModuleId,
+    ) -> std::result::Result<Vec<ModuleId>, StorageError> {
         self.ensure_context().await?;
 
         let id_str: String = id.path_string().to_string();
@@ -270,7 +280,10 @@ impl GraphQueries for GraphStorage {
         Ok(entry_points)
     }
 
-    async fn store_external_dependency(&self, dep: &ExternalDependency) -> std::result::Result<(), StorageError> {
+    async fn store_external_dependency(
+        &self,
+        dep: &ExternalDependency,
+    ) -> std::result::Result<(), StorageError> {
         self.ensure_context().await?;
 
         let specifier: String = dep.specifier.clone();
@@ -302,7 +315,9 @@ impl GraphQueries for GraphStorage {
         Ok(())
     }
 
-    async fn get_external_dependencies(&self) -> std::result::Result<Vec<ExternalDependency>, StorageError> {
+    async fn get_external_dependencies(
+        &self,
+    ) -> std::result::Result<Vec<ExternalDependency>, StorageError> {
         self.ensure_context().await?;
 
         let query = "SELECT * FROM external_dep";
@@ -335,11 +350,7 @@ impl GraphQueries for GraphStorage {
     async fn clear_all(&self) -> std::result::Result<(), StorageError> {
         self.ensure_context().await?;
 
-        let queries = vec![
-            "DELETE module",
-            "DELETE depends_on",
-            "DELETE external_dep",
-        ];
+        let queries = vec!["DELETE module", "DELETE depends_on", "DELETE external_dep"];
 
         for query in queries {
             self.db()
@@ -351,7 +362,10 @@ impl GraphQueries for GraphStorage {
         Ok(())
     }
 
-    fn module_from_record(&self, record: ModuleRecord) -> std::result::Result<Module, StorageError> {
+    fn module_from_record(
+        &self,
+        record: ModuleRecord,
+    ) -> std::result::Result<Module, StorageError> {
         // Parse source type
         let source_type = match record.source_type.as_str() {
             "JavaScript" => SourceType::JavaScript,
@@ -393,5 +407,3 @@ impl GraphQueries for GraphStorage {
             .build())
     }
 }
-
-

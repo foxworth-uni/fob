@@ -43,7 +43,11 @@ impl BundleManifest {
                 ChunkMetadata {
                     file: chunk.filename.to_string(),
                     imports: chunk.imports.iter().map(|s| s.to_string()).collect(),
-                    dynamic_imports: chunk.dynamic_imports.iter().map(|s| s.to_string()).collect(),
+                    dynamic_imports: chunk
+                        .dynamic_imports
+                        .iter()
+                        .map(|s| s.to_string())
+                        .collect(),
                     css: vec![], // TODO: Extract CSS references
                     modules,
                 },

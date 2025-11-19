@@ -10,5 +10,5 @@ pub use app::AppBuild;
 pub use bundle::Bundle;
 pub use bundles::ComponentBuild;
 pub use import_map::ImportMap;
-pub use manifest::{BundleManifest, BuildStats, ChunkMetadata};
+pub use manifest::{BuildStats, BundleManifest, ChunkMetadata};
 pub use metadata::{BundleMetadata, ExportInfo, ImportInfo};

@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 /**
  * Cloudflare Worker Example with Fob Bundler (Rust)
  *
@@ -19,10 +21,7 @@
  * - Using a separate bundling service
  * - Serverless functions with full Node.js runtime (not edge)
  */
-
 use worker::*;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[derive(Deserialize)]
 struct BundleRequest {
@@ -60,7 +59,7 @@ struct BundleMeta {
 /// Example source files to bundle
 fn example_files() -> HashMap<String, String> {
     let mut files = HashMap::new();
-    
+
     files.insert(
         "index.js".to_string(),
         r#"
@@ -77,9 +76,10 @@ export default function handler() {
     timestamp: Date.now()
   };
 }
-"#.to_string(),
+"#
+        .to_string(),
     );
-    
+
     files.insert(
         "utils.js".to_string(),
         r#"
@@ -90,18 +90,20 @@ export function greet(name) {
 export function formatDate(date) {
   return new Date(date).toISOString();
 }
-"#.to_string(),
+"#
+        .to_string(),
     );
-    
+
     files.insert(
         "constants.js".to_string(),
         r#"
 export const version = '1.0.0';
 export const environment = 'cloudflare-worker-rust';
 export const features = ['rust', 'edge-bundling', 'type-safe'];
-"#.to_string(),
+"#
+        .to_string(),
     );
-    
+
     files
 }
 
@@ -158,7 +160,7 @@ async fn bundle_files(
 }
 
 /// HTML template for the demo page
-/// 
+///
 /// Demonstrates building type-safe HTML using structured formatting
 /// rather than raw template strings.
 fn render_html(result: &BundleResult, duration: f64) -> String {
@@ -172,9 +174,10 @@ fn render_html(result: &BundleResult, duration: f64) -> String {
         ("Bundle Time", &time_str),
         ("Modules Analyzed", &modules_str),
     ];
-    
+
     let mut html = String::new();
-    html.push_str(r#"<!DOCTYPE html>
+    html.push_str(
+        r#"<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -253,8 +256,9 @@ fn render_html(result: &BundleResult, duration: f64) -> String {
     </header>
     
     <div class="content">
-      <div class="stats">"#);
-    
+      <div class="stats">"#,
+    );
+
     // Build stat cards programmatically
     for (label, value) in stats_cards {
         html.push_str(&format!(
@@ -266,7 +270,7 @@ fn render_html(result: &BundleResult, duration: f64) -> String {
             label, value
         ));
     }
-    
+
     html.push_str(r#"
       </div>
 
@@ -319,44 +323,43 @@ Duration:         {:.2}ms</pre>
   </div>
 </body>
 </html>"#);
-    
+
     html
 }
 
 #[event(fetch)]
 async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
     let router = Router::new();
-    
+
     router
         // Route: GET / - Demo page
         .get_async("/", |_req, _ctx| async move {
             let start = Date::now().as_millis();
-            
+
             let files = example_files();
             let entries = vec!["index.js".to_string()];
-            
+
             let result = bundle_files(files, entries, None)
                 .await
                 .map_err(|e| Error::RustError(e.to_string()))?;
-            
+
             let duration = (Date::now().as_millis() - start) as f64;
-            
+
             Response::from_html(render_html(&result, duration))
         })
-        
         // Route: GET /api/bundle - Get bundle result as JSON
         .get_async("/api/bundle", |_req, _ctx| async move {
             let start = Date::now().as_millis();
-            
+
             let files = example_files();
             let entries = vec!["index.js".to_string()];
-            
+
             let result = bundle_files(files, entries, None)
                 .await
                 .map_err(|e| Error::RustError(e.to_string()))?;
-            
+
             let duration = (Date::now().as_millis() - start) as f64;
-            
+
             let response = BundleResponse {
                 success: true,
                 result: Some(result),
@@ -367,28 +370,27 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                     worker: "cloudflare-rust",
                 },
             };
-            
+
             Response::from_json(&response)
         })
-        
         // Route: POST /api/bundle - Bundle custom code
         .post_async("/api/bundle", |mut req, _ctx| async move {
             let start = Date::now().as_millis();
-            
+
             let body: BundleRequest = req.json().await?;
-            
+
             let entries = if body.entries.is_empty() {
                 vec!["index.js".to_string()]
             } else {
                 body.entries
             };
-            
+
             let result = bundle_files(body.files, entries, body.format)
                 .await
                 .map_err(|e| Error::RustError(e.to_string()))?;
-            
+
             let duration = (Date::now().as_millis() - start) as f64;
-            
+
             let response = BundleResponse {
                 success: true,
                 result: Some(result),
@@ -399,11 +401,9 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                     worker: "cloudflare-rust",
                 },
             };
-            
+
             Response::from_json(&response)
         })
-        
         .run(req, env)
         .await
 }
-

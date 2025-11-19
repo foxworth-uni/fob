@@ -34,4 +34,3 @@ pub fn default_llm_mode() -> String {
 pub fn default_llm_cache() -> bool {
     true
 }
-

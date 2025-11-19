@@ -89,22 +89,23 @@ where
     P: AsRef<Path>,
 {
     let mut analyzer = Analyzer::new();
-    
+
     // Add entries
     for entry in entries {
         analyzer = analyzer.entry(entry.as_ref());
     }
-    
+
     // Apply framework rules if any (not yet implemented in Analyzer)
     // For now, we'll skip framework rules in standalone analysis
-    
+
     // Apply runtime if available
     // Note: AnalyzeOptions doesn't have runtime, so we'll use default
     // This could be enhanced in the future
-    
-    analyzer.analyze().await.map_err(|e| {
-        AnalyzeError::NotImplemented(format!("Analysis failed: {}", e))
-    })
+
+    analyzer
+        .analyze()
+        .await
+        .map_err(|e| AnalyzeError::NotImplemented(format!("Analysis failed: {}", e)))
 }
 
 /// Convenience function using default options.

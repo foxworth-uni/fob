@@ -117,7 +117,10 @@ fn print_build_stats(output_dir: &Path) -> Result<()> {
 
         if path.extension().and_then(|s| s.to_str()) == Some("js") {
             let size = entry.metadata()?.len();
-            chunks.push((path.file_name().unwrap().to_string_lossy().to_string(), size));
+            chunks.push((
+                path.file_name().unwrap().to_string_lossy().to_string(),
+                size,
+            ));
         }
     }
 

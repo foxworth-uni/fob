@@ -25,12 +25,12 @@ impl FobConfig {
                         std::env::current_dir().ok()?.join(cwd)
                     };
                     let candidate = cwd_path.join("fob.config.json");
-                    candidate.exists().then(|| candidate)
+                    candidate.exists().then_some(candidate)
                 })
             })
             .or_else(|| {
                 let default_path = Path::new("fob.config.json");
-                default_path.exists().then(|| default_path.to_path_buf())
+                default_path.exists().then_some(default_path.to_path_buf())
             });
         let has_config_file = config_file.is_some();
 
@@ -46,10 +46,7 @@ impl FobConfig {
 
         // Preserve existing entry when CLI explicitly omits entries so other CLI flags still apply.
         let base_entry = if args.entry.is_empty() {
-            let base: Self = figment
-                .clone()
-                .extract()
-                .map_err(convert_figment_error)?;
+            let base: Self = figment.clone().extract().map_err(convert_figment_error)?;
             Some(base.entry)
         } else {
             None
@@ -58,9 +55,7 @@ impl FobConfig {
         let cli_config = Self::from_build_args(args);
         figment = figment.merge(Serialized::defaults(cli_config));
 
-        let mut config: Self = figment
-            .extract()
-            .map_err(convert_figment_error)?;
+        let mut config: Self = figment.extract().map_err(convert_figment_error)?;
 
         if let Some(entry) = base_entry {
             config.entry = entry;
@@ -69,13 +64,12 @@ impl FobConfig {
         if args.entry.is_empty()
             && !has_config_file
             && config.entry == default_entry
-            && !std::env::vars().any(|(key, _)| {
-                key == "FOB_ENTRY" || key.starts_with("FOB_ENTRY_")
-            })
+            && !std::env::vars().any(|(key, _)| key == "FOB_ENTRY" || key.starts_with("FOB_ENTRY_"))
         {
             return Err(ConfigError::MissingField {
                 field: "entry".to_string(),
-                hint: "Specify at least one entry point with --entry or fob.config.json".to_string(),
+                hint: "Specify at least one entry point with --entry or fob.config.json"
+                    .to_string(),
             }
             .into());
         }
@@ -85,8 +79,6 @@ impl FobConfig {
 
     /// Convert CLI BuildArgs to FobConfig.
     fn from_build_args(args: &crate::cli::BuildArgs) -> Self {
-        
-
         Self {
             entry: args.entry.clone(),
             format: args.format.into(),
@@ -97,7 +89,7 @@ impl FobConfig {
             platform: args.platform.into(),
             sourcemap: args.sourcemap.map(Into::into),
             minify: args.minify,
-            target: args.target.into(),
+            target: args.target,
             global_name: args.global_name.clone(),
             bundle: args.bundle,
             splitting: args.splitting,
@@ -152,7 +144,7 @@ fn env_key_to_camel_case(key: &str) -> String {
     for part in parts {
         let mut chars = part.chars();
         if let Some(first_char) = chars.next() {
-            result.push(first_char.to_ascii_uppercase() as char);
+            result.push(first_char.to_ascii_uppercase());
             for c in chars {
                 result.push(c.to_ascii_lowercase());
             }

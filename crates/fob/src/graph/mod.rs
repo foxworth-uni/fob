@@ -59,7 +59,10 @@
 //!
 
 // Core graph types and primitives
+mod class_enum_extraction;
+mod code_quality_extraction;
 pub mod collection;
+pub mod dependency_chain;
 pub mod export;
 pub mod external_dep;
 pub mod framework_rules;
@@ -67,14 +70,11 @@ pub mod from_collection;
 pub mod import;
 pub mod module;
 pub mod module_id;
+pub mod package_json;
 pub mod semantic;
 pub mod span;
 pub mod statistics;
 pub mod symbol;
-mod class_enum_extraction;
-mod code_quality_extraction;
-pub mod package_json;
-pub mod dependency_chain;
 
 // ModuleGraph implementations
 // Default: in-memory implementation (WASM-compatible)
@@ -104,7 +104,11 @@ pub struct UnusedExport {
     pub module_id: module_id::ModuleId,
     pub export: export::Export,
 }
-pub use collection::{CollectionState, CollectedExport, CollectedImport, CollectedModule, CollectedImportSpecifier, parse_module_structure};
+pub use collection::{
+    parse_module_structure, CollectedExport, CollectedImport, CollectedImportSpecifier,
+    CollectedModule, CollectionState,
+};
+pub use dependency_chain::{ChainAnalysis, DependencyChain};
 pub use export::{Export, ExportKind};
 pub use external_dep::ExternalDependency;
 pub use framework_rules::FrameworkRule;
@@ -112,17 +116,16 @@ pub use from_collection::CollectionGraphError;
 pub use import::{Import, ImportKind, ImportSpecifier};
 pub use module::{Module, SourceType};
 pub use module_id::{ModuleId, ModuleIdError};
+pub use package_json::{
+    extract_package_name, DependencyCoverage, DependencyType, PackageJson, TypeCoverage,
+    UnusedDependency,
+};
 pub use span::SourceSpan;
 pub use statistics::GraphStatistics;
 pub use symbol::{
     ClassMemberMetadata, EnumMemberMetadata, EnumMemberValue, Symbol, SymbolKind, SymbolMetadata,
     SymbolSpan, SymbolStatistics, SymbolTable, UnreachableCode, UnusedSymbol, Visibility,
 };
-pub use package_json::{
-    DependencyCoverage, DependencyType, PackageJson, TypeCoverage, UnusedDependency,
-    extract_package_name,
-};
-pub use dependency_chain::{ChainAnalysis, DependencyChain};
 
 #[cfg(test)]
 mod tests;

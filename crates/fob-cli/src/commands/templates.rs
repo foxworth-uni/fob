@@ -326,13 +326,14 @@ export { createServer } from './server';
 /// Generate HTML file for app template.
 pub fn index_html(name: &str) -> String {
     use fob_gen::{Allocator, HtmlBuilder};
-    
+
     let allocator = Allocator::default();
     let html_builder = HtmlBuilder::new(&allocator);
-    
+
     // Use HtmlBuilder to generate the HTML
     // Note: HtmlBuilder doesn't support custom titles yet, so we'll generate and modify
-    html_builder.index_html(Some("/src/main.ts"))
+    html_builder
+        .index_html(Some("/src/main.ts"))
         .unwrap_or_else(|_| {
             // Fallback if builder fails
             format!(
@@ -607,10 +608,22 @@ mod tests {
         assert_eq!(Template::from_str("lib"), Some(Template::Library));
         assert_eq!(Template::from_str("app"), Some(Template::App));
         assert_eq!(Template::from_str("application"), Some(Template::App));
-        assert_eq!(Template::from_str("component-library"), Some(Template::ComponentLibrary));
-        assert_eq!(Template::from_str("components"), Some(Template::ComponentLibrary));
-        assert_eq!(Template::from_str("meta-framework"), Some(Template::MetaFramework));
-        assert_eq!(Template::from_str("framework"), Some(Template::MetaFramework));
+        assert_eq!(
+            Template::from_str("component-library"),
+            Some(Template::ComponentLibrary)
+        );
+        assert_eq!(
+            Template::from_str("components"),
+            Some(Template::ComponentLibrary)
+        );
+        assert_eq!(
+            Template::from_str("meta-framework"),
+            Some(Template::MetaFramework)
+        );
+        assert_eq!(
+            Template::from_str("framework"),
+            Some(Template::MetaFramework)
+        );
         assert_eq!(Template::from_str("invalid"), None);
     }
 

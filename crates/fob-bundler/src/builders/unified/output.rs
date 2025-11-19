@@ -209,17 +209,15 @@ impl BuildOutput {
                     None
                 }
             })),
-            BuildOutput::Multiple(bundles) => {
-                Box::new(bundles.values().flat_map(|bundle| {
-                    bundle.assets.iter().filter_map(|output| {
-                        if let crate::Output::Chunk(chunk) = output {
-                            Some(&**chunk)
-                        } else {
-                            None
-                        }
-                    })
-                }))
-            }
+            BuildOutput::Multiple(bundles) => Box::new(bundles.values().flat_map(|bundle| {
+                bundle.assets.iter().filter_map(|output| {
+                    if let crate::Output::Chunk(chunk) = output {
+                        Some(&**chunk)
+                    } else {
+                        None
+                    }
+                })
+            })),
         }
     }
 
@@ -233,17 +231,15 @@ impl BuildOutput {
                     None
                 }
             })),
-            BuildOutput::Multiple(bundles) => {
-                Box::new(bundles.values().flat_map(|bundle| {
-                    bundle.assets.iter().filter_map(|output| {
-                        if let crate::Output::Asset(asset) = output {
-                            Some(&**asset)
-                        } else {
-                            None
-                        }
-                    })
-                }))
-            }
+            BuildOutput::Multiple(bundles) => Box::new(bundles.values().flat_map(|bundle| {
+                bundle.assets.iter().filter_map(|output| {
+                    if let crate::Output::Asset(asset) = output {
+                        Some(&**asset)
+                    } else {
+                        None
+                    }
+                })
+            })),
         }
     }
 
@@ -267,4 +263,3 @@ fn calculate_bundle_size(bundle: &crate::BundleOutput) -> usize {
         })
         .sum()
 }
-

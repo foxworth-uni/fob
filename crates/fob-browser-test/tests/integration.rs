@@ -53,10 +53,7 @@ async fn test_browser_create_page() {
         .await
         .expect("failed to launch");
 
-    let page = browser
-        .new_page()
-        .await
-        .expect("failed to create page");
+    let page = browser.new_page().await.expect("failed to create page");
 
     // Verify we can navigate to about:blank
     page.navigate("about:blank")
@@ -264,7 +261,9 @@ async fn test_page_url() {
 
     let page = browser.new_page().await.expect("failed to create page");
 
-    page.navigate("about:blank").await.expect("failed to navigate");
+    page.navigate("about:blank")
+        .await
+        .expect("failed to navigate");
 
     let url = page.url().await.expect("failed to get URL");
     assert_eq!(url, "about:blank");
@@ -369,13 +368,13 @@ async fn test_multiple_pages() {
 async fn test_browser_config_custom_window_size() {
     let config = TestBrowserConfig::new().with_window_size(800, 600);
 
-    let browser = TestBrowser::launch(config)
-        .await
-        .expect("failed to launch");
+    let browser = TestBrowser::launch(config).await.expect("failed to launch");
 
     let page = browser.new_page().await.expect("failed to create page");
 
-    page.navigate("about:blank").await.expect("failed to navigate");
+    page.navigate("about:blank")
+        .await
+        .expect("failed to navigate");
 
     // Check window dimensions
     let width: i32 = page

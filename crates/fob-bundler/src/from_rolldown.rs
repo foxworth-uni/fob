@@ -41,10 +41,12 @@ pub async fn from_rolldown_parts(
     module_table: &ModuleTable,
     entry_points: &[EntryPoint],
 ) -> Result<ModuleGraph, RolldownGraphError> {
-    let graph = ModuleGraph::new().await.map_err(|_| RolldownGraphError::ModuleIdConversion {
-        path: "graph initialization".to_string(),
-        source: ModuleIdError::EmptyPath,
-    })?;
+    let graph = ModuleGraph::new()
+        .await
+        .map_err(|_| RolldownGraphError::ModuleIdConversion {
+            path: "graph initialization".to_string(),
+            source: ModuleIdError::EmptyPath,
+        })?;
     let mut idx_to_id: HashMap<ModuleIdx, ModuleId> = HashMap::new();
     let mut external_idx_to_name: HashMap<ModuleIdx, String> = HashMap::new();
     let mut pending_modules: Vec<PendingModule> = Vec::new();
@@ -120,13 +122,15 @@ pub async fn from_rolldown_parts(
     for pending in pending_modules {
         let module_id = pending.id.clone();
         let mut module = pending.module;
-        
+
         let mut resolved_imports = Vec::with_capacity(pending.imports.len());
         for mut pending_import in pending.imports {
             if let Some(target_idx) = pending_import.target {
                 if let Some(target_id) = idx_to_id.get(&target_idx) {
                     pending_import.import.resolved_to = Some(target_id.clone());
-                    graph.add_dependency(module_id.clone(), target_id.clone()).await
+                    graph
+                        .add_dependency(module_id.clone(), target_id.clone())
+                        .await
                         .map_err(|_e| RolldownGraphError::ModuleIdConversion {
                             path: format!("dependency {} -> {}", module_id, target_id),
                             source: ModuleIdError::EmptyPath,
@@ -143,7 +147,9 @@ pub async fn from_rolldown_parts(
 
         // Update module with resolved imports before adding
         module.imports = resolved_imports;
-        graph.add_module(module).await
+        graph
+            .add_module(module)
+            .await
             .map_err(|_e| RolldownGraphError::ModuleIdConversion {
                 path: module_id.to_string(),
                 source: ModuleIdError::EmptyPath,
@@ -152,11 +158,12 @@ pub async fn from_rolldown_parts(
 
     for dep in external_aggregate.into_values() {
         let specifier = dep.specifier.clone();
-        graph.add_external_dependency(dep).await
-            .map_err(|_| RolldownGraphError::ModuleIdConversion {
+        graph.add_external_dependency(dep).await.map_err(|_| {
+            RolldownGraphError::ModuleIdConversion {
                 path: specifier,
                 source: ModuleIdError::EmptyPath,
-            })?;
+            }
+        })?;
     }
 
     Ok(graph)
@@ -177,14 +184,14 @@ fn convert_module_id(normal: &NormalModule) -> Result<ModuleId, RolldownGraphErr
 
 fn convert_exports(normal: &NormalModule, module_id: &ModuleId) -> Vec<Export> {
     let mut exports = Vec::new();
-    
+
     // Build a map of import record indices to their module sources
     // This helps us detect re-exports by matching exports to imports
     let mut import_record_sources: FxHashMap<ImportRecordIdx, String> = FxHashMap::default();
     for (idx, record) in normal.ecma_view.import_records.iter_enumerated() {
         import_record_sources.insert(idx, record.module_request.to_string());
     }
-    
+
     // Build a map of export names to their import record indices (if re-exported)
     let mut export_to_import_record: FxHashMap<String, ImportRecordIdx> = FxHashMap::default();
     for named_import in normal.ecma_view.named_imports.values() {
@@ -193,10 +200,10 @@ fn convert_exports(normal: &NormalModule, module_id: &ModuleId) -> Vec<Export> {
             export_to_import_record.insert(lit.to_string(), named_import.record_id);
         }
     }
-    
+
     for (name, export) in &normal.ecma_view.named_exports {
         let span = export.span;
-        
+
         // Determine export kind
         let (kind, re_exported_from) = if name.as_str() == "default" {
             (ExportKind::Default, None)
@@ -207,15 +214,15 @@ fn convert_exports(normal: &NormalModule, module_id: &ModuleId) -> Vec<Export> {
         } else {
             (ExportKind::Named, None)
         };
-        
+
         exports.push(Export::new(
             name.to_string(),
             kind,
-            false,  // is_used
-            false,  // is_type_only
+            false, // is_used
+            false, // is_type_only
             re_exported_from,
-            false,  // is_framework_used
-            export.came_from_commonjs,  // ⬅️ NEW: Use rolldown's CJS flag
+            false,                     // is_framework_used
+            export.came_from_commonjs, // ⬅️ NEW: Use rolldown's CJS flag
             SourceSpan::new(module_id.as_path(), span.start, span.end),
         ));
     }
@@ -227,14 +234,14 @@ fn convert_exports(normal: &NormalModule, module_id: &ModuleId) -> Vec<Export> {
             // ImportRecord doesn't have span info, so we use a zero span
             // The span info is in the import lookup table, but star re-exports may not be there
             exports.push(Export::new(
-                "*".to_string(),  // Star re-export uses "*" as the name
-                ExportKind::StarReExport,  // ⬅️ NEW: Use new enum variant
-                false,  // is_used
-                false,  // is_type_only
-                Some(record.module_request.to_string()),  // Source module
-                false,  // is_framework_used
-                false,  // came_from_commonjs (star re-exports are always ESM)
-                SourceSpan::new(module_id.as_path(), 0, 0),  // No span available
+                "*".to_string(),                            // Star re-export uses "*" as the name
+                ExportKind::StarReExport,                   // ⬅️ NEW: Use new enum variant
+                false,                                      // is_used
+                false,                                      // is_type_only
+                Some(record.module_request.to_string()),    // Source module
+                false,                                      // is_framework_used
+                false, // came_from_commonjs (star re-exports are always ESM)
+                SourceSpan::new(module_id.as_path(), 0, 0), // No span available
             ));
         }
     }
@@ -276,38 +283,39 @@ fn convert_imports(normal: &NormalModule, module_id: &ModuleId) -> Vec<PendingIm
         .keys()
         .map(|name| name.to_string())
         .collect();
-    
+
     normal
         .ecma_view
         .import_records
         .iter_enumerated()
         .map(|(idx, record)| {
             let specifiers = record_specifiers.remove(&idx).unwrap_or_default();
-            
+
             // Check if this import is a re-export
             // Primary signal: Check if this import record has the IsExportStar flag
             // Secondary: Check if imported names match exported names (for named re-exports)
             let is_reexport = record.meta.contains(ImportRecordMeta::IsExportStar) || {
                 // Named re-exports: check if imported names match exported names
-                !specifiers.is_empty() && specifiers.iter().any(|spec| {
-                    match spec {
-                        ImportSpecifier::Named(name) => exported_names.contains(name),
-                        ImportSpecifier::Default => exported_names.contains("default"),
-                        ImportSpecifier::Namespace(_) => {
-                            // Namespace imports (import * as X) are NOT re-exports
-                            // unless they're also in the exported names
-                            false
+                !specifiers.is_empty()
+                    && specifiers.iter().any(|spec| {
+                        match spec {
+                            ImportSpecifier::Named(name) => exported_names.contains(name),
+                            ImportSpecifier::Default => exported_names.contains("default"),
+                            ImportSpecifier::Namespace(_) => {
+                                // Namespace imports (import * as X) are NOT re-exports
+                                // unless they're also in the exported names
+                                false
+                            }
                         }
-                    }
-                })
+                    })
             };
-            
+
             let import_kind = if is_reexport {
                 ImportKind::ReExport
             } else {
                 convert_import_kind(record.kind)
             };
-            
+
             let span = span_lookup
                 .remove(&idx)
                 .unwrap_or_else(|| SourceSpan::new(&module_path, 0, 0));
@@ -345,7 +353,7 @@ fn convert_module_format(format: RdModuleDefFormat) -> FobModuleFormat {
         RdModuleDefFormat::CjsPackageJson => FobModuleFormat::CjsPackageJson,
         RdModuleDefFormat::Unknown => FobModuleFormat::Unknown,
         // Rolldown uses variants like ESM and CJS (capitalized), map them to our format
-        _ => FobModuleFormat::Unknown,  // Catch-all for any other variants
+        _ => FobModuleFormat::Unknown, // Catch-all for any other variants
     }
 }
 

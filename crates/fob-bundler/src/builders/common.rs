@@ -8,13 +8,11 @@ use rolldown::{BundlerBuilder as RolldownBundlerBuilder, BundlerOptions, InputIt
 use rolldown_plugin::{Plugin, __inner::SharedPluginable};
 use rustc_hash::FxHashMap;
 
-use fob::analysis::{
-    stats::compute_stats, AnalysisResult, CacheAnalysis, TransformationTrace,
-};
 use crate::analysis::AnalyzedBundle;
-use crate::builders::{asset_registry::AssetRegistry, asset_plugin::AssetDetectionPlugin};
+use crate::builders::{asset_plugin::AssetDetectionPlugin, asset_registry::AssetRegistry};
 use crate::module_collection_plugin::ModuleCollectionPlugin;
 use crate::{Error, Result};
+use fob::analysis::{stats::compute_stats, AnalysisResult, CacheAnalysis, TransformationTrace};
 
 /// Normalize an entry path by cleaning redundant `.` / `..` segments.
 pub(crate) fn normalize_entry_path(entry: impl AsRef<Path>) -> String {
@@ -138,7 +136,9 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
 
                 #[cfg(not(target_family = "wasm"))]
                 {
-                    eprintln!("[FOB_BUILD] No runtime or explicit cwd, using std::env::current_dir()");
+                    eprintln!(
+                        "[FOB_BUILD] No runtime or explicit cwd, using std::env::current_dir()"
+                    );
                     std::env::current_dir()?
                 }
             }
@@ -185,15 +185,15 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
         ".woff2".to_string(),
     ];
     // Runtime is required for asset detection (WASM compatibility)
-    let runtime = runtime.ok_or_else(|| Error::InvalidConfig(
-        "Runtime is required for asset detection plugin".to_string()
-    ))?;
+    let runtime = runtime.ok_or_else(|| {
+        Error::InvalidConfig("Runtime is required for asset detection plugin".to_string())
+    })?;
 
     let asset_plugin = AssetDetectionPlugin::new(
         Arc::clone(&asset_registry),
         &scan_cwd,
         asset_extensions,
-        Arc::clone(&runtime)
+        Arc::clone(&runtime),
     );
     plugins.push(Arc::new(asset_plugin));
     eprintln!("[FOB_BUILD] Added asset detection plugin");
@@ -213,11 +213,14 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
         .await
         .map_err(|e| Error::Bundler(format!("{e:?}")))?;
 
-    eprintln!("[FOB_BUILD] Bundle complete. Asset registry has {} assets", asset_registry.len());
+    eprintln!(
+        "[FOB_BUILD] Bundle complete. Asset registry has {} assets",
+        asset_registry.len()
+    );
 
     // Asset detection now happens during bundling via the plugin transform hook
     // The asset_registry was populated by the AssetDetectionPlugin during transform
-    let asset_registry_opt = if asset_registry.len() > 0 {
+    let asset_registry_opt = if !asset_registry.is_empty() {
         Some(asset_registry)
     } else {
         None
@@ -225,11 +228,19 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
 
     // Extract collected module data from the plugin and build the module graph
     let collection_data = collection_plugin.take_data();
-    eprintln!("[FOB_BUILD] Collected {} modules", collection_data.modules.len());
+    eprintln!(
+        "[FOB_BUILD] Collected {} modules",
+        collection_data.modules.len()
+    );
 
-        let graph = fob::graph::ModuleGraph::from_collected_data(collection_data)
+    let graph = fob::graph::ModuleGraph::from_collected_data(collection_data)
         .await
-        .map_err(|e| Error::Bundler(format!("Failed to build module graph from collected data: {}", e)))?;
+        .map_err(|e| {
+            Error::Bundler(format!(
+                "Failed to build module graph from collected data: {}",
+                e
+            ))
+        })?;
 
     let stats = compute_stats(&graph).await?;
     let entry_points = graph.entry_points().await?;

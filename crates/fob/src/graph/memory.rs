@@ -13,10 +13,12 @@ use rustc_hash::{FxHashMap, FxHashMap as HashMap, FxHashSet as HashSet};
 use super::external_dep::ExternalDependency;
 use super::import::{ImportKind, ImportSpecifier};
 use super::symbol::{
-    ClassMemberMetadata, EnumMemberValue, Symbol, SymbolMetadata,
-    SymbolStatistics, UnreachableCode, UnusedSymbol,
+    ClassMemberMetadata, EnumMemberValue, Symbol, SymbolMetadata, SymbolStatistics,
+    UnreachableCode, UnusedSymbol,
 };
-use super::{Export, ExportKind, GraphStatistics, Import, Module, ModuleId, SourceSpan, SourceType};
+use super::{
+    Export, ExportKind, GraphStatistics, Import, Module, ModuleId, SourceSpan, SourceType,
+};
 use crate::{Error, Result};
 
 /// Information about a class member symbol
@@ -114,13 +116,17 @@ impl ModuleGraph {
     pub async fn from_collected_data(
         collection: super::collection::CollectionState,
     ) -> Result<Self> {
-        use super::from_collection::{convert_collected_exports, convert_collected_imports, convert_collected_module_id, infer_exports_kind, has_star_export, PendingImport};
-        use super::semantic::analyze_symbols;
+        use super::from_collection::{
+            convert_collected_exports, convert_collected_imports, convert_collected_module_id,
+            has_star_export, infer_exports_kind, PendingImport,
+        };
         use super::module::ModuleFormat as FobModuleFormat;
-        
+        use super::semantic::analyze_symbols;
+
         let graph = Self::new().await?;
 
-        let mut path_to_id: std::collections::HashMap<String, ModuleId> = std::collections::HashMap::new();
+        let mut path_to_id: std::collections::HashMap<String, ModuleId> =
+            std::collections::HashMap::new();
         let mut pending_modules: Vec<(ModuleId, Module, Vec<PendingImport>)> = Vec::new();
 
         // First pass: create module IDs and identify externals
@@ -129,9 +135,8 @@ impl ModuleGraph {
                 continue;
             }
 
-            let module_id = convert_collected_module_id(path).map_err(|e| {
-                Error::InvalidConfig(format!("Module ID conversion failed: {}", e))
-            })?;
+            let module_id = convert_collected_module_id(path)
+                .map_err(|e| Error::InvalidConfig(format!("Module ID conversion failed: {}", e)))?;
             path_to_id.insert(path.clone(), module_id);
         }
 
@@ -141,9 +146,9 @@ impl ModuleGraph {
                 continue;
             }
 
-            let module_id = path_to_id
-                .get(path)
-                .ok_or_else(|| Error::InvalidConfig(format!("Module ID not found for path: {}", path)))?;
+            let module_id = path_to_id.get(path).ok_or_else(|| {
+                Error::InvalidConfig(format!("Module ID not found for path: {}", path))
+            })?;
 
             let exports = convert_collected_exports(collected, module_id);
             let imports = convert_collected_imports(collected, module_id, &path_to_id);
@@ -197,7 +202,9 @@ impl ModuleGraph {
                 if let Some(target_path) = pending_import.target {
                     if let Some(target_id) = path_to_id.get(&target_path) {
                         pending_import.import.resolved_to = Some(target_id.clone());
-                        graph.add_dependency(module_id.clone(), target_id.clone()).await?;
+                        graph
+                            .add_dependency(module_id.clone(), target_id.clone())
+                            .await?;
                     } else {
                         // Any unresolved import is treated as external dependency
                         let dep = external_aggregate
@@ -253,15 +260,17 @@ impl ModuleGraph {
         let mut inner = self.inner.write();
 
         // Add forward edge
-        inner.dependencies
+        inner
+            .dependencies
             .entry(from.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(to.clone());
 
         // Add reverse edge
-        inner.dependents
+        inner
+            .dependents
             .entry(to)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(from);
 
         Ok(())
@@ -307,7 +316,11 @@ impl ModuleGraph {
     /// Get module by filesystem path.
     pub async fn module_by_path(&self, path: &Path) -> Result<Option<Module>> {
         let inner = self.inner.read();
-        Ok(inner.modules.values().find(|module| module.path == path).cloned())
+        Ok(inner
+            .modules
+            .values()
+            .find(|module| module.path == path)
+            .cloned())
     }
 
     /// Get all modules.
@@ -379,7 +392,8 @@ impl ModuleGraph {
                 continue;
             }
 
-            let has_dependents = inner.dependents
+            let has_dependents = inner
+                .dependents
                 .get(&module.id)
                 .map(|deps| !deps.is_empty())
                 .unwrap_or(false);
@@ -419,6 +433,7 @@ impl ModuleGraph {
         Ok(unused)
     }
 
+    #[allow(clippy::only_used_in_recursion)]
     fn is_export_used_inner(
         &self,
         inner: &GraphInner,
@@ -439,15 +454,19 @@ impl ModuleGraph {
                         continue;
                     }
 
-                    let is_used = import_record.specifiers.iter().any(|specifier| match specifier {
-                        ImportSpecifier::Named(name) => name == export_name,
-                        ImportSpecifier::Default => export_name == "default",
-                        ImportSpecifier::Namespace(_) => {
-                            // True namespace imports (import * as X) use ALL exports
-                            // But star re-exports (export * from) only forward, not use
-                            !matches!(import_record.kind, ImportKind::ReExport)
-                        }
-                    });
+                    let is_used =
+                        import_record
+                            .specifiers
+                            .iter()
+                            .any(|specifier| match specifier {
+                                ImportSpecifier::Named(name) => name == export_name,
+                                ImportSpecifier::Default => export_name == "default",
+                                ImportSpecifier::Namespace(_) => {
+                                    // True namespace imports (import * as X) use ALL exports
+                                    // But star re-exports (export * from) only forward, not use
+                                    !matches!(import_record.kind, ImportKind::ReExport)
+                                }
+                            });
 
                     if is_used {
                         return Ok(true);
@@ -488,7 +507,11 @@ impl ModuleGraph {
                                 if re_exported_from == source_path.as_ref() {
                                     // This is a named re-export of our specific export
                                     // Recursively check if THIS re-export is used
-                                    if self.is_export_used_inner(inner, re_exporter_id, &export.name)? {
+                                    if self.is_export_used_inner(
+                                        inner,
+                                        re_exporter_id,
+                                        &export.name,
+                                    )? {
                                         return Ok(true);
                                     }
                                 }
@@ -742,7 +765,10 @@ impl ModuleGraph {
     }
 
     /// Apply multiple framework rules.
-    pub async fn apply_framework_rules(&self, rules: Vec<Box<dyn super::FrameworkRule>>) -> Result<()> {
+    pub async fn apply_framework_rules(
+        &self,
+        rules: Vec<Box<dyn super::FrameworkRule>>,
+    ) -> Result<()> {
         for rule in rules {
             self.apply_framework_rule(rule).await?;
         }
@@ -850,11 +876,7 @@ impl ModuleGraph {
     pub async fn symbol_statistics(&self) -> Result<SymbolStatistics> {
         let inner = self.inner.read();
 
-        let tables: Vec<_> = inner
-            .modules
-            .values()
-            .map(|m| &m.symbol_table)
-            .collect();
+        let tables: Vec<_> = inner.modules.values().map(|m| &m.symbol_table).collect();
 
         Ok(SymbolStatistics::from_tables(tables.into_iter()))
     }
@@ -1030,7 +1052,7 @@ impl ModuleGraph {
         include_dev: bool,
         include_peer: bool,
     ) -> Result<Vec<super::package_json::UnusedDependency>> {
-        use super::package_json::{DependencyType, UnusedDependency, extract_package_name};
+        use super::package_json::{extract_package_name, DependencyType, UnusedDependency};
 
         let inner = self.inner.read();
 
@@ -1082,7 +1104,9 @@ impl ModuleGraph {
         &self,
         package_json: &super::package_json::PackageJson,
     ) -> Result<super::package_json::DependencyCoverage> {
-        use super::package_json::{DependencyCoverage, DependencyType, TypeCoverage, extract_package_name};
+        use super::package_json::{
+            extract_package_name, DependencyCoverage, DependencyType, TypeCoverage,
+        };
 
         let inner = self.inner.read();
 
@@ -1163,11 +1187,7 @@ impl ModuleGraph {
         let inner = self.inner.read();
 
         let get_deps = |module: &ModuleId| -> Vec<ModuleId> {
-            inner
-                .dependencies
-                .get(module)
-                .cloned()
-                .unwrap_or_default()
+            inner.dependencies.get(module).cloned().unwrap_or_default()
         };
 
         Ok(find_chains(&entry_points, target, get_deps))

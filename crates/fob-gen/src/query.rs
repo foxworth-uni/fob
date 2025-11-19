@@ -5,9 +5,9 @@
 
 #[cfg(feature = "query-api")]
 mod query_impl {
-    use oxc_ast::ast::*;
     use oxc_allocator::Allocator;
-    use oxc_ast_visit::{Visit, walk};
+    use oxc_ast::ast::*;
+    use oxc_ast_visit::{walk, Visit};
 
     /// Query builder for finding AST nodes
     pub struct QueryBuilder<'a> {
@@ -175,9 +175,7 @@ mod query_impl {
         where
             F: Fn(&JSXElement<'a>) -> bool,
         {
-            self.matches.retain(|&ptr| {
-                unsafe { predicate(&*ptr) }
-            });
+            self.matches.retain(|&ptr| unsafe { predicate(&*ptr) });
             self
         }
 
@@ -195,11 +193,7 @@ mod query_impl {
     }
 
     impl<'a> ImportQuery<'a> {
-        fn new(
-            _allocator: &'a Allocator,
-            program: &'a Program<'a>,
-            source: Option<&str>,
-        ) -> Self {
+        fn new(_allocator: &'a Allocator, program: &'a Program<'a>, source: Option<&str>) -> Self {
             let mut query = Self {
                 program,
                 source: source.map(|s| s.to_string()),
@@ -270,7 +264,11 @@ mod query_impl {
                 'ast: 'a,
             {
                 fn visit_module_declaration(&mut self, decl: &ModuleDeclaration<'ast>) {
-                    if matches!(decl, ModuleDeclaration::ExportNamedDeclaration(_) | ModuleDeclaration::ExportDefaultDeclaration(_)) {
+                    if matches!(
+                        decl,
+                        ModuleDeclaration::ExportNamedDeclaration(_)
+                            | ModuleDeclaration::ExportDefaultDeclaration(_)
+                    ) {
                         self.matches.push(decl as *const _);
                     }
                 }
@@ -292,4 +290,3 @@ mod query_impl {
 
 #[cfg(feature = "query-api")]
 pub use query_impl::*;
-

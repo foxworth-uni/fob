@@ -52,7 +52,13 @@ impl DevBuilder {
     /// # Errors
     ///
     /// Returns errors from the underlying build process
-    pub async fn initial_build(&self) -> Result<(u64, BundleCache, Option<std::sync::Arc<fob_bundler::builders::asset_registry::AssetRegistry>>)> {
+    pub async fn initial_build(
+        &self,
+    ) -> Result<(
+        u64,
+        BundleCache,
+        Option<std::sync::Arc<fob_bundler::builders::asset_registry::AssetRegistry>>,
+    )> {
         let start = Instant::now();
 
         let result = crate::commands::build::build_with_result(&self.config, &self.cwd).await?;
@@ -82,7 +88,13 @@ impl DevBuilder {
     /// # Errors
     ///
     /// Returns errors from the build process
-    pub async fn rebuild(&self) -> Result<(u64, BundleCache, Option<std::sync::Arc<fob_bundler::builders::asset_registry::AssetRegistry>>)> {
+    pub async fn rebuild(
+        &self,
+    ) -> Result<(
+        u64,
+        BundleCache,
+        Option<std::sync::Arc<fob_bundler::builders::asset_registry::AssetRegistry>>,
+    )> {
         let start = Instant::now();
 
         // For now, delegate to unified build since we're using the production
@@ -219,7 +231,11 @@ impl DevBuilder {
 
         for asset in registry.all_assets() {
             if let Some(url_path) = &asset.url_path {
-                tracing::debug!("[URL_REWRITE] Mapping: '{}' -> '{}'", asset.specifier, url_path);
+                tracing::debug!(
+                    "[URL_REWRITE] Mapping: '{}' -> '{}'",
+                    asset.specifier,
+                    url_path
+                );
                 url_map.insert(asset.specifier.clone(), url_path.clone());
             }
         }

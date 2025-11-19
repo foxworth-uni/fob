@@ -83,11 +83,11 @@
 //! ```
 
 mod builder;
-mod error;
-mod jsx;
-mod format;
-mod program_builder;
 mod dev_ui;
+mod error;
+mod format;
+mod jsx;
+mod program_builder;
 
 #[cfg(feature = "parser")]
 mod parser;
@@ -102,23 +102,23 @@ mod transform;
 mod internal;
 
 pub use builder::JsBuilder;
-pub use error::{GenError, Result};
-pub use jsx::JsxBuilder;
-pub use format::{FormatOptions, QuoteStyle, IndentStyle};
-pub use program_builder::ProgramBuilder;
 pub use dev_ui::{HtmlBuilder, RouteSpec};
+pub use error::{GenError, Result};
+pub use format::{FormatOptions, IndentStyle, QuoteStyle};
+pub use jsx::JsxBuilder;
+pub use program_builder::ProgramBuilder;
 
 #[cfg(feature = "parser")]
-pub use parser::{ParseOptions, ParseDiagnostic, ParsedProgram, parse};
+pub use parser::{parse, ParseDiagnostic, ParseOptions, ParsedProgram};
 
 #[cfg(feature = "query-api")]
-pub use query::{QueryBuilder, CallQuery, JsxQuery, ImportQuery, ExportQuery};
+pub use query::{CallQuery, ExportQuery, ImportQuery, JsxQuery, QueryBuilder};
 
 #[cfg(feature = "transform-engine")]
-pub use transform::{TransformEngine, TransformPass, TransformResult, TransformOutput};
+pub use transform::{TransformEngine, TransformOutput, TransformPass, TransformResult};
 
 #[cfg(feature = "fob_internal")]
-pub use internal::{ImportManipulation, DevInjection, AstMutations};
+pub use internal::{AstMutations, DevInjection, ImportManipulation};
 
 // Re-export commonly used OXC types for convenience
 pub use oxc_allocator::Allocator;

@@ -44,20 +44,20 @@ keywords = ["bundler", "esm", "javascript", "typescript", "rust"]
 
 [workspace.dependencies]
 # OXC ecosystem - High-performance JavaScript tooling
-oxc_parser = "0.97.0"
-oxc_ast = "0.97.0"
-oxc_ast_visit = "0.97.0"
-oxc_semantic = "0.97.0"
+oxc_parser = "0.98.0"
+oxc_ast = "0.98.0"
+oxc_ast_visit = "0.98.0"
+oxc_semantic = "0.98.0"
 oxc_resolver = "11.13.0"
-oxc_transformer = "0.97.0"
-oxc_transformer_plugins = "0.97.0"
-oxc_codegen = "0.97.0"
-oxc_minifier = "0.97.0"
-oxc_allocator = "0.97.0"
-oxc_span = "0.97.0"
+oxc_transformer = "0.98.0"
+oxc_transformer_plugins = "0.98.0"
+oxc_codegen = "0.98.0"
+oxc_minifier = "0.98.0"
+oxc_allocator = "0.98.0"
+oxc_span = "0.98.0"
 oxc_sourcemap = "6.0.1"
-oxc_traverse = "0.97.0"
-oxc_isolated_declarations = "0.97.0"
+oxc_traverse = "0.98.0"
+oxc_isolated_declarations = "0.98.0"
 
 # Rolldown bundler
 rolldown = { git = "https://github.com/rolldown/rolldown", tag = "v1.0.0-beta.50" }
@@ -172,10 +172,10 @@ napi-derive = "3"
 napi-build = "2.3"
 
 # WASM Bindings
-wit-bindgen = "0.38"
+wit-bindgen = "0.48.0"
 
 # Schema & Validation
-jsonschema = "0.33"
+jsonschema = "0.37.1"
 schemars = "1.1"
 
 # Testing

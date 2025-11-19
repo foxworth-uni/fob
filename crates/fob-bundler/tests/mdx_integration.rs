@@ -3,12 +3,12 @@
 //! These tests verify that the joy-mdx plugin correctly integrates with
 //! Rolldown using the new task-based builder APIs.
 
-use fob_bundler::{plugin, BuildOptions, BunnyMdxPlugin, Platform};
-use fob_bundler::{Runtime, RuntimeError, RuntimeResult, FileMetadata};
-use tempfile::TempDir;
-use std::sync::Arc;
 use async_trait::async_trait;
+use fob_bundler::{plugin, BuildOptions, BunnyMdxPlugin, Platform};
+use fob_bundler::{FileMetadata, Runtime, RuntimeError, RuntimeResult};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use tempfile::TempDir;
 
 /// Simple test runtime for MDX integration tests
 #[derive(Debug)]
@@ -69,7 +69,11 @@ impl Runtime for TestRuntime {
     async fn read_dir(&self, path: &Path) -> RuntimeResult<Vec<String>> {
         let entries: Vec<String> = std::fs::read_dir(path)
             .map_err(|e| RuntimeError::Io(e.to_string()))?
-            .filter_map(|entry| entry.ok().and_then(|e| e.file_name().to_str().map(String::from)))
+            .filter_map(|entry| {
+                entry
+                    .ok()
+                    .and_then(|e| e.file_name().to_str().map(String::from))
+            })
             .collect();
         Ok(entries)
     }

@@ -13,20 +13,17 @@
 //! - **Error handling**: Uses `CollectionGraphError` to provide context on
 //!   conversion failures (e.g., invalid module IDs, graph initialization).
 
-
 use std::collections::HashMap;
 use std::path::PathBuf;
 
 use thiserror::Error;
 
-use super::collection::{
-    CollectedExport, CollectedModule, CollectedImportSpecifier,
-};
-use super::{
-    Export, ExportKind, Import, ImportKind, ImportSpecifier as FobImportSpecifier,
-    ModuleId, ModuleIdError, SourceSpan,
-};
+use super::collection::{CollectedExport, CollectedModule, CollectedImportSpecifier, CollectedImportKind};
 use super::module::ExportsKind as FobExportsKind;
+use super::{
+    Export, ExportKind, Import, ImportKind, ImportSpecifier as FobImportSpecifier, ModuleId,
+    ModuleIdError, SourceSpan,
+};
 
 /// Errors that can occur during collection-to-graph conversion
 #[derive(Debug, Error)]
@@ -56,18 +53,13 @@ pub struct PendingImport {
 
 pub fn convert_collected_module_id(path: &str) -> Result<ModuleId, CollectionGraphError> {
     let path_buf = PathBuf::from(path);
-    ModuleId::new(&path_buf).map_err(|source| {
-        CollectionGraphError::ModuleIdConversion {
-            path: path.to_string(),
-            source,
-        }
+    ModuleId::new(&path_buf).map_err(|source| CollectionGraphError::ModuleIdConversion {
+        path: path.to_string(),
+        source,
     })
 }
 
-pub fn convert_collected_exports(
-    collected: &CollectedModule,
-    module_id: &ModuleId,
-) -> Vec<Export> {
+pub fn convert_collected_exports(collected: &CollectedModule, module_id: &ModuleId) -> Vec<Export> {
     let mut exports = Vec::new();
 
     for export in &collected.exports {
@@ -133,10 +125,10 @@ pub fn convert_collected_imports(
             .map(convert_import_specifier)
             .collect();
 
-        let kind = if import.is_dynamic {
-            ImportKind::Dynamic
-        } else {
-            ImportKind::Static
+        let kind = match import.kind {
+            CollectedImportKind::Dynamic => ImportKind::Dynamic,
+            CollectedImportKind::Static => ImportKind::Static,
+            CollectedImportKind::TypeOnly => ImportKind::TypeOnly,
         };
 
         let fob_import = Import::new(
@@ -171,7 +163,9 @@ pub fn convert_import_specifier(spec: &CollectedImportSpecifier) -> FobImportSpe
             FobImportSpecifier::Named(imported.clone())
         }
         CollectedImportSpecifier::Default { local: _ } => FobImportSpecifier::Default,
-        CollectedImportSpecifier::Namespace { local: _ } => FobImportSpecifier::Namespace("*".to_string()),
+        CollectedImportSpecifier::Namespace { local: _ } => {
+            FobImportSpecifier::Namespace("*".to_string())
+        }
     }
 }
 
@@ -185,5 +179,7 @@ pub fn infer_exports_kind(exports: &[CollectedExport]) -> FobExportsKind {
 }
 
 pub fn has_star_export(exports: &[CollectedExport]) -> bool {
-    exports.iter().any(|e| matches!(e, CollectedExport::All { .. }))
+    exports
+        .iter()
+        .any(|e| matches!(e, CollectedExport::All { .. }))
 }

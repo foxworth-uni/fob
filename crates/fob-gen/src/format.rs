@@ -1,18 +1,13 @@
 //! Code formatting options for generated JavaScript
 
 /// Quote style for string literals
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum QuoteStyle {
     /// Single quotes: `'hello'`
     Single,
     /// Double quotes: `"hello"`
+    #[default]
     Double,
-}
-
-impl Default for QuoteStyle {
-    fn default() -> Self {
-        QuoteStyle::Double
-    }
 }
 
 /// Indentation style
@@ -74,4 +69,3 @@ impl FormatOptions {
         }
     }
 }
-

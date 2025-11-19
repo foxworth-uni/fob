@@ -16,4 +16,3 @@ pub struct AnalyzedBundle {
     /// Asset registry containing discovered static assets
     pub asset_registry: Option<Arc<AssetRegistry>>,
 }
-

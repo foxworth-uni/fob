@@ -1,7 +1,7 @@
-use fob::analysis::{AnalysisResult, CacheAnalysis, TransformationTrace};
-use fob::graph::{GraphStatistics, ModuleGraph, ModuleId};
 use crate::analysis::AnalyzedBundle;
 use crate::BundleOutput;
+use fob::analysis::{AnalysisResult, CacheAnalysis, TransformationTrace};
+use fob::graph::{GraphStatistics, ModuleGraph, ModuleId};
 
 /// High-level wrapper around `AnalyzedBundle` with ergonomic accessors.
 pub struct Bundle {

@@ -46,7 +46,7 @@ async fn main() -> Result<()> {
     // Build 1: ESM with Code Splitting
     // =========================================================================
     println!("📦 Building ESM bundle with code splitting...");
-    
+
     let esm_result = BuildOptions::app(["input/app.js", "input/worker.js"])
         .runtime(runtime.clone())
         .outdir("output/esm")
@@ -58,9 +58,9 @@ async fn main() -> Result<()> {
         .minify(true)
         .build()
         .await?;
-    
+
     esm_result.write_to_force("output/esm")?;
-    
+
     let esm_stats = esm_result.stats();
     println!("   ✓ ESM bundle complete");
     println!("     • Modules: {}", esm_stats.module_count);
@@ -72,7 +72,7 @@ async fn main() -> Result<()> {
     // Build 2: CommonJS for Node.js
     // =========================================================================
     println!("📦 Building CommonJS bundle for Node.js...");
-    
+
     let cjs_result = BuildOptions::app(["input/app.js"])
         .runtime(runtime.clone())
         .outdir("output/cjs")
@@ -82,9 +82,9 @@ async fn main() -> Result<()> {
         .minify(false) // Keep readable for Node.js debugging
         .build()
         .await?;
-    
+
     cjs_result.write_to_force("output/cjs")?;
-    
+
     let cjs_stats = cjs_result.stats();
     println!("   ✓ CommonJS bundle complete");
     println!("     • Modules: {}", cjs_stats.module_count);
@@ -96,7 +96,7 @@ async fn main() -> Result<()> {
     // Build 3: IIFE for Browsers (No Module System)
     // =========================================================================
     println!("📦 Building IIFE bundle for browsers...");
-    
+
     let iife_result = BuildOptions::app(["input/app.js"])
         .runtime(runtime)
         .outdir("output/iife")
@@ -106,9 +106,9 @@ async fn main() -> Result<()> {
         .minify(true)
         .build()
         .await?;
-    
+
     iife_result.write_to_force("output/iife")?;
-    
+
     let iife_stats = iife_result.stats();
     println!("   ✓ IIFE bundle complete");
     println!("     • Modules: {}", iife_stats.module_count);
@@ -120,7 +120,7 @@ async fn main() -> Result<()> {
     // Summary
     // =========================================================================
     println!("✅ All bundles complete!\n");
-    
+
     println!("📁 Output Structure:");
     println!("   output/");
     println!("   ├── esm/          # ES modules with code splitting");
@@ -131,15 +131,14 @@ async fn main() -> Result<()> {
     println!("   │   └── app.js    # CommonJS format");
     println!("   └── iife/         # IIFE for browsers");
     println!("       └── app.js");
-    
+
     println!("\n💡 Usage Examples:");
     println!("   ESM:  import {{ calculate }} from './output/esm/app.js'");
     println!("   CJS:  const {{ calculate }} = require('./output/cjs/app.js')");
     println!("   IIFE: <script src=\"output/iife/app.js\"></script>");
-    
+
     println!("\n🚀 Try it:");
     println!("   node output/cjs/app.js");
 
     Ok(())
 }
-

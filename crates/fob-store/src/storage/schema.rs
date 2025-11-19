@@ -56,4 +56,3 @@ pub async fn define_schema(db: &Surreal<Any>) -> Result<(), StorageError> {
 
     Ok(())
 }
-

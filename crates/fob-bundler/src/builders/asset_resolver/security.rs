@@ -22,10 +22,13 @@ pub async fn validate_asset_security(
     runtime: &dyn Runtime,
 ) -> Result<()> {
     // Get canonicalized cwd
-    let cwd_canonical = super::canonicalize_path(cwd, runtime).await.map_err(|e| Error::IoError {
-        message: "Failed to canonicalize working directory".to_string(),
-        source: std::io::Error::new(std::io::ErrorKind::Other, format!("{}", e)),
-    })?;
+    let cwd_canonical =
+        super::canonicalize_path(cwd, runtime)
+            .await
+            .map_err(|e| Error::IoError {
+                message: "Failed to canonicalize working directory".to_string(),
+                source: std::io::Error::other(format!("{e}")),
+            })?;
 
     // Check if path is within project directory
     if canonical.starts_with(&cwd_canonical) {
@@ -34,9 +37,9 @@ pub async fn validate_asset_security(
 
     // Check if path is within node_modules
     // Look for "node_modules" component in path
-    let has_node_modules = canonical.components().any(|c| {
-        matches!(c, Component::Normal(s) if s == "node_modules")
-    });
+    let has_node_modules = canonical
+        .components()
+        .any(|c| matches!(c, Component::Normal(s) if s == "node_modules"));
 
     if has_node_modules {
         // Ensure it's still under a node_modules that's under cwd
@@ -134,4 +137,3 @@ pub(crate) async fn canonicalize_path(path: &Path, runtime: &dyn Runtime) -> Res
     // This handles . and .. components correctly
     Ok(path.to_path_buf().clean())
 }
-

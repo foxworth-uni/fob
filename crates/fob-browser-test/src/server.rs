@@ -1,6 +1,6 @@
 //! Dev server lifecycle management abstraction.
 //!
-//! This module provides the DevServer trait that framework-specific test
+//! This module provides the `DevServer` trait that framework-specific test
 //! harnesses implement. fob-browser-test doesn't know how to start servers,
 //! but it can consume URLs from anything that implements this trait.
 //!
@@ -42,10 +42,10 @@ use std::fmt;
 /// ```
 #[async_trait]
 pub trait DevServer: Send + Sync {
-    /// Returns the base URL of the server (e.g., "http://localhost:3000").
+    /// Returns the base URL of the server (e.g., `<http://localhost:3000>`).
     ///
     /// This URL should NOT include a trailing slash. Paths will be joined
-    /// using url::Url::join() semantics.
+    /// using `url::Url::join()` semantics.
     fn base_url(&self) -> &str;
 
     /// Performs a health check to ensure the server is responsive.
@@ -66,7 +66,7 @@ pub trait DevServer: Send + Sync {
     fn url(&self, path: &str) -> String {
         let base = self.base_url().trim_end_matches('/');
         let path = path.trim_start_matches('/');
-        format!("{}/{}", base, path)
+        format!("{base}/{path}")
     }
 }
 

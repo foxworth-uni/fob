@@ -498,4 +498,3 @@ impl Default for BuildOptions {
 fn normalize_entry_path(entry: impl AsRef<Path>) -> String {
     crate::builders::common::normalize_entry_path(entry)
 }
-

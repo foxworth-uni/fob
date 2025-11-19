@@ -74,4 +74,3 @@ impl Default for TailwindOptions {
         }
     }
 }
-

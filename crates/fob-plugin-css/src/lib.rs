@@ -110,9 +110,9 @@ impl FobCssPlugin {
 
         // Minify if enabled
         if self.options.minify {
-            stylesheet
-                .minify(MinifyOptions::default())
-                .map_err(|e| anyhow::anyhow!("Failed to minify CSS from {}: {:?}", path.display(), e))?;
+            stylesheet.minify(MinifyOptions::default()).map_err(|e| {
+                anyhow::anyhow!("Failed to minify CSS from {}: {:?}", path.display(), e)
+            })?;
         }
 
         // Print to string
@@ -267,9 +267,7 @@ mod tests {
 
     #[test]
     fn test_should_process_exclusions() {
-        let plugin = FobCssPlugin::with_options(
-            CssPluginOptions::new().exclude("vendor/")
-        );
+        let plugin = FobCssPlugin::with_options(CssPluginOptions::new().exclude("vendor/"));
 
         assert!(!plugin.should_process("node_modules/vendor/styles.css"));
         assert!(plugin.should_process("src/styles.css"));
@@ -277,9 +275,7 @@ mod tests {
 
     #[test]
     fn test_should_process_inclusions() {
-        let plugin = FobCssPlugin::with_options(
-            CssPluginOptions::new().include("src/")
-        );
+        let plugin = FobCssPlugin::with_options(CssPluginOptions::new().include("src/"));
 
         assert!(plugin.should_process("src/styles.css"));
         assert!(!plugin.should_process("vendor/styles.css"));
@@ -298,9 +294,7 @@ mod tests {
 
     #[test]
     fn test_process_with_minification() {
-        let plugin = FobCssPlugin::with_options(
-            CssPluginOptions::new().with_minify(true)
-        );
+        let plugin = FobCssPlugin::with_options(CssPluginOptions::new().with_minify(true));
 
         let css = "body {\n  color: red;\n  background: blue;\n}";
         let path = Path::new("test.css");

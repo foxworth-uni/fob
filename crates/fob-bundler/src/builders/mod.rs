@@ -35,10 +35,10 @@ pub(crate) mod unified;
 mod virtual_file_plugin;
 
 // Asset handling modules
-pub mod asset_registry;
-pub mod asset_resolver;
 pub mod asset_plugin;
 pub mod asset_processor;
+pub mod asset_registry;
+pub mod asset_resolver;
 
 // Re-export public API
 pub use unified::{build, BuildOptions, BuildOutput, BuildResult, EntryPoints};

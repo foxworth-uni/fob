@@ -106,7 +106,7 @@ impl DevConfig {
         // Resolve project root using smart auto-detection
         let cwd = crate::commands::utils::resolve_project_root(
             base.cwd.as_deref(),                    // explicit --cwd flag
-            base.entry.first().map(|s| s.as_str()), // first entry point
+            base.entry.first().map(String::as_str), // first entry point
         )?;
 
         // Try to bind to requested port, fall back to next available

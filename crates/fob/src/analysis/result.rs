@@ -1,4 +1,7 @@
-use crate::graph::{symbol::SymbolStatistics, GraphStatistics, ModuleGraph, ModuleId, ExternalDependency, dependency_chain::DependencyChain};
+use crate::graph::{
+    dependency_chain::DependencyChain, symbol::SymbolStatistics, ExternalDependency,
+    GraphStatistics, ModuleGraph, ModuleId,
+};
 
 #[derive(Debug)]
 pub struct AnalysisResult {
@@ -35,7 +38,10 @@ impl AnalysisResult {
     /// Get all dependency chains to a target module.
     ///
     /// Useful for understanding why a module is included or finding circular dependencies.
-    pub async fn dependency_chains_to(&self, target: &ModuleId) -> crate::Result<Vec<DependencyChain>> {
+    pub async fn dependency_chains_to(
+        &self,
+        target: &ModuleId,
+    ) -> crate::Result<Vec<DependencyChain>> {
         self.graph.dependency_chains_to(target).await
     }
 
@@ -58,4 +64,3 @@ impl AnalysisResult {
         Ok(circular)
     }
 }
-

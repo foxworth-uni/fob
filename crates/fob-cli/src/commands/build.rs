@@ -46,7 +46,7 @@ pub async fn execute(args: BuildArgs) -> Result<()> {
     // Resolve project root using smart auto-detection
     let cwd = utils::resolve_project_root(
         config.cwd.as_deref(),                    // explicit --cwd flag
-        config.entry.first().map(|s| s.as_str()), // first entry point
+        config.entry.first().map(String::as_str), // first entry point
     )?;
 
     // Step 2: Clean output if requested
@@ -91,7 +91,10 @@ pub async fn execute(args: BuildArgs) -> Result<()> {
 /// - Applies bundle, splitting, platform, etc. from config
 ///
 /// This version returns the BuildResult for dev server use.
-pub(crate) async fn build_with_result(config: &FobConfig, cwd: &std::path::Path) -> Result<fob_bundler::BuildResult> {
+pub(crate) async fn build_with_result(
+    config: &FobConfig,
+    cwd: &std::path::Path,
+) -> Result<fob_bundler::BuildResult> {
     validate_output_dir(&config.out_dir, cwd)?;
 
     // Display build info
@@ -199,10 +202,12 @@ fn validate_output_dir(out_dir: &Path, cwd: &Path) -> Result<()> {
     let canonical_out = if resolved_out_dir.exists() {
         resolved_out_dir.canonicalize()?
     } else {
-        let parent = resolved_out_dir
-            .parent()
-            .ok_or_else(|| CliError::Build(BuildError::OutputNotWritable(resolved_out_dir.clone())))?;
-        parent.canonicalize()?.join(resolved_out_dir.file_name().unwrap())
+        let parent = resolved_out_dir.parent().ok_or_else(|| {
+            CliError::Build(BuildError::OutputNotWritable(resolved_out_dir.clone()))
+        })?;
+        parent
+            .canonicalize()?
+            .join(resolved_out_dir.file_name().unwrap())
     };
 
     let canonical_cwd = cwd.canonicalize()?;
@@ -214,7 +219,7 @@ fn validate_output_dir(out_dir: &Path, cwd: &Path) -> Result<()> {
         .unwrap_or(false);
 
     if !is_within_project && !is_sibling {
-        return Err(CliError::Build(BuildError::OutputNotWritable(resolved_out_dir)).into());
+        return Err(CliError::Build(BuildError::OutputNotWritable(resolved_out_dir)));
     }
 
     const DANGEROUS_PATHS: &[&str] = &[
@@ -240,16 +245,14 @@ fn validate_output_dir(out_dir: &Path, cwd: &Path) -> Result<()> {
             return Err(CliError::Build(BuildError::Custom(format!(
                 "Refusing to write to system directory: {}",
                 out_str
-            )))
-            .into());
+            ))));
         }
     }
 
     if out_str == "/" {
         return Err(CliError::Build(BuildError::Custom(
             "Refusing to write to root directory".to_string(),
-        ))
-        .into());
+        )));
     }
 
     Ok(())

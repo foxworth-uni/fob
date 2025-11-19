@@ -100,7 +100,7 @@ async fn execute_components_build(options: BuildOptions) -> Result<BuildResult> 
     };
 
     let mut bundles = FxHashMap::default();
-        let merged_graph = fob::graph::ModuleGraph::new().await?;
+    let merged_graph = fob::graph::ModuleGraph::new().await?;
     let mut all_entry_points = Vec::new();
     let mut all_warnings = Vec::new();
     let mut all_errors = Vec::new();
@@ -114,7 +114,13 @@ async fn execute_components_build(options: BuildOptions) -> Result<BuildResult> 
 
         // Merge this component's graph into the accumulated graph
         let modules = analyzed.analysis.graph.modules().await?;
-        let entry_points_set: std::collections::HashSet<_> = analyzed.analysis.graph.entry_points().await?.into_iter().collect();
+        let entry_points_set: std::collections::HashSet<_> = analyzed
+            .analysis
+            .graph
+            .entry_points()
+            .await?
+            .into_iter()
+            .collect();
         for module in modules {
             merged_graph.add_module(module.clone()).await?;
             // Add entry points from this component
@@ -146,9 +152,9 @@ async fn execute_components_build(options: BuildOptions) -> Result<BuildResult> 
         bundles.insert(name, analyzed.bundle);
     }
 
-        let stats = fob::analysis::stats::compute_stats(&merged_graph).await?;
+    let stats = fob::analysis::stats::compute_stats(&merged_graph).await?;
     let symbol_stats = merged_graph.symbol_statistics().await?;
-        let analysis = fob::analysis::AnalysisResult {
+    let analysis = fob::analysis::AnalysisResult {
         graph: merged_graph,
         entry_points: all_entry_points,
         warnings: all_warnings,
@@ -298,7 +304,10 @@ fn configure_rolldown_options(options: &BuildOptions) -> BundlerOptions {
     rolldown_options.platform = Some(options.platform);
 
     // Module resolution with absolute paths for pnpm/monorepo support
-    rolldown_options.resolve = Some(configure_resolution(options.cwd.as_ref(), &options.path_aliases));
+    rolldown_options.resolve = Some(configure_resolution(
+        options.cwd.as_ref(),
+        &options.path_aliases,
+    ));
 
     rolldown_options
 }
@@ -308,7 +317,10 @@ fn configure_rolldown_options(options: &BuildOptions) -> BundlerOptions {
 /// Uses multiple resolution paths to properly handle pnpm symlinks,
 /// monorepos, and nested package structures. Also configures path aliases
 /// for import resolution (e.g., "@/" -> "./src/").
-fn configure_resolution(cwd: Option<&PathBuf>, path_aliases: &FxHashMap<String, String>) -> ResolveOptions {
+fn configure_resolution(
+    cwd: Option<&PathBuf>,
+    path_aliases: &FxHashMap<String, String>,
+) -> ResolveOptions {
     // Use multiple paths for modules to handle different package manager layouts
     let modules = if let Some(cwd_path) = cwd {
         vec![

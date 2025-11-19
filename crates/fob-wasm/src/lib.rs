@@ -33,7 +33,8 @@ impl Guest for BundlerComponent {
             sourcemap: config.sourcemap,
         };
 
-        let result = rt.block_on(bundle_internal(config_internal))
+        let result = rt
+            .block_on(bundle_internal(config_internal))
             .map_err(|e| e.to_string())?;
 
         // Convert back to WIT types

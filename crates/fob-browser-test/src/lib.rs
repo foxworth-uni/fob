@@ -8,11 +8,11 @@
 //!
 //! ## Architecture
 //!
-//! - **TestBrowser**: Manages the browser process lifecycle
-//! - **Page**: Represents a browser tab with navigation and scripting
-//! - **ConsoleCapture**: Thread-safe accumulation of console messages
-//! - **DevServer**: Trait for integrating with dev servers
-//! - **WaitConfig**: Configurable waiting strategies with timeouts
+//! - **`TestBrowser`**: Manages the browser process lifecycle
+//! - **`Page`**: Represents a browser tab with navigation and scripting
+//! - **`ConsoleCapture`**: Thread-safe accumulation of console messages
+//! - **`DevServer`**: Trait for integrating with dev servers
+//! - **`WaitConfig`**: Configurable waiting strategies with timeouts
 //!
 //! ## Design Principles
 //!

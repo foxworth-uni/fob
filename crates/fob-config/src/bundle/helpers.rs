@@ -32,4 +32,3 @@ pub(crate) fn default_html_filename() -> String {
 pub(crate) fn default_lang() -> String {
     "en".to_string()
 }
-

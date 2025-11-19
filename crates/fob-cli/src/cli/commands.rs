@@ -146,7 +146,12 @@ pub struct BuildArgs {
     /// - merge: Merge LLM output with existing JSDoc (default, preserves custom tags)
     /// - replace: Replace existing JSDoc entirely with LLM output
     /// - skip: Skip symbols that already have JSDoc
-    #[arg(long, value_enum, value_name = "STRATEGY", requires = "docs_write_back")]
+    #[arg(
+        long,
+        value_enum,
+        value_name = "STRATEGY",
+        requires = "docs_write_back"
+    )]
     pub docs_merge_strategy: Option<DocsMergeStrategy>,
 
     /// Skip creating backup files when writing back
@@ -349,4 +354,3 @@ pub struct CheckArgs {
     #[arg(short, long)]
     pub warnings: bool,
 }
-

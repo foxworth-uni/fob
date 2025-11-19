@@ -5,14 +5,14 @@
 //! JavaScript/TypeScript AST nodes.
 
 use oxc_ast::ast::{
-    Class, ClassElement, MethodDefinition, MethodDefinitionKind, PropertyDefinition,
-    PropertyKey, TSAccessibility, TSEnumDeclaration, TSEnumMemberName, Expression,
+    Class, ClassElement, Expression, MethodDefinition, MethodDefinitionKind, PropertyDefinition,
+    PropertyKey, TSAccessibility, TSEnumDeclaration, TSEnumMemberName,
 };
-use oxc_ast_visit::{Visit, walk};
+use oxc_ast_visit::{walk, Visit};
 
 use super::symbol::{
-    ClassMemberMetadata, EnumMemberMetadata, EnumMemberValue, Symbol, SymbolKind,
-    SymbolMetadata, SymbolSpan, SymbolTable, Visibility,
+    ClassMemberMetadata, EnumMemberMetadata, EnumMemberValue, Symbol, SymbolKind, SymbolMetadata,
+    SymbolSpan, SymbolTable, Visibility,
 };
 
 /// Extract class member symbols from an AST program
@@ -88,11 +88,8 @@ impl<'a, 'table> ClassEnumExtractor<'a, 'table> {
             let (line, column) = get_line_column(self.source_text, prop.span.start);
             let span = SymbolSpan::new(line, column, prop.span.start);
 
-            let mut metadata = ClassMemberMetadata::new(
-                visibility,
-                prop.r#static,
-                class_name.to_string(),
-            );
+            let mut metadata =
+                ClassMemberMetadata::new(visibility, prop.r#static, class_name.to_string());
             metadata.is_readonly = prop.readonly;
 
             let symbol = Symbol::with_metadata(
@@ -121,12 +118,10 @@ impl<'a, 'table> ClassEnumExtractor<'a, 'table> {
                 MethodDefinitionKind::Method => SymbolKind::ClassMethod,
             };
 
-            let mut metadata = ClassMemberMetadata::new(
-                visibility,
-                method.r#static,
-                class_name.to_string(),
-            );
-            metadata.is_accessor = matches!(kind, SymbolKind::ClassGetter | SymbolKind::ClassSetter);
+            let mut metadata =
+                ClassMemberMetadata::new(visibility, method.r#static, class_name.to_string());
+            metadata.is_accessor =
+                matches!(kind, SymbolKind::ClassGetter | SymbolKind::ClassSetter);
 
             let symbol = Symbol::with_metadata(
                 name,
@@ -152,16 +147,14 @@ impl<'a, 'table> ClassEnumExtractor<'a, 'table> {
             };
 
             if let Some(member_name) = member_name {
-                let value = member.initializer.as_ref().and_then(|init| {
-                    match init {
-                        Expression::NumericLiteral(lit) => {
-                            Some(EnumMemberValue::Number(lit.value as i64))
-                        }
-                        Expression::StringLiteral(lit) => {
-                            Some(EnumMemberValue::String(lit.value.to_string()))
-                        }
-                        _ => Some(EnumMemberValue::Computed),
+                let value = member.initializer.as_ref().map(|init| match init {
+                    Expression::NumericLiteral(lit) => {
+                        EnumMemberValue::Number(lit.value as i64)
                     }
+                    Expression::StringLiteral(lit) => {
+                        EnumMemberValue::String(lit.value.to_string())
+                    }
+                    _ => EnumMemberValue::Computed,
                 });
 
                 let (line, column) = get_line_column(self.source_text, member.span.start);
@@ -293,20 +286,24 @@ mod tests {
         "#;
 
         let allocator = Allocator::default();
-        let ParserReturn { program, .. } = Parser::new(&allocator, source, SourceType::tsx()).parse();
+        let ParserReturn { program, .. } =
+            Parser::new(&allocator, source, SourceType::tsx()).parse();
 
         let mut table = SymbolTable::new();
         extract_class_and_enum_members(&program, source, &mut table);
 
         // Should find multiple class members
-        let class_members: Vec<_> = table.symbols.iter()
+        let class_members: Vec<_> = table
+            .symbols
+            .iter()
             .filter(|s| matches!(s.metadata, SymbolMetadata::ClassMember(_)))
             .collect();
 
         assert!(!class_members.is_empty(), "Should find class members");
 
         // Check for private members
-        let private_members: Vec<_> = class_members.iter()
+        let private_members: Vec<_> = class_members
+            .iter()
             .filter(|s| {
                 if let SymbolMetadata::ClassMember(meta) = &s.metadata {
                     matches!(meta.visibility, Visibility::Private)
@@ -330,12 +327,15 @@ mod tests {
         "#;
 
         let allocator = Allocator::default();
-        let ParserReturn { program, .. } = Parser::new(&allocator, source, SourceType::tsx()).parse();
+        let ParserReturn { program, .. } =
+            Parser::new(&allocator, source, SourceType::tsx()).parse();
 
         let mut table = SymbolTable::new();
         extract_class_and_enum_members(&program, source, &mut table);
 
-        let enum_members: Vec<_> = table.symbols.iter()
+        let enum_members: Vec<_> = table
+            .symbols
+            .iter()
             .filter(|s| matches!(s.kind, SymbolKind::EnumMember))
             .collect();
 

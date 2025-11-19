@@ -18,4 +18,3 @@ pub struct DtsOptions {
     /// Generate .d.ts.map source maps (default: false).
     pub sourcemap: bool,
 }
-

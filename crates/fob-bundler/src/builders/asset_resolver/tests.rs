@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests {
+    use crate::builders::asset_resolver::security::find_monorepo_root;
     use crate::builders::asset_resolver::{resolve_asset, validate_asset_size};
     use crate::test_utils::TestRuntime;
-    use crate::builders::asset_resolver::security::find_monorepo_root;
     use std::fs;
     use tempfile::TempDir;
 
@@ -25,8 +25,13 @@ mod tests {
         fs::write(&referrer, b"").unwrap();
 
         // Resolve relative path
-        let resolved = resolve_asset("./assets/test.wasm", &referrer, &cwd, &runtime).await.unwrap();
-        assert_eq!(resolved.canonicalize().unwrap(), asset_file.canonicalize().unwrap());
+        let resolved = resolve_asset("./assets/test.wasm", &referrer, &cwd, &runtime)
+            .await
+            .unwrap();
+        assert_eq!(
+            resolved.canonicalize().unwrap(),
+            asset_file.canonicalize().unwrap()
+        );
     }
 
     #[cfg(not(target_family = "wasm"))]
@@ -48,8 +53,13 @@ mod tests {
         fs::write(&referrer, b"").unwrap();
 
         // Resolve from node_modules
-        let resolved = resolve_asset("@test/pkg/wasm/file.wasm", &referrer, &cwd, &runtime).await.unwrap();
-        assert_eq!(resolved.canonicalize().unwrap(), asset_file.canonicalize().unwrap());
+        let resolved = resolve_asset("@test/pkg/wasm/file.wasm", &referrer, &cwd, &runtime)
+            .await
+            .unwrap();
+        assert_eq!(
+            resolved.canonicalize().unwrap(),
+            asset_file.canonicalize().unwrap()
+        );
     }
 
     #[cfg(not(target_family = "wasm"))]
@@ -82,7 +92,9 @@ mod tests {
         fs::write(&small_file, vec![0u8; 1024]).unwrap(); // 1KB
 
         // Should succeed with default limit
-        let size = validate_asset_size(&small_file, None, &runtime).await.unwrap();
+        let size = validate_asset_size(&small_file, None, &runtime)
+            .await
+            .unwrap();
         assert_eq!(size, 1024);
 
         // Should fail with tiny limit
@@ -100,7 +112,8 @@ mod tests {
         fs::write(
             monorepo_root.join("pnpm-workspace.yaml"),
             "packages:\n  - 'packages/*'\n",
-        ).unwrap();
+        )
+        .unwrap();
 
         // Create workspace packages
         let pkg_a = monorepo_root.join("packages/pkg-a/src");
@@ -120,8 +133,13 @@ mod tests {
         let runtime = TestRuntime::new(cwd.clone());
 
         // Should succeed - asset is in same monorepo
-        let resolved = resolve_asset("../../pkg-b/assets/logo.png", &referrer, &cwd, &runtime).await;
-        assert!(resolved.is_ok(), "Failed to resolve monorepo asset: {:?}", resolved.err());
+        let resolved =
+            resolve_asset("../../pkg-b/assets/logo.png", &referrer, &cwd, &runtime).await;
+        assert!(
+            resolved.is_ok(),
+            "Failed to resolve monorepo asset: {:?}",
+            resolved.err()
+        );
     }
 
     #[cfg(not(target_family = "wasm"))]
@@ -132,7 +150,11 @@ mod tests {
         let runtime = TestRuntime::new(root.clone());
 
         // Create pnpm workspace
-        fs::write(root.join("pnpm-workspace.yaml"), "packages:\n  - 'packages/*'\n").unwrap();
+        fs::write(
+            root.join("pnpm-workspace.yaml"),
+            "packages:\n  - 'packages/*'\n",
+        )
+        .unwrap();
 
         let pkg_dir = root.join("packages/pkg-a");
         fs::create_dir_all(&pkg_dir).unwrap();
@@ -140,7 +162,10 @@ mod tests {
         // Should find root from package directory
         let found_root = find_monorepo_root(&pkg_dir, &runtime).await;
         assert!(found_root.is_some());
-        assert_eq!(found_root.unwrap().canonicalize().unwrap(), root.canonicalize().unwrap());
+        assert_eq!(
+            found_root.unwrap().canonicalize().unwrap(),
+            root.canonicalize().unwrap()
+        );
     }
 
     #[cfg(not(target_family = "wasm"))]
@@ -154,7 +179,8 @@ mod tests {
         fs::write(
             root.join("package.json"),
             r#"{"name": "monorepo", "workspaces": ["packages/*"]}"#,
-        ).unwrap();
+        )
+        .unwrap();
 
         let pkg_dir = root.join("packages/pkg-a");
         fs::create_dir_all(&pkg_dir).unwrap();
@@ -162,7 +188,10 @@ mod tests {
         // Should find root from package directory
         let found_root = find_monorepo_root(&pkg_dir, &runtime).await;
         assert!(found_root.is_some());
-        assert_eq!(found_root.unwrap().canonicalize().unwrap(), root.canonicalize().unwrap());
+        assert_eq!(
+            found_root.unwrap().canonicalize().unwrap(),
+            root.canonicalize().unwrap()
+        );
     }
 
     #[cfg(not(target_family = "wasm"))]
@@ -186,7 +215,11 @@ mod tests {
 
         // Resolve bare filename from JS file (no ./ prefix)
         let resolved = resolve_asset("pkg_bg.wasm", &js_file, &cwd, &runtime).await;
-        assert!(resolved.is_ok(), "Failed to resolve bare filename: {:?}", resolved.err());
+        assert!(
+            resolved.is_ok(),
+            "Failed to resolve bare filename: {:?}",
+            resolved.err()
+        );
 
         let resolved_path = resolved.unwrap();
         assert_eq!(
@@ -219,7 +252,11 @@ mod tests {
 
         // Package path with slashes should resolve from node_modules
         let resolved = resolve_asset("pkg/assets/file.wasm", &referrer, &cwd, &runtime).await;
-        assert!(resolved.is_ok(), "Package path should resolve: {:?}", resolved.err());
+        assert!(
+            resolved.is_ok(),
+            "Package path should resolve: {:?}",
+            resolved.err()
+        );
         assert_eq!(
             resolved.unwrap().canonicalize().unwrap(),
             pkg_asset.canonicalize().unwrap()
@@ -246,7 +283,10 @@ mod tests {
 
         // @scope/file.wasm should look in node_modules/@scope/
         let resolved = resolve_asset("@scope/file.wasm", &referrer, &cwd, &runtime).await;
-        assert!(resolved.is_ok(), "Scoped package should resolve: {:?}", resolved.err());
+        assert!(
+            resolved.is_ok(),
+            "Scoped package should resolve: {:?}",
+            resolved.err()
+        );
     }
 }
-

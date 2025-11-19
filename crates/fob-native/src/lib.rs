@@ -50,7 +50,7 @@ impl Fob {
 
         let runtime: Arc<dyn Runtime> = Arc::new(
             NativeRuntime::new(cwd)
-                .map_err(|e| Error::from_reason(format!("Failed to create runtime: {}", e)))?
+                .map_err(|e| Error::from_reason(format!("Failed to create runtime: {}", e)))?,
         );
 
         Ok(Self { config, runtime })
@@ -74,7 +74,9 @@ impl Fob {
         };
 
         let sourcemap = self.config.sourcemap.unwrap_or(false);
-        let cwd = self.runtime.get_cwd()
+        let cwd = self
+            .runtime
+            .get_cwd()
             .map_err(|e| Error::from_reason(format!("Failed to get cwd: {}", e)))?;
         let out_dir = PathBuf::from(self.config.output_dir.as_deref().unwrap_or("dist"));
 

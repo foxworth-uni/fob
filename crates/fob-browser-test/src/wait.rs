@@ -36,6 +36,7 @@ pub struct WaitConfig {
 
 impl WaitConfig {
     /// Creates a new wait configuration.
+    #[must_use]
     pub fn new(timeout: Duration, poll_interval: Duration) -> Self {
         Self {
             timeout,
@@ -44,6 +45,7 @@ impl WaitConfig {
     }
 
     /// Creates a config with custom timeout and default poll interval.
+    #[must_use]
     pub fn with_timeout(timeout: Duration) -> Self {
         Self::new(timeout, DEFAULT_POLL_INTERVAL)
     }
@@ -70,11 +72,11 @@ impl Default for WaitConfig {
 ///     "element to be visible"
 /// ).await?;
 /// ```
-pub async fn wait_for<F, Fut>(
-    condition: F,
-    config: WaitConfig,
-    description: &str,
-) -> Result<()>
+///
+/// # Errors
+///
+/// Returns an error if the condition times out.
+pub async fn wait_for<F, Fut>(condition: F, config: WaitConfig, description: &str) -> Result<()>
 where
     F: Fn() -> Fut,
     Fut: Future<Output = bool>,
@@ -99,9 +101,13 @@ where
 
 /// Waits for a condition that returns a Result<bool>.
 ///
-/// Similar to wait_for, but the condition can return errors.
+/// Similar to `wait_for`, but the condition can return errors.
 /// If the condition returns an error, we continue waiting (the error
 /// might be transient, like a network issue).
+///
+/// # Errors
+///
+/// Returns an error if the condition times out.
 pub async fn wait_for_result<F, Fut>(
     condition: F,
     config: WaitConfig,
@@ -114,12 +120,10 @@ where
     let start = Instant::now();
 
     loop {
-        match condition().await {
-            Ok(true) => return Ok(()),
-            Ok(false) | Err(_) => {
-                // Continue waiting on false or transient errors
-            }
+        if let Ok(true) = condition().await {
+            return Ok(());
         }
+        // Continue waiting on false or transient errors
 
         if start.elapsed() >= config.timeout {
             return Err(BrowserError::WaitTimeout {
@@ -140,12 +144,7 @@ mod tests {
 
     #[tokio::test]
     async fn wait_for_succeeds_immediately() {
-        let result = wait_for(
-            || async { true },
-            WaitConfig::default(),
-            "test condition",
-        )
-        .await;
+        let result = wait_for(|| async { true }, WaitConfig::default(), "test condition").await;
 
         assert!(result.is_ok());
     }

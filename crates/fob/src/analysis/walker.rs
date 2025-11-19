@@ -10,10 +10,10 @@ use std::sync::Arc;
 use path_clean::PathClean;
 use rustc_hash::FxHashSet;
 
-use crate::runtime::{Runtime, RuntimeError};
 use crate::graph::collection::{
-    CollectedExport, CollectedImport, CollectedModule, CollectionState, parse_module_structure,
+    parse_module_structure, CollectedExport, CollectedImport, CollectedImportKind, CollectedModule, CollectionState,
 };
+use crate::runtime::{Runtime, RuntimeError};
 
 use super::resolver::ModuleResolver;
 use super::types::{AnalyzerConfig, ResolveResult};
@@ -57,10 +57,7 @@ impl GraphWalker {
     /// Walk the dependency graph starting from entry points.
     ///
     /// Returns a CollectionState that can be converted to a ModuleGraph.
-    pub async fn walk(
-        &self,
-        runtime: Arc<dyn Runtime>,
-    ) -> Result<CollectionState, WalkerError> {
+    pub async fn walk(&self, runtime: Arc<dyn Runtime>) -> Result<CollectionState, WalkerError> {
         let mut collection = CollectionState::new();
         let mut visited = FxHashSet::default();
         let mut queue = VecDeque::new();
@@ -115,7 +112,7 @@ impl GraphWalker {
             // Resolve imports and populate resolved_path
             for import in &mut imports {
                 // Skip dynamic imports if not following them
-                if import.is_dynamic && !self.config.follow_dynamic_imports {
+                if import.kind == CollectedImportKind::Dynamic && !self.config.follow_dynamic_imports {
                     continue;
                 }
 
@@ -133,10 +130,11 @@ impl GraphWalker {
                 match resolve_result {
                     ResolveResult::Local(resolved_path) => {
                         let normalized = self.normalize_path(&resolved_path, runtime.as_ref())?;
-                        
+
                         // Store resolved path for graph building
-                        import.resolved_path = Some(self.path_for_storage(&normalized, runtime.as_ref())?);
-                        
+                        import.resolved_path =
+                            Some(self.path_for_storage(&normalized, runtime.as_ref())?);
+
                         // Check for circular dependency
                         if visited.contains(&normalized) {
                             // Already processed, skip
@@ -179,28 +177,27 @@ impl GraphWalker {
                 if let CollectedExport::All { source } = export {
                     // Re-export - treat as import to follow the dependency
                     // Skip dynamic imports if not following them (re-exports are never dynamic)
-                    
+
                     // Resolve the re-export source
-                    if let Ok(resolve_result) = self
+                    if let Ok(ResolveResult::Local(resolved_path)) = self
                         .resolver
                         .resolve(source, &current_path, runtime.as_ref())
                         .await
                     {
-                        if let ResolveResult::Local(resolved_path) = resolve_result {
-                            let normalized = self.normalize_path(&resolved_path, runtime.as_ref())?;
-                            
-                            // Check for circular dependency
-                            if visited.contains(&normalized) {
-                                // Already processed, skip
-                                continue;
-                            }
+                        let normalized =
+                            self.normalize_path(&resolved_path, runtime.as_ref())?;
 
-                            // Add to queue if not already queued
-                            if !depth_map.contains_key(&normalized) {
-                                let new_depth = depth + 1;
-                                depth_map.insert(normalized.clone(), new_depth);
-                                queue.push_back((normalized, new_depth));
-                            }
+                        // Check for circular dependency
+                        if visited.contains(&normalized) {
+                            // Already processed, skip
+                            continue;
+                        }
+
+                        // Add to queue if not already queued
+                        if !depth_map.contains_key(&normalized) {
+                            let new_depth = depth + 1;
+                            depth_map.insert(normalized.clone(), new_depth);
+                            queue.push_back((normalized, new_depth));
                         }
                     }
                 }
@@ -213,17 +210,14 @@ impl GraphWalker {
     }
 
     /// Read a file from the filesystem.
-    async fn read_file(
-        &self,
-        path: &Path,
-        runtime: &dyn Runtime,
-    ) -> Result<String, WalkerError> {
-        let bytes = runtime.read_file(path).await.map_err(|e| {
-            WalkerError::ReadFile {
+    async fn read_file(&self, path: &Path, runtime: &dyn Runtime) -> Result<String, WalkerError> {
+        let bytes = runtime
+            .read_file(path)
+            .await
+            .map_err(|e| WalkerError::ReadFile {
                 path: path.to_path_buf(),
                 source: e,
-            }
-        })?;
+            })?;
 
         String::from_utf8(bytes).map_err(|e| WalkerError::ReadFile {
             path: path.to_path_buf(),
@@ -235,29 +229,23 @@ impl GraphWalker {
     ///
     /// Uses the existing parse_module_structure function from collection module.
     /// If parsing fails, returns empty imports/exports and assumes side effects.
-    fn parse_module(
-        &self,
-        code: &str,
-    ) -> (Vec<CollectedImport>, Vec<CollectedExport>, bool) {
+    fn parse_module(&self, code: &str) -> (Vec<CollectedImport>, Vec<CollectedExport>, bool) {
         parse_module_structure(code).unwrap_or_else(|_| (vec![], vec![], true))
     }
 
     /// Normalize a path to an absolute path.
-    fn normalize_path(
-        &self,
-        path: &Path,
-        runtime: &dyn Runtime,
-    ) -> Result<PathBuf, WalkerError> {
+    fn normalize_path(&self, path: &Path, runtime: &dyn Runtime) -> Result<PathBuf, WalkerError> {
         let normalized = if path.is_absolute() {
             path.to_path_buf()
         } else {
-            let cwd = self.resolver.get_cwd(runtime).map_err(|e| {
-                WalkerError::ResolutionFailed {
-                    specifier: path.to_string_lossy().to_string(),
-                    from: PathBuf::new(),
-                    reason: format!("Failed to get cwd: {}", e),
-                }
-            })?;
+            let cwd =
+                self.resolver
+                    .get_cwd(runtime)
+                    .map_err(|e| WalkerError::ResolutionFailed {
+                        specifier: path.to_string_lossy().to_string(),
+                        from: PathBuf::new(),
+                        reason: format!("Failed to get cwd: {}", e),
+                    })?;
             cwd.join(path)
         };
         // Clean the path to normalize . and .. components
@@ -265,19 +253,16 @@ impl GraphWalker {
     }
 
     /// Convert an absolute path to a path relative to cwd for storage.
-    fn path_for_storage(
-        &self,
-        path: &Path,
-        runtime: &dyn Runtime,
-    ) -> Result<String, WalkerError> {
-        let cwd = self.resolver.get_cwd(runtime).map_err(|e| {
-            WalkerError::ResolutionFailed {
+    fn path_for_storage(&self, path: &Path, runtime: &dyn Runtime) -> Result<String, WalkerError> {
+        let cwd = self
+            .resolver
+            .get_cwd(runtime)
+            .map_err(|e| WalkerError::ResolutionFailed {
                 specifier: path.to_string_lossy().to_string(),
                 from: PathBuf::new(),
                 reason: format!("Failed to get cwd: {}", e),
-            }
-        })?;
-        
+            })?;
+
         // Try to make it relative to cwd
         if let Ok(rel) = path.strip_prefix(&cwd) {
             Ok(rel.to_string_lossy().to_string())
@@ -287,4 +272,3 @@ impl GraphWalker {
         }
     }
 }
-

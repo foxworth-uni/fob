@@ -2,9 +2,9 @@
 //!
 //! These tests verify end-to-end build functionality with real files and directories.
 
-use fob_cli::commands::build;
 use fob_cli::cli::BuildArgs;
-use fob_cli::cli::{Format, Platform, SourceMapMode, EsTarget};
+use fob_cli::cli::{EsTarget, Format, Platform, SourceMapMode};
+use fob_cli::commands::build;
 use std::fs;
 use std::path::PathBuf;
 use tempfile::TempDir;
@@ -71,7 +71,7 @@ async fn test_build_successful_single_entry() {
     // Verify output files exist
     let dist_dir = project_dir.join("dist");
     assert!(dist_dir.exists(), "Output directory should exist");
-    
+
     // Check for JS file
     let js_files: Vec<_> = fs::read_dir(&dist_dir)
         .unwrap()
@@ -82,7 +82,7 @@ async fn test_build_successful_single_entry() {
             name_str.ends_with(".js") && !name_str.ends_with(".map.js")
         })
         .collect();
-    
+
     assert!(!js_files.is_empty(), "Should generate at least one JS file");
 }
 
@@ -134,7 +134,7 @@ async fn test_build_missing_entry_point() {
 
     let result = build::execute(args).await;
     assert!(result.is_err(), "Build should fail with missing entry");
-    
+
     let error = result.unwrap_err();
     let error_msg = format!("{}", error);
     assert!(
@@ -197,8 +197,14 @@ async fn test_build_clean_output_dir() {
     build::execute(args).await.expect("Build should succeed");
 
     // Verify old files are gone
-    assert!(!dist_dir.join("old.js").exists(), "Old JS file should be removed");
-    assert!(!dist_dir.join("old.txt").exists(), "Old text file should be removed");
+    assert!(
+        !dist_dir.join("old.js").exists(),
+        "Old JS file should be removed"
+    );
+    assert!(
+        !dist_dir.join("old.txt").exists(),
+        "Old text file should be removed"
+    );
 
     // Verify new files exist
     let js_files: Vec<_> = fs::read_dir(&dist_dir)
@@ -210,7 +216,7 @@ async fn test_build_clean_output_dir() {
             name_str.ends_with(".js") && !name_str.ends_with(".map.js")
         })
         .collect();
-    
+
     assert!(!js_files.is_empty(), "Should generate new JS files");
 }
 
@@ -252,7 +258,7 @@ async fn test_build_empty_entry_list() {
 
     let result = build::execute(args).await;
     assert!(result.is_err(), "Build should fail with empty entry list");
-    
+
     let error = result.unwrap_err();
     let error_msg = format!("{}", error);
     assert!(

@@ -35,7 +35,10 @@ async fn add_dependency_creates_reverse_edges() {
     graph.add_module(a.clone()).await.unwrap();
     graph.add_module(b.clone()).await.unwrap();
 
-    graph.add_dependency(a.id.clone(), b.id.clone()).await.unwrap();
+    graph
+        .add_dependency(a.id.clone(), b.id.clone())
+        .await
+        .unwrap();
 
     let deps = graph.dependencies(&a.id).await.unwrap();
     assert!(deps.contains(&b.id));

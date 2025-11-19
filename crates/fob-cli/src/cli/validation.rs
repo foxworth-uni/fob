@@ -37,4 +37,3 @@ pub fn parse_global(s: &str) -> Result<String, String> {
 
     Ok(s.to_string())
 }
-

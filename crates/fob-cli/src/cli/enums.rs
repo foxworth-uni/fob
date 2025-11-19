@@ -205,4 +205,3 @@ pub enum DocsMergeStrategy {
     #[value(name = "skip")]
     Skip,
 }
-

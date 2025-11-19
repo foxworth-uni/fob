@@ -11,25 +11,25 @@ use crate::Runtime;
 pub struct AnalyzerConfig {
     /// Entry points to analyze.
     pub entries: Vec<PathBuf>,
-    
+
     /// Packages to treat as external (not analyzed).
     pub external: Vec<String>,
-    
+
     /// Path aliases for import resolution (e.g., "@" → "./src").
     pub path_aliases: FxHashMap<String, String>,
-    
+
     /// Whether to follow dynamic imports.
     pub follow_dynamic_imports: bool,
-    
+
     /// Whether to include TypeScript type-only imports.
     pub include_type_imports: bool,
-    
+
     /// Maximum depth for graph traversal (DoS protection).
     pub max_depth: Option<usize>,
-    
+
     /// Runtime for filesystem operations.
     pub runtime: Option<Arc<dyn Runtime>>,
-    
+
     /// Current working directory.
     pub cwd: Option<PathBuf>,
 }
@@ -54,10 +54,10 @@ impl Default for AnalyzerConfig {
 pub enum ResolveResult {
     /// Module resolved to a local file path.
     Local(PathBuf),
-    
+
     /// Module is external (npm package, etc.).
     External(String),
-    
+
     /// Module could not be resolved.
     Unresolved(String),
 }
@@ -66,13 +66,12 @@ impl ResolveResult {
     pub fn is_local(&self) -> bool {
         matches!(self, ResolveResult::Local(_))
     }
-    
+
     pub fn is_external(&self) -> bool {
         matches!(self, ResolveResult::External(_))
     }
-    
+
     pub fn is_unresolved(&self) -> bool {
         matches!(self, ResolveResult::Unresolved(_))
     }
 }
-

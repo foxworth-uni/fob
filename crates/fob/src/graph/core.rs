@@ -10,7 +10,6 @@ use super::symbol::{
     ClassMemberMetadata, EnumMemberMetadata, EnumMemberValue, Symbol, SymbolMetadata,
     SymbolStatistics, UnreachableCode, UnusedSymbol,
 };
-#![cfg(feature = "storage")]
 
 use super::{Export, ExportKind, GraphStatistics, Import, Module, ModuleId, SourceSpan};
 use crate::{Error, Result};
@@ -74,11 +73,9 @@ pub struct ModuleGraph {
 impl ModuleGraph {
     /// Create a new empty graph with SurrealDB storage.
     pub async fn new() -> Result<Self> {
-        let storage = Arc::new(
-            fob_store::GraphStorage::new()
-                .await
-                .map_err(|e| Error::InvalidConfig(format!("Failed to initialize graph storage: {e}")))?,
-        );
+        let storage = Arc::new(fob_store::GraphStorage::new().await.map_err(|e| {
+            Error::InvalidConfig(format!("Failed to initialize graph storage: {e}"))
+        })?);
         Ok(Self { storage })
     }
 
@@ -90,7 +87,9 @@ impl ModuleGraph {
         let storage = Arc::new(
             fob_store::GraphStorage::with_path(path)
                 .await
-                .map_err(|e| Error::InvalidConfig(format!("Failed to initialize graph storage: {e}")))?,
+                .map_err(|e| {
+                    Error::InvalidConfig(format!("Failed to initialize graph storage: {e}"))
+                })?,
         );
         Ok(Self { storage })
     }
@@ -162,7 +161,9 @@ impl ModuleGraph {
         self.storage
             .store_external_dependency(&dep)
             .await
-            .map_err(|e| Error::InvalidConfig(format!("Failed to store external dependency: {e}")))?;
+            .map_err(|e| {
+                Error::InvalidConfig(format!("Failed to store external dependency: {e}"))
+            })?;
         Ok(())
     }
 
@@ -280,7 +281,10 @@ impl ModuleGraph {
                     continue;
                 }
 
-                if !self.is_export_used(&module.id, &export.name, &all_modules).await? {
+                if !self
+                    .is_export_used(&module.id, &export.name, &all_modules)
+                    .await?
+                {
                     unused.push(UnusedExport {
                         module_id: module.id.clone(),
                         export: export.clone(),
@@ -312,15 +316,19 @@ impl ModuleGraph {
                         continue;
                     }
 
-                    let is_used = import_record.specifiers.iter().any(|specifier| match specifier {
-                        ImportSpecifier::Named(name) => name == export_name,
-                        ImportSpecifier::Default => export_name == "default",
-                        ImportSpecifier::Namespace(_) => {
-                            // True namespace imports (import * as X) use ALL exports
-                            // But star re-exports (export * from) only forward, not use
-                            !matches!(import_record.kind, ImportKind::ReExport)
-                        }
-                    });
+                    let is_used =
+                        import_record
+                            .specifiers
+                            .iter()
+                            .any(|specifier| match specifier {
+                                ImportSpecifier::Named(name) => name == export_name,
+                                ImportSpecifier::Default => export_name == "default",
+                                ImportSpecifier::Namespace(_) => {
+                                    // True namespace imports (import * as X) use ALL exports
+                                    // But star re-exports (export * from) only forward, not use
+                                    !matches!(import_record.kind, ImportKind::ReExport)
+                                }
+                            });
 
                     if is_used {
                         return Ok(true);
@@ -378,7 +386,9 @@ impl ModuleGraph {
             }
 
             // Save the updated module back to storage (upsert semantics)
-            self.storage.store_module(&updated_module).await
+            self.storage
+                .store_module(&updated_module)
+                .await
                 .map_err(|e| Error::InvalidConfig(format!("Failed to update module: {e}")))?;
         }
 
@@ -566,7 +576,10 @@ impl ModuleGraph {
     }
 
     /// Apply multiple framework rules.
-    pub async fn apply_framework_rules(&self, rules: Vec<Box<dyn super::FrameworkRule>>) -> Result<()> {
+    pub async fn apply_framework_rules(
+        &self,
+        rules: Vec<Box<dyn super::FrameworkRule>>,
+    ) -> Result<()> {
         for rule in rules {
             self.apply_framework_rule(rule).await?;
         }
@@ -672,10 +685,7 @@ impl ModuleGraph {
     pub async fn symbol_statistics(&self) -> Result<SymbolStatistics> {
         let all_modules = self.modules().await?;
 
-        let tables: Vec<_> = all_modules
-            .iter()
-            .map(|m| &m.symbol_table)
-            .collect();
+        let tables: Vec<_> = all_modules.iter().map(|m| &m.symbol_table).collect();
 
         Ok(SymbolStatistics::from_tables(tables.into_iter()))
     }
@@ -697,9 +707,12 @@ impl ModuleGraph {
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn unused_private_class_members(&self) -> Result<std::collections::HashMap<String, Vec<UnusedSymbol>>> {
+    pub async fn unused_private_class_members(
+        &self,
+    ) -> Result<std::collections::HashMap<String, Vec<UnusedSymbol>>> {
         let all_modules = self.modules().await?;
-        let mut by_class: std::collections::HashMap<String, Vec<UnusedSymbol>> = std::collections::HashMap::new();
+        let mut by_class: std::collections::HashMap<String, Vec<UnusedSymbol>> =
+            std::collections::HashMap::new();
 
         for module in all_modules {
             for symbol in &module.symbol_table.symbols {
@@ -773,9 +786,12 @@ impl ModuleGraph {
     ///
     /// Enum members that are never referenced can often be safely removed,
     /// especially in application code. This groups results by enum for easier analysis.
-    pub async fn unused_enum_members(&self) -> Result<std::collections::HashMap<String, Vec<UnusedSymbol>>> {
+    pub async fn unused_enum_members(
+        &self,
+    ) -> Result<std::collections::HashMap<String, Vec<UnusedSymbol>>> {
         let all_modules = self.modules().await?;
-        let mut by_enum: std::collections::HashMap<String, Vec<UnusedSymbol>> = std::collections::HashMap::new();
+        let mut by_enum: std::collections::HashMap<String, Vec<UnusedSymbol>> =
+            std::collections::HashMap::new();
 
         for module in all_modules {
             for symbol in &module.symbol_table.symbols {
@@ -800,9 +816,12 @@ impl ModuleGraph {
     ///
     /// This provides complete visibility into enum structure, useful for
     /// understanding enum coverage and usage patterns.
-    pub async fn all_enum_members(&self) -> Result<std::collections::HashMap<String, Vec<EnumMemberInfo>>> {
+    pub async fn all_enum_members(
+        &self,
+    ) -> Result<std::collections::HashMap<String, Vec<EnumMemberInfo>>> {
         let all_modules = self.modules().await?;
-        let mut by_enum: std::collections::HashMap<String, Vec<EnumMemberInfo>> = std::collections::HashMap::new();
+        let mut by_enum: std::collections::HashMap<String, Vec<EnumMemberInfo>> =
+            std::collections::HashMap::new();
 
         for module in all_modules {
             for symbol in &module.symbol_table.symbols {
@@ -851,7 +870,7 @@ impl ModuleGraph {
         include_dev: bool,
         include_peer: bool,
     ) -> Result<Vec<super::package_json::UnusedDependency>> {
-        use super::package_json::{DependencyType, UnusedDependency, extract_package_name};
+        use super::package_json::{extract_package_name, DependencyType, UnusedDependency};
 
         let all_modules = self.modules().await?;
 
@@ -903,7 +922,9 @@ impl ModuleGraph {
         &self,
         package_json: &super::package_json::PackageJson,
     ) -> Result<super::package_json::DependencyCoverage> {
-        use super::package_json::{DependencyCoverage, DependencyType, TypeCoverage, extract_package_name};
+        use super::package_json::{
+            extract_package_name, DependencyCoverage, DependencyType, TypeCoverage,
+        };
 
         let all_modules = self.modules().await?;
 
@@ -1031,9 +1052,12 @@ impl ModuleGraph {
     ///
     /// This creates layers of the dependency graph, useful for visualizing
     /// the structure and understanding module organization.
-    pub async fn modules_by_depth(&self) -> Result<std::collections::HashMap<usize, Vec<ModuleId>>> {
+    pub async fn modules_by_depth(
+        &self,
+    ) -> Result<std::collections::HashMap<usize, Vec<ModuleId>>> {
         let all_modules = self.modules().await?;
-        let mut by_depth: std::collections::HashMap<usize, Vec<ModuleId>> = std::collections::HashMap::new();
+        let mut by_depth: std::collections::HashMap<usize, Vec<ModuleId>> =
+            std::collections::HashMap::new();
 
         for module in all_modules {
             if let Some(depth) = self.import_depth(&module.id).await? {

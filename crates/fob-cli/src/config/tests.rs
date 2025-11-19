@@ -127,11 +127,11 @@ mod tests {
             SourceMapMode::Inline
         );
         assert_eq!(
-            EsTarget::from(crate::cli::EsTarget::Es2020),
+            crate::cli::EsTarget::Es2020,
             EsTarget::Es2020
         );
         assert_eq!(
-            EsTarget::from(crate::cli::EsTarget::Esnext),
+            crate::cli::EsTarget::Esnext,
             EsTarget::Esnext
         );
     }
@@ -148,4 +148,3 @@ mod tests {
         assert_eq!(config.dts_bundle, Some(true));
     }
 }
-

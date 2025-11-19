@@ -130,10 +130,7 @@ pub enum Error {
 
     /// Asset security violation (e.g., directory traversal attempt).
     #[error("Asset security violation: {path} - {reason}")]
-    AssetSecurityViolation {
-        path: String,
-        reason: String,
-    },
+    AssetSecurityViolation { path: String, reason: String },
 
     /// Asset file is too large.
     #[error("Asset too large: {path} ({size} bytes exceeds limit of {max_size} bytes)")]
@@ -158,4 +155,3 @@ pub enum Error {
 
 /// Result type alias for fob-bundler operations.
 pub type Result<T> = std::result::Result<T, Error>;
-

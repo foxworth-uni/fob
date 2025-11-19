@@ -70,12 +70,7 @@ impl AssetRegistry {
     /// # Returns
     ///
     /// The asset info, either newly created or existing
-    pub fn register(
-        &self,
-        source_path: PathBuf,
-        referrer: String,
-        specifier: String,
-    ) -> AssetInfo {
+    pub fn register(&self, source_path: PathBuf, referrer: String, specifier: String) -> AssetInfo {
         let mut inner = self.inner.write();
 
         // Check if already registered
@@ -87,9 +82,7 @@ impl AssetRegistry {
         let content_type = Self::content_type_from_path(&source_path);
 
         // Try to get file size
-        let size = std::fs::metadata(&source_path)
-            .ok()
-            .map(|m| m.len());
+        let size = std::fs::metadata(&source_path).ok().map(|m| m.len());
 
         let info = AssetInfo {
             source_path: source_path.clone(),
@@ -111,7 +104,9 @@ impl AssetRegistry {
 
         if let Some(info) = inner.assets.get_mut(source_path) {
             info.url_path = Some(url_path.clone());
-            inner.url_to_path.insert(url_path, source_path.to_path_buf());
+            inner
+                .url_to_path
+                .insert(url_path, source_path.to_path_buf());
         }
     }
 
@@ -151,7 +146,8 @@ impl AssetRegistry {
 
     /// Check if registry is empty.
     pub fn is_empty(&self) -> bool {
-        self.len() == 0
+        let inner = self.inner.read();
+        inner.assets.is_empty()
     }
 
     /// Clear all assets from the registry.
@@ -163,9 +159,7 @@ impl AssetRegistry {
 
     /// Determine content type from file path.
     fn content_type_from_path(path: &Path) -> String {
-        let ext = path.extension()
-            .and_then(|e| e.to_str())
-            .unwrap_or("");
+        let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
 
         match ext {
             "wasm" => "application/wasm",
@@ -182,7 +176,8 @@ impl AssetRegistry {
             "html" => "text/html",
             "txt" => "text/plain",
             _ => "application/octet-stream",
-        }.to_string()
+        }
+        .to_string()
     }
 }
 

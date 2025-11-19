@@ -14,4 +14,3 @@ pub enum EntryPoints {
     /// Keys are the output chunk names, values are the import paths.
     Named(FxHashMap<String, String>),
 }
-

@@ -9,11 +9,7 @@ use fob_bundler::graph::{
 use fob_bundler::Result;
 
 /// Helper to create a basic module with given exports.
-fn create_module(
-    id: &str,
-    exports: Vec<(&str, ExportKind)>,
-    imports: Vec<Import>,
-) -> Module {
+fn create_module(id: &str, exports: Vec<(&str, ExportKind)>, imports: Vec<Import>) -> Module {
     let exports = exports
         .into_iter()
         .map(|(name, kind)| {
@@ -84,7 +80,10 @@ async fn test_simple_usage_once() -> Result<()> {
     graph.compute_export_usage_counts().await?;
 
     // Verify
-    let module_a = graph.module(&ModuleId::new("a.js").unwrap()).await?.unwrap();
+    let module_a = graph
+        .module(&ModuleId::new("a.js").unwrap())
+        .await?
+        .unwrap();
     assert_eq!(module_a.exports.len(), 1);
     assert_eq!(module_a.exports[0].name, "foo");
     assert_eq!(module_a.exports[0].usage_count(), Some(1));
@@ -133,7 +132,10 @@ async fn test_multiple_importers() -> Result<()> {
 
     graph.compute_export_usage_counts().await?;
 
-    let module_a = graph.module(&ModuleId::new("a.js").unwrap()).await?.unwrap();
+    let module_a = graph
+        .module(&ModuleId::new("a.js").unwrap())
+        .await?
+        .unwrap();
     assert_eq!(module_a.exports[0].usage_count(), Some(2));
 
     Ok(())
@@ -170,7 +172,10 @@ async fn test_unused_export() -> Result<()> {
 
     graph.compute_export_usage_counts().await?;
 
-    let module_a = graph.module(&ModuleId::new("a.js").unwrap()).await?.unwrap();
+    let module_a = graph
+        .module(&ModuleId::new("a.js").unwrap())
+        .await?
+        .unwrap();
     let foo = module_a.exports.iter().find(|e| e.name == "foo").unwrap();
     let bar = module_a.exports.iter().find(|e| e.name == "bar").unwrap();
 
@@ -211,7 +216,10 @@ async fn test_namespace_import() -> Result<()> {
 
     graph.compute_export_usage_counts().await?;
 
-    let module_a = graph.module(&ModuleId::new("a.js").unwrap()).await?.unwrap();
+    let module_a = graph
+        .module(&ModuleId::new("a.js").unwrap())
+        .await?
+        .unwrap();
     let foo = module_a.exports.iter().find(|e| e.name == "foo").unwrap();
     let bar = module_a.exports.iter().find(|e| e.name == "bar").unwrap();
 
@@ -249,7 +257,10 @@ async fn test_default_export() -> Result<()> {
 
     graph.compute_export_usage_counts().await?;
 
-    let module_a = graph.module(&ModuleId::new("a.js").unwrap()).await?.unwrap();
+    let module_a = graph
+        .module(&ModuleId::new("a.js").unwrap())
+        .await?
+        .unwrap();
     let default_export = module_a
         .exports
         .iter()
@@ -295,7 +306,10 @@ async fn test_multiple_imports_same_module() -> Result<()> {
 
     graph.compute_export_usage_counts().await?;
 
-    let module_a = graph.module(&ModuleId::new("a.js").unwrap()).await?.unwrap();
+    let module_a = graph
+        .module(&ModuleId::new("a.js").unwrap())
+        .await?
+        .unwrap();
     let foo = module_a.exports.iter().find(|e| e.name == "foo").unwrap();
     let bar = module_a.exports.iter().find(|e| e.name == "bar").unwrap();
 
@@ -339,7 +353,10 @@ async fn test_same_export_multiple_imports() -> Result<()> {
 
     graph.compute_export_usage_counts().await?;
 
-    let module_a = graph.module(&ModuleId::new("a.js").unwrap()).await?.unwrap();
+    let module_a = graph
+        .module(&ModuleId::new("a.js").unwrap())
+        .await?
+        .unwrap();
     let foo = module_a.exports.iter().find(|e| e.name == "foo").unwrap();
 
     // Two separate import statements = count of 2
@@ -361,7 +378,10 @@ async fn test_no_imports() -> Result<()> {
 
     graph.compute_export_usage_counts().await?;
 
-    let module_a = graph.module(&ModuleId::new("a.js").unwrap()).await?.unwrap();
+    let module_a = graph
+        .module(&ModuleId::new("a.js").unwrap())
+        .await?
+        .unwrap();
     let foo = module_a.exports.iter().find(|e| e.name == "foo").unwrap();
 
     assert_eq!(foo.usage_count(), Some(0));

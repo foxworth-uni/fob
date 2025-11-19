@@ -30,7 +30,7 @@ impl ImportMap {
     /// This delegates to HtmlBuilder for consistent HTML generation.
     pub fn inject_html(&self, html: &str) -> String {
         use fob_gen::{Allocator, HtmlBuilder};
-        
+
         let allocator = Allocator::default();
         let html_builder = HtmlBuilder::new(&allocator);
         html_builder.inject_import_map(html, &self.to_json())

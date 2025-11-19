@@ -294,7 +294,7 @@ pub fn resolve_project_root(
             cwd_path.to_path_buf()
         } else {
             std::env::current_dir()
-                .map_err(|e| CliError::Io(e))?
+                .map_err(CliError::Io)?
                 .join(cwd_path)
         };
 
@@ -321,7 +321,7 @@ pub fn resolve_project_root(
 
     // Priority 2: Entry point's package.json
     if let Some(entry) = entry_point {
-        let current_dir = std::env::current_dir().map_err(|e| CliError::Io(e))?;
+        let current_dir = std::env::current_dir().map_err(CliError::Io)?;
 
         let entry_path = if Path::new(entry).is_absolute() {
             PathBuf::from(entry)
@@ -342,7 +342,7 @@ pub fn resolve_project_root(
     }
 
     // Priority 3: Current directory's package.json
-    let current_dir = std::env::current_dir().map_err(|e| CliError::Io(e))?;
+    let current_dir = std::env::current_dir().map_err(CliError::Io)?;
 
     if let Some(package_root) = find_package_json(&current_dir) {
         ui::info(&format!(

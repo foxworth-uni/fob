@@ -18,17 +18,17 @@
 //! use fob_cli::error::{Result, ResultExt, CliError};
 //! use std::path::Path;
 //! use std::str::FromStr;
-//! 
+//!
 //! struct Config;
-//! 
+//!
 //! impl FromStr for Config {
 //!     type Err = CliError;
-//! 
+//!
 //!     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
 //!         Ok(Config)
 //!     }
 //! }
-//! 
+//!
 //! fn load_config(path: &Path) -> Result<Config> {
 //!     std::fs::read_to_string(path)
 //!         .with_path(path)?

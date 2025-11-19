@@ -1,12 +1,12 @@
 //! Core JavaScript code builder using OXC AST
 
+use crate::format::FormatOptions;
+use crate::Result;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::*;
 use oxc_ast::{AstBuilder, NONE};
 use oxc_codegen::Codegen;
-use oxc_span::{SourceType, SPAN, Atom};
-use crate::Result;
-use crate::format::FormatOptions;
+use oxc_span::{Atom, SourceType, SPAN};
 
 /// Main JavaScript code builder
 ///
@@ -32,7 +32,7 @@ pub struct JsBuilder<'a> {
 impl<'a> JsBuilder<'a> {
     /// Create a new builder with the given allocator
     pub fn new(alloc: &'a Allocator) -> Self {
-        Self { 
+        Self {
             ast: AstBuilder::new(alloc),
         }
     }
@@ -41,7 +41,7 @@ impl<'a> JsBuilder<'a> {
     pub fn allocator(&self) -> &'a Allocator {
         self.ast.allocator
     }
-    
+
     /// Get the underlying AstBuilder (for advanced usage)
     pub fn ast(&self) -> &AstBuilder<'a> {
         &self.ast
@@ -61,7 +61,8 @@ impl<'a> JsBuilder<'a> {
 
     /// Create a number literal: `42`
     pub fn number(&self, value: f64) -> Expression<'a> {
-        self.ast.expression_numeric_literal(SPAN, value, None, NumberBase::Decimal)
+        self.ast
+            .expression_numeric_literal(SPAN, value, None, NumberBase::Decimal)
     }
 
     /// Create null: `null`
@@ -79,26 +80,28 @@ impl<'a> JsBuilder<'a> {
     /// Create a member expression: `obj.prop`
     pub fn member(&self, object: Expression<'a>, property: impl Into<Atom<'a>>) -> Expression<'a> {
         let prop_name = self.ast.identifier_name(SPAN, property);
-        let member = self.ast.member_expression_static(SPAN, object, prop_name, false);
+        let member = self
+            .ast
+            .member_expression_static(SPAN, object, prop_name, false);
         Expression::from(member)
     }
 
     /// Create a computed member expression: `obj[expr]`
     ///
     /// This is critical for array indexing: `arr[0]`, `pageRoutes[idx]`, etc.
-    pub fn computed_member(
-        &self,
-        object: Expression<'a>,
-        index: Expression<'a>,
-    ) -> Expression<'a> {
-        let member = self.ast.member_expression_computed(SPAN, object, index, false);
+    pub fn computed_member(&self, object: Expression<'a>, index: Expression<'a>) -> Expression<'a> {
+        let member = self
+            .ast
+            .member_expression_computed(SPAN, object, index, false);
         Expression::from(member)
     }
 
     /// Create a call expression: `callee(args...)`
     pub fn call(&self, callee: Expression<'a>, args: Vec<Argument<'a>>) -> Expression<'a> {
         let args_vec = self.ast.vec_from_iter(args);
-        let call = self.ast.call_expression(SPAN, callee, NONE, args_vec, false);
+        let call = self
+            .ast
+            .call_expression(SPAN, callee, NONE, args_vec, false);
         Expression::CallExpression(self.ast.alloc(call))
     }
 
@@ -139,11 +142,7 @@ impl<'a> JsBuilder<'a> {
     }
 
     /// Create an arrow function with expression body: `(params) => expr`
-    pub fn arrow_fn(
-        &self,
-        params: Vec<&'a str>,
-        body: Expression<'a>,
-    ) -> Expression<'a> {
+    pub fn arrow_fn(&self, params: Vec<&'a str>, body: Expression<'a>) -> Expression<'a> {
         let param_items: Vec<_> = params
             .into_iter()
             .map(|name| {
@@ -152,7 +151,8 @@ impl<'a> JsBuilder<'a> {
                     NONE,
                     false,
                 );
-                self.ast.formal_parameter(SPAN, self.ast.vec(), pattern, None, false, false)
+                self.ast
+                    .formal_parameter(SPAN, self.ast.vec(), pattern, None, false, false)
             })
             .collect();
 
@@ -194,7 +194,8 @@ impl<'a> JsBuilder<'a> {
                     NONE,
                     false,
                 );
-                self.ast.formal_parameter(SPAN, self.ast.vec(), pattern, None, false, false)
+                self.ast
+                    .formal_parameter(SPAN, self.ast.vec(), pattern, None, false, false)
             })
             .collect();
 
@@ -229,22 +230,41 @@ impl<'a> JsBuilder<'a> {
             NONE,
             false,
         );
-        let declarator = self.ast.variable_declarator(SPAN, VariableDeclarationKind::Const, pattern, Some(init), false);
+        let declarator = self.ast.variable_declarator(
+            SPAN,
+            VariableDeclarationKind::Const,
+            pattern,
+            Some(init),
+            false,
+        );
         let declarations = self.ast.vec1(declarator);
-        let var_decl = self.ast.variable_declaration(SPAN, VariableDeclarationKind::Const, declarations, false);
+        let var_decl = self.ast.variable_declaration(
+            SPAN,
+            VariableDeclarationKind::Const,
+            declarations,
+            false,
+        );
         Statement::VariableDeclaration(self.ast.alloc(var_decl))
     }
 
     /// Create a let declaration: `let name = init;`
-    pub fn let_decl(&self, name: impl Into<Atom<'a>>, init: Option<Expression<'a>>) -> Statement<'a> {
+    pub fn let_decl(
+        &self,
+        name: impl Into<Atom<'a>>,
+        init: Option<Expression<'a>>,
+    ) -> Statement<'a> {
         let pattern = self.ast.binding_pattern(
             self.ast.binding_pattern_kind_binding_identifier(SPAN, name),
             NONE,
             false,
         );
-        let declarator = self.ast.variable_declarator(SPAN, VariableDeclarationKind::Let, pattern, init, false);
+        let declarator =
+            self.ast
+                .variable_declarator(SPAN, VariableDeclarationKind::Let, pattern, init, false);
         let declarations = self.ast.vec1(declarator);
-        let var_decl = self.ast.variable_declaration(SPAN, VariableDeclarationKind::Let, declarations, false);
+        let var_decl =
+            self.ast
+                .variable_declaration(SPAN, VariableDeclarationKind::Let, declarations, false);
         Statement::VariableDeclaration(self.ast.alloc(var_decl))
     }
 
@@ -263,7 +283,7 @@ impl<'a> JsBuilder<'a> {
     ) -> Statement<'a> {
         let consequent_stmts = self.ast.vec_from_iter(consequent);
         let consequent_block = self.ast.statement_block(SPAN, consequent_stmts);
-        
+
         let alternate_block = alternate.map(|stmts| {
             let alt_stmts = self.ast.vec_from_iter(stmts);
             self.ast.statement_block(SPAN, alt_stmts)
@@ -303,9 +323,11 @@ impl<'a> JsBuilder<'a> {
     ) -> ModuleDeclaration<'a> {
         let binding = self.ast.binding_identifier(SPAN, local);
         let specifier = self.ast.import_default_specifier(SPAN, binding);
-        let specifiers = self.ast.vec1(ImportDeclarationSpecifier::ImportDefaultSpecifier(
-            self.ast.alloc(specifier),
-        ));
+        let specifiers = self
+            .ast
+            .vec1(ImportDeclarationSpecifier::ImportDefaultSpecifier(
+                self.ast.alloc(specifier),
+            ));
         let source_literal = self.ast.string_literal(SPAN, source, None);
         self.ast.module_declaration_import_declaration(
             SPAN,
@@ -318,10 +340,7 @@ impl<'a> JsBuilder<'a> {
     }
 
     /// Create side-effect import: `import 'source';`
-    pub fn import_side_effect(
-        &self,
-        source: impl Into<Atom<'a>>,
-    ) -> ModuleDeclaration<'a> {
+    pub fn import_side_effect(&self, source: impl Into<Atom<'a>>) -> ModuleDeclaration<'a> {
         let source_literal = self.ast.string_literal(SPAN, source, None);
         self.ast.module_declaration_import_declaration(
             SPAN,
@@ -343,7 +362,7 @@ impl<'a> JsBuilder<'a> {
             .into_iter()
             .map(|name| {
                 let atom = name.into();
-                let imported_name = self.ast.identifier_name(SPAN, atom.clone());
+                let imported_name = self.ast.identifier_name(SPAN, atom);
                 let local_binding = self.ast.binding_identifier(SPAN, atom);
                 let specifier = self.ast.import_specifier(
                     SPAN,
@@ -371,7 +390,8 @@ impl<'a> JsBuilder<'a> {
     pub fn export_default(&self, expr: Expression<'a>) -> ModuleDeclaration<'a> {
         // ExportDefaultDeclarationKind inherits Expression variants, so we can convert
         let kind: ExportDefaultDeclarationKind = expr.into();
-        self.ast.module_declaration_export_default_declaration(SPAN, kind)
+        self.ast
+            .module_declaration_export_default_declaration(SPAN, kind)
     }
 
     /// Create named export of variable: `export const name = init;`
@@ -414,7 +434,7 @@ impl<'a> JsBuilder<'a> {
             SourceType::mjs(),
             "",
             self.ast.vec(), // imports/exports (empty for now)
-            None, // hashbang
+            None,           // hashbang
             self.ast.vec(), // directives
             body_vec,
         );
@@ -430,7 +450,8 @@ impl<'a> JsBuilder<'a> {
 
     /// Unary not operator: `!expr`
     pub fn not(&self, expr: Expression<'a>) -> Expression<'a> {
-        self.ast.expression_unary(SPAN, UnaryOperator::LogicalNot, expr)
+        self.ast
+            .expression_unary(SPAN, UnaryOperator::LogicalNot, expr)
     }
 
     /// Binary expression: `left op right`
@@ -460,7 +481,8 @@ impl<'a> JsBuilder<'a> {
         consequent: Expression<'a>,
         alternate: Expression<'a>,
     ) -> Expression<'a> {
-        self.ast.expression_conditional(SPAN, test, consequent, alternate)
+        self.ast
+            .expression_conditional(SPAN, test, consequent, alternate)
     }
 
     /// New expression: `new Ctor(args)`
@@ -494,7 +516,7 @@ impl<'a> JsBuilder<'a> {
                 let atom = part.into();
                 let tail = i == expressions.len(); // Last quasi element
                 let value = TemplateElementValue {
-                    raw: atom.clone(),
+                    raw: atom,
                     cooked: Some(atom),
                 };
                 TemplateElement {
@@ -505,11 +527,12 @@ impl<'a> JsBuilder<'a> {
                 }
             })
             .collect();
-        
+
         let quasis_vec = self.ast.vec_from_iter(quasis);
         let expressions_vec = self.ast.vec_from_iter(expressions);
-        
-        self.ast.expression_template_literal(SPAN, quasis_vec, expressions_vec)
+
+        self.ast
+            .expression_template_literal(SPAN, quasis_vec, expressions_vec)
     }
 
     /// Spread element for arrays or function calls: `...expr`
