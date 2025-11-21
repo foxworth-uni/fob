@@ -4,7 +4,7 @@ import type {
   FileSystem,
   ProgressEvent,
 } from './types.js';
-import { FobError, formatFobError } from './types.js';
+import { FobError } from './types.js';
 import {
   EdgeRuntime,
   installMemoryRuntime,
@@ -26,8 +26,6 @@ import {
   flushCache,
   type FileCache 
 } from './wasi-bridge.js';
-
-let wasmInitialized = false;
 
 export interface FobOptions {
   wasmUrl?: string;
@@ -149,7 +147,6 @@ export class Fob {
       // (Node.js built-in WASI for Node/tests, @wasmer/wasi for browsers/edge)
       console.log('[Fob] Initializing WASM with auto-detected WASI...');
       await initialize(moduleBytes, fsBindings);
-      wasmInitialized = true;
       this.initialized = true;
       console.log('[Fob] WASM initialized successfully');
     } catch (error) {

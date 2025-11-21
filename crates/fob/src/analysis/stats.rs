@@ -1,12 +1,12 @@
 use crate::graph::{GraphStatistics, ModuleGraph};
 use crate::Result;
 
-pub async fn compute_stats(graph: &ModuleGraph) -> Result<GraphStatistics> {
-    let unused = graph.unused_exports().await?;
-    let unreachable = graph.unreachable_modules().await?;
-    let external = graph.external_dependencies().await?;
-    let modules = graph.modules().await?;
-    let entry_points = graph.entry_points().await?;
+pub fn compute_stats(graph: &ModuleGraph) -> Result<GraphStatistics> {
+    let unused = graph.unused_exports()?;
+    let unreachable = graph.unreachable_modules()?;
+    let external = graph.external_dependencies()?;
+    let modules = graph.modules()?;
+    let entry_points = graph.entry_points()?;
 
     Ok(GraphStatistics::new(
         modules.len(),

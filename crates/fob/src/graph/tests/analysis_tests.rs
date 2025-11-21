@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use std::path::PathBuf;
 
 use super::super::{
@@ -66,23 +68,22 @@ fn import_namespace(from: &str) -> Import {
 
 #[tokio::test]
 async fn unused_exports_filters_consumed_symbols() {
-    let graph = ModuleGraph::new().await.unwrap();
+    let graph = ModuleGraph::new().unwrap();
 
     let utils = module_with_exports("virtual:utils.ts", &["format", "slug"]);
     let mut ui = module_with_exports("virtual:ui.tsx", &["Button"]);
     ui.mark_entry();
 
-    ui.imports.push(import_named("virtual:utils.ts", "format"));
+Arc::make_mut(&mut     ui.imports).push(import_named("virtual:utils.ts", "format"));
 
-    graph.add_module(utils.clone()).await.unwrap();
-    graph.add_module(ui.clone()).await.unwrap();
+    graph.add_module(utils.clone()).unwrap();
+    graph.add_module(ui.clone()).unwrap();
 
     graph
         .add_dependency(ui.id.clone(), utils.id.clone())
-        .await
         .unwrap();
 
-    let unused = graph.unused_exports().await.unwrap();
+    let unused = graph.unused_exports().unwrap();
     assert_eq!(unused.len(), 1);
     assert_eq!(unused[0].export.name, "slug");
     assert_eq!(unused[0].module_id, utils.id);
@@ -90,7 +91,7 @@ async fn unused_exports_filters_consumed_symbols() {
 
 #[tokio::test]
 async fn unreachable_modules_ignores_entry_and_side_effects() {
-    let graph = ModuleGraph::new().await.unwrap();
+    let graph = ModuleGraph::new().unwrap();
 
     let mut entry = module_with_exports("virtual:entry.ts", &[]);
     entry.mark_entry();
@@ -100,21 +101,21 @@ async fn unreachable_modules_ignores_entry_and_side_effects() {
 
     let orphan = module_with_exports("virtual:unused.ts", &[]);
 
-    graph.add_module(entry).await.unwrap();
-    graph.add_module(side_effect).await.unwrap();
-    graph.add_module(orphan.clone()).await.unwrap();
+    graph.add_module(entry).unwrap();
+    graph.add_module(side_effect).unwrap();
+    graph.add_module(orphan.clone()).unwrap();
 
-    let unreachable = graph.unreachable_modules().await.unwrap();
+    let unreachable = graph.unreachable_modules().unwrap();
     assert_eq!(unreachable.len(), 1);
     assert_eq!(unreachable[0].id, orphan.id);
 }
 
 #[tokio::test]
 async fn external_dependencies_aggregates_importers() {
-    let graph = ModuleGraph::new().await.unwrap();
+    let graph = ModuleGraph::new().unwrap();
 
     let mut entry = module_with_exports("virtual:entry.tsx", &[]);
-    entry.imports.push(Import::new(
+Arc::make_mut(&mut     entry.imports).push(Import::new(
         "react",
         Vec::new(),
         ImportKind::Static,
@@ -123,7 +124,7 @@ async fn external_dependencies_aggregates_importers() {
     ));
 
     let mut another = module_with_exports("virtual:another.tsx", &[]);
-    another.imports.push(Import::new(
+Arc::make_mut(&mut     another.imports).push(Import::new(
         "react",
         Vec::new(),
         ImportKind::Static,
@@ -131,10 +132,10 @@ async fn external_dependencies_aggregates_importers() {
         SourceSpan::new("virtual:another.tsx", 0, 0),
     ));
 
-    graph.add_module(entry.clone()).await.unwrap();
-    graph.add_module(another.clone()).await.unwrap();
+    graph.add_module(entry.clone()).unwrap();
+    graph.add_module(another.clone()).unwrap();
 
-    let externals = graph.external_dependencies().await.unwrap();
+    let externals = graph.external_dependencies().unwrap();
     assert_eq!(externals.len(), 1);
     assert_eq!(externals[0].specifier, "react");
     assert_eq!(externals[0].importers.len(), 2);
@@ -142,25 +143,24 @@ async fn external_dependencies_aggregates_importers() {
 
 #[tokio::test]
 async fn statistics_reflects_graph_state() {
-    let graph = ModuleGraph::new().await.unwrap();
+    let graph = ModuleGraph::new().unwrap();
 
     let mut entry = module_with_exports("virtual:entry.ts", &["run"]);
     entry.mark_entry();
 
     let mut util = module_with_exports("virtual:util.ts", &["helper"]);
-    util.imports.push(import_named("virtual:entry.ts", "run"));
-    util.imports.push(Import::new(
+Arc::make_mut(&mut     util.imports).push(import_named("virtual:entry.ts", "run"));
+Arc::make_mut(&mut     util.imports).push(Import::new(
         "legacy-lib",
         Vec::new(),
         ImportKind::Static,
         None,
         SourceSpan::new("virtual:util.ts", 0, 0),
     ));
-    graph.add_module(entry.clone()).await.unwrap();
-    graph.add_module(util.clone()).await.unwrap();
+    graph.add_module(entry.clone()).unwrap();
+    graph.add_module(util.clone()).unwrap();
     graph
         .add_dependency(util.id.clone(), entry.id.clone())
-        .await
         .unwrap();
 
     graph
@@ -168,11 +168,10 @@ async fn statistics_reflects_graph_state() {
             specifier: "legacy-lib".into(),
             importers: vec![entry.id.clone()],
         })
-        .await
         .unwrap();
 
-    let unused_count = graph.unused_exports().await.unwrap().len();
-    let stats = graph.statistics().await.unwrap();
+    let unused_count = graph.unused_exports().unwrap().len();
+    let stats = graph.statistics().unwrap();
     assert_eq!(stats, GraphStatistics::new(2, 1, 1, 0, unused_count, 1));
 }
 
@@ -185,7 +184,7 @@ async fn star_reexport_doesnt_mark_all_exports_used() {
     // demo.tsx: import { validateEmail } from './helpers'
     // Expected: validateZipCode should be unused
 
-    let graph = ModuleGraph::new().await.unwrap();
+    let graph = ModuleGraph::new().unwrap();
 
     let validators_id = ModuleId::new_virtual("validators.ts");
     let validators = Module::builder(
@@ -246,27 +245,25 @@ async fn star_reexport_doesnt_mark_all_exports_used() {
         ),
     ])
     .build();
-    helpers.imports.push(import_star_reexport("validators.ts"));
+Arc::make_mut(&mut     helpers.imports).push(import_star_reexport("validators.ts"));
 
     let mut demo = module_with_exports("demo.tsx", &[]);
     demo.mark_entry();
-    demo.imports
+    Arc::make_mut(&mut demo.imports)
         .push(import_named("helpers.ts", "validateEmail"));
 
-    graph.add_module(validators.clone()).await.unwrap();
-    graph.add_module(helpers.clone()).await.unwrap();
-    graph.add_module(demo.clone()).await.unwrap();
+    graph.add_module(validators.clone()).unwrap();
+    graph.add_module(helpers.clone()).unwrap();
+    graph.add_module(demo.clone()).unwrap();
 
     graph
         .add_dependency(helpers_id.clone(), validators_id.clone())
-        .await
         .unwrap();
     graph
         .add_dependency(demo.id.clone(), helpers_id.clone())
-        .await
         .unwrap();
 
-    let unused = graph.unused_exports().await.unwrap();
+    let unused = graph.unused_exports().unwrap();
 
     // validateZipCode should be unused (not marked as used by star re-export)
     let unused_zipcode = unused
@@ -289,7 +286,7 @@ async fn namespace_import_marks_all_exports_used() {
     // app.ts: import * as utils from './utils';
     // Expected: Both foo and bar should be marked as used
 
-    let graph = ModuleGraph::new().await.unwrap();
+    let graph = ModuleGraph::new().unwrap();
 
     let utils_id = ModuleId::new_virtual("utils.ts");
     let utils = Module::builder(
@@ -323,17 +320,16 @@ async fn namespace_import_marks_all_exports_used() {
 
     let mut app = module_with_exports("app.ts", &[]);
     app.mark_entry();
-    app.imports.push(import_namespace("utils.ts"));
+Arc::make_mut(&mut     app.imports).push(import_namespace("utils.ts"));
 
-    graph.add_module(utils.clone()).await.unwrap();
-    graph.add_module(app.clone()).await.unwrap();
+    graph.add_module(utils.clone()).unwrap();
+    graph.add_module(app.clone()).unwrap();
 
     graph
         .add_dependency(app.id.clone(), utils_id.clone())
-        .await
         .unwrap();
 
-    let unused = graph.unused_exports().await.unwrap();
+    let unused = graph.unused_exports().unwrap();
 
     // Both foo and bar should be marked as used by namespace import
     let unused_from_utils: Vec<_> = unused.iter().filter(|u| u.module_id == utils_id).collect();

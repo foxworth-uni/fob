@@ -1,0 +1,25 @@
+[package]
+name = "fob-plugin-astro"
+version = "0.1.0"
+authors = ["Fob Contributors"]
+edition = "2021"
+rust-version = "1.77"
+license = "MIT OR Apache-2.0"
+description = "Rolldown bundler plugin for Astro - extract and process frontmatter and script blocks from Astro components"
+
+[dependencies]
+# Fob core extractors
+fob = { path = "../fob" }
+
+# Rolldown bundler integration
+rolldown = { workspace = true }
+rolldown_plugin = { workspace = true }
+rolldown_common = { workspace = true }
+
+# Error handling
+anyhow.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+tokio = { workspace = true, features = ["macros", "rt"] }

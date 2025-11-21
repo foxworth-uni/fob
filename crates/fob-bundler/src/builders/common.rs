@@ -234,7 +234,6 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
     );
 
     let graph = fob::graph::ModuleGraph::from_collected_data(collection_data)
-        .await
         .map_err(|e| {
             Error::Bundler(format!(
                 "Failed to build module graph from collected data: {}",
@@ -242,9 +241,9 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
             ))
         })?;
 
-    let stats = compute_stats(&graph).await?;
-    let entry_points = graph.entry_points().await?;
-    let symbol_stats = graph.symbol_statistics().await?;
+    let stats = compute_stats(&graph)?;
+    let entry_points = graph.entry_points()?;
+    let symbol_stats = graph.symbol_statistics()?;
     let analysis = AnalysisResult {
         graph,
         entry_points,

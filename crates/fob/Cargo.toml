@@ -24,6 +24,7 @@ path-clean.workspace = true
 rustc-hash.workspace = true
 serde_json.workspace = true
 anyhow.workspace = true
+memchr.workspace = true
 
 # Asset handling dependencies
 oxc_parser.workspace = true
@@ -41,10 +42,6 @@ uuid.workspace = true
 
 [features]
 default = []
-
-# Storage backend integration
-# Note: When using storage feature, also depend on fob-store crate
-storage = []
 
 # Test utilities (for integration tests)
 test-utils = []

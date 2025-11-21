@@ -95,7 +95,7 @@ impl BundleMetadata {
     ) -> Result<Self> {
         let exports = extract_exports(graph).await?;
         let imports = extract_imports(graph).await?;
-        let module_count = graph.len().await?;
+        let module_count = graph.len()?;
 
         Ok(Self {
             exports,
@@ -226,10 +226,10 @@ impl BundleMetadata {
 /// - We want a complete picture of what the bundle contains
 async fn extract_exports(graph: &ModuleGraph) -> Result<Vec<ExportInfo>> {
     let mut exports = Vec::new();
-    let modules = graph.modules().await?;
+    let modules = graph.modules()?;
 
     for module in modules {
-        for export in &module.exports {
+        for export in module.exports.iter() {
             exports.push(ExportInfo {
                 name: if matches!(export.kind, ExportKind::Default) {
                     "default".to_string()
@@ -255,10 +255,10 @@ async fn extract_imports(graph: &ModuleGraph) -> Result<Vec<ImportInfo>> {
     use rustc_hash::FxHashMap;
 
     let mut import_map: FxHashMap<String, ImportInfo> = FxHashMap::default();
-    let modules = graph.modules().await?;
+    let modules = graph.modules()?;
 
     for module in modules {
-        for import in &module.imports {
+        for import in module.imports.iter() {
             // Only collect external imports (npm packages, etc.)
             // Skip relative imports as they're bundled
             if import.is_external() {
@@ -295,7 +295,7 @@ mod tests {
     };
 
     async fn create_test_graph() -> ModuleGraph {
-        let graph = ModuleGraph::new().await.unwrap();
+        let graph = ModuleGraph::new().unwrap();
 
         // Entry module with exports
         let entry_id = ModuleId::new_virtual("entry.js");
@@ -332,7 +332,7 @@ mod tests {
             .entry(true)
             .build();
 
-        graph.add_module(entry).await.unwrap();
+        graph.add_module(entry).unwrap();
         graph
     }
 

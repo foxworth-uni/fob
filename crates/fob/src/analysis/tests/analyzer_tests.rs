@@ -100,7 +100,7 @@ async fn test_analyze_with_externals() {
         .await
         .unwrap();
 
-    let externals = analysis.external_dependencies().await.unwrap();
+    let externals = analysis.external_dependencies().unwrap();
     assert!(externals.iter().any(|d| d.specifier == "react"));
     assert!(externals.iter().any(|d| d.specifier == "lodash"));
 }
@@ -121,7 +121,7 @@ async fn test_analyze_with_path_aliases() {
         .unwrap();
 
     assert!(analysis.is_ok());
-    assert!(assert_graph_contains_module(&analysis.graph, "Button").await);
+    assert!(assert_graph_contains_module(&analysis.graph, "Button"));
 }
 
 #[tokio::test]

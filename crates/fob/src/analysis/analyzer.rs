@@ -35,7 +35,7 @@ use super::walker::GraphWalker;
 ///     .analyze()
 ///     .await?;
 ///
-/// println!("Unused exports: {}", analysis.unused_exports().await?.len());
+/// println!("Unused exports: {}", analysis.unused_exports()?.len());
 /// # Ok(())
 /// # }
 /// ```
@@ -162,13 +162,12 @@ impl Analyzer {
 
         // Build module graph from collected data
         let graph = ModuleGraph::from_collected_data(collection)
-            .await
             .map_err(|e| Error::Operation(format!("Failed to build module graph: {}", e)))?;
 
         // Compute statistics
-        let stats = compute_stats(&graph).await?;
-        let entry_points = graph.entry_points().await?;
-        let symbol_stats = graph.symbol_statistics().await?;
+        let stats = compute_stats(&graph)?;
+        let entry_points = graph.entry_points()?;
+        let symbol_stats = graph.symbol_statistics()?;
 
         Ok(AnalysisResult {
             graph,

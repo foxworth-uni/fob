@@ -10,8 +10,8 @@ use fob_bundler::graph::{
 use fob_bundler::output::metadata::BundleMetadata;
 
 /// Helper to create a test module graph with various scenarios.
-async fn create_test_graph() -> ModuleGraph {
-    let graph = ModuleGraph::new().await.unwrap();
+fn create_test_graph() -> ModuleGraph {
+    let graph = ModuleGraph::new().unwrap();
 
     // Entry module with default and named exports
     let entry_id = ModuleId::new_virtual("entry.js");
@@ -71,7 +71,7 @@ async fn create_test_graph() -> ModuleGraph {
         .original_size(1024)
         .build();
 
-    graph.add_module(entry).await.unwrap();
+    graph.add_module(entry).unwrap();
 
     // Utility module with re-exports
     let utils_id = ModuleId::new_virtual("utils.js");
@@ -108,7 +108,7 @@ async fn create_test_graph() -> ModuleGraph {
         .original_size(512)
         .build();
 
-    graph.add_module(utils).await.unwrap();
+    graph.add_module(utils).unwrap();
 
     // Type-only module (TypeScript)
     let types_id = ModuleId::new_virtual("types.ts");
@@ -133,14 +133,14 @@ async fn create_test_graph() -> ModuleGraph {
         .original_size(256)
         .build();
 
-    graph.add_module(types).await.unwrap();
+    graph.add_module(types).unwrap();
 
     graph
 }
 
 #[tokio::test]
 async fn test_metadata_extracts_all_exports() {
-    let graph = create_test_graph().await;
+    let graph = create_test_graph();
     let metadata = BundleMetadata::from_graph(&graph, 2048, 1).await.unwrap();
 
     let exports = metadata.exports();
@@ -158,7 +158,7 @@ async fn test_metadata_extracts_all_exports() {
 
 #[tokio::test]
 async fn test_metadata_identifies_default_export() {
-    let graph = create_test_graph().await;
+    let graph = create_test_graph();
     let metadata = BundleMetadata::from_graph(&graph, 2048, 1).await.unwrap();
 
     assert!(metadata.has_default_export());
@@ -171,7 +171,7 @@ async fn test_metadata_identifies_default_export() {
 
 #[tokio::test]
 async fn test_metadata_separates_named_and_default_exports() {
-    let graph = create_test_graph().await;
+    let graph = create_test_graph();
     let metadata = BundleMetadata::from_graph(&graph, 2048, 1).await.unwrap();
 
     let named = metadata.named_exports();
@@ -190,7 +190,7 @@ async fn test_metadata_separates_named_and_default_exports() {
 
 #[tokio::test]
 async fn test_metadata_tracks_export_usage() {
-    let graph = create_test_graph().await;
+    let graph = create_test_graph();
     let metadata = BundleMetadata::from_graph(&graph, 2048, 1).await.unwrap();
 
     let exports = metadata.exports();
@@ -206,7 +206,7 @@ async fn test_metadata_tracks_export_usage() {
 
 #[tokio::test]
 async fn test_metadata_identifies_unused_exports() {
-    let graph = create_test_graph().await;
+    let graph = create_test_graph();
     let metadata = BundleMetadata::from_graph(&graph, 2048, 1).await.unwrap();
 
     let unused = metadata.unused_exports();
@@ -221,7 +221,7 @@ async fn test_metadata_identifies_unused_exports() {
 
 #[tokio::test]
 async fn test_metadata_extracts_external_imports() {
-    let graph = create_test_graph().await;
+    let graph = create_test_graph();
     let metadata = BundleMetadata::from_graph(&graph, 2048, 1).await.unwrap();
 
     let imports = metadata.imports();
@@ -238,7 +238,7 @@ async fn test_metadata_extracts_external_imports() {
 
 #[tokio::test]
 async fn test_metadata_groups_imports_by_specifier() {
-    let graph = create_test_graph().await;
+    let graph = create_test_graph();
     let metadata = BundleMetadata::from_graph(&graph, 2048, 1).await.unwrap();
 
     let imports = metadata.imports();
@@ -252,7 +252,7 @@ async fn test_metadata_groups_imports_by_specifier() {
 
 #[tokio::test]
 async fn test_metadata_identifies_type_only_imports() {
-    let graph = create_test_graph().await;
+    let graph = create_test_graph();
     let metadata = BundleMetadata::from_graph(&graph, 2048, 1).await.unwrap();
 
     let imports = metadata.imports();
@@ -269,39 +269,35 @@ async fn test_metadata_identifies_type_only_imports() {
 
 #[tokio::test]
 async fn test_metadata_calculates_total_size() {
-    let graph = create_test_graph().await;
+    let graph = create_test_graph();
     let total_size = 2048;
-    let metadata = BundleMetadata::from_graph(&graph, total_size, 1)
-        .await
-        .unwrap();
+    let metadata = BundleMetadata::from_graph(&graph, total_size, 1).await.unwrap();
 
     assert_eq!(metadata.total_size(), total_size);
 }
 
 #[tokio::test]
 async fn test_metadata_counts_assets() {
-    let graph = create_test_graph().await;
+    let graph = create_test_graph();
     let asset_count = 3;
-    let metadata = BundleMetadata::from_graph(&graph, 1024, asset_count)
-        .await
-        .unwrap();
+    let metadata = BundleMetadata::from_graph(&graph, 1024, asset_count).await.unwrap();
 
     assert_eq!(metadata.asset_count(), asset_count);
 }
 
 #[tokio::test]
 async fn test_metadata_counts_modules() {
-    let graph = create_test_graph().await;
+    let graph = create_test_graph();
     let metadata = BundleMetadata::from_graph(&graph, 1024, 1).await.unwrap();
 
     // Should count all modules in the graph
-    assert_eq!(metadata.module_count(), graph.len().await.unwrap());
+    assert_eq!(metadata.module_count(), graph.len().unwrap());
     assert_eq!(metadata.module_count(), 3); // entry, utils, types
 }
 
 #[tokio::test]
 async fn test_has_export_check() {
-    let graph = create_test_graph().await;
+    let graph = create_test_graph();
     let metadata = BundleMetadata::from_graph(&graph, 1024, 1).await.unwrap();
 
     // Should find existing exports
@@ -317,7 +313,7 @@ async fn test_has_export_check() {
 
 #[tokio::test]
 async fn test_metadata_with_empty_graph() {
-    let graph = ModuleGraph::new().await.unwrap();
+    let graph = ModuleGraph::new().unwrap();
     let metadata = BundleMetadata::from_graph(&graph, 0, 0).await.unwrap();
 
     assert_eq!(metadata.exports().len(), 0);
@@ -330,7 +326,7 @@ async fn test_metadata_with_empty_graph() {
 
 #[tokio::test]
 async fn test_metadata_with_single_module() {
-    let graph = ModuleGraph::new().await.unwrap();
+    let graph = ModuleGraph::new().unwrap();
 
     let module_id = ModuleId::new_virtual("index.js");
     let module = Module::builder(module_id, "index.js".into(), SourceType::JavaScript)
@@ -348,7 +344,7 @@ async fn test_metadata_with_single_module() {
         .original_size(100)
         .build();
 
-    graph.add_module(module).await.unwrap();
+    graph.add_module(module).unwrap();
 
     let metadata = BundleMetadata::from_graph(&graph, 100, 1).await.unwrap();
 
@@ -360,7 +356,7 @@ async fn test_metadata_with_single_module() {
 
 #[tokio::test]
 async fn test_metadata_excludes_internal_imports() {
-    let graph = ModuleGraph::new().await.unwrap();
+    let graph = ModuleGraph::new().unwrap();
 
     let module_a_id = ModuleId::new_virtual("a.js");
     let module_b_id = ModuleId::new_virtual("b.js");
@@ -399,8 +395,8 @@ async fn test_metadata_excludes_internal_imports() {
         )])
         .build();
 
-    graph.add_module(module_a).await.unwrap();
-    graph.add_module(module_b).await.unwrap();
+    graph.add_module(module_a).unwrap();
+    graph.add_module(module_b).unwrap();
 
     let metadata = BundleMetadata::from_graph(&graph, 200, 1).await.unwrap();
 
@@ -411,7 +407,7 @@ async fn test_metadata_excludes_internal_imports() {
 
 #[tokio::test]
 async fn test_metadata_handles_re_exports() {
-    let graph = ModuleGraph::new().await.unwrap();
+    let graph = ModuleGraph::new().unwrap();
 
     let module_id = ModuleId::new_virtual("reexports.js");
     let module = Module::builder(module_id, "reexports.js".into(), SourceType::JavaScript)
@@ -427,7 +423,7 @@ async fn test_metadata_handles_re_exports() {
         )])
         .build();
 
-    graph.add_module(module).await.unwrap();
+    graph.add_module(module).unwrap();
 
     let metadata = BundleMetadata::from_graph(&graph, 100, 1).await.unwrap();
 
@@ -439,7 +435,7 @@ async fn test_metadata_handles_re_exports() {
 
 #[tokio::test]
 async fn test_metadata_multiple_default_exports() {
-    let graph = ModuleGraph::new().await.unwrap();
+    let graph = ModuleGraph::new().unwrap();
 
     // Two different modules with default exports
     let module1_id = ModuleId::new_virtual("module1.js");
@@ -470,8 +466,8 @@ async fn test_metadata_multiple_default_exports() {
         )])
         .build();
 
-    graph.add_module(module1).await.unwrap();
-    graph.add_module(module2).await.unwrap();
+    graph.add_module(module1).unwrap();
+    graph.add_module(module2).unwrap();
 
     let metadata = BundleMetadata::from_graph(&graph, 200, 1).await.unwrap();
 

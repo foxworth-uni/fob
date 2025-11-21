@@ -4,11 +4,10 @@
 
 #[cfg(feature = "transform-engine")]
 mod transform_impl {
-    use crate::error::{GenError, Result};
+    use crate::error::Result;
     use crate::format::FormatOptions;
     use crate::parser::{ParseOptions, ParsedProgram};
     use oxc_allocator::Allocator;
-    use oxc_ast::ast::Program;
 
     /// Result of a transformation pass
     #[derive(Debug)]
@@ -104,13 +103,11 @@ mod transform_impl {
             }
 
             // Generate code
-            use crate::JsBuilder;
-            use oxc_ast::ast::Statement;
+            use oxc_codegen::Codegen;
 
-            let js = JsBuilder::new(self.allocator);
-            let statements: Vec<Statement> = parsed.program.body.iter().map(|s| *s).collect();
-
-            let code = js.program_with_format(statements, &self.format_options)?;
+            let codegen = Codegen::new();
+            let result = codegen.build(&parsed.program);
+            let code = result.code;
 
             Ok(TransformOutput {
                 code,

@@ -100,7 +100,7 @@ async fn execute_components_build(options: BuildOptions) -> Result<BuildResult> 
     };
 
     let mut bundles = FxHashMap::default();
-    let merged_graph = fob::graph::ModuleGraph::new().await?;
+    let merged_graph = fob::graph::ModuleGraph::new()?;
     let mut all_entry_points = Vec::new();
     let mut all_warnings = Vec::new();
     let mut all_errors = Vec::new();
@@ -113,25 +113,25 @@ async fn execute_components_build(options: BuildOptions) -> Result<BuildResult> 
         let name = entry_to_name(entry);
 
         // Merge this component's graph into the accumulated graph
-        let modules = analyzed.analysis.graph.modules().await?;
+        let modules = analyzed.analysis.graph.modules()?;
         let entry_points_set: std::collections::HashSet<_> = analyzed
             .analysis
             .graph
-            .entry_points()
-            .await?
+            .entry_points()?
             .into_iter()
             .collect();
         for module in modules {
-            merged_graph.add_module(module.clone()).await?;
+            let module_id = module.id.clone();
+            merged_graph.add_module(module)?;
             // Add entry points from this component
-            if entry_points_set.contains(&module.id) {
-                merged_graph.add_entry_point(module.id.clone()).await?;
+            if entry_points_set.contains(&module_id) {
+                merged_graph.add_entry_point(module_id.clone())?;
             }
 
             // Merge dependencies for this module
-            let deps = analyzed.analysis.graph.dependencies(&module.id).await?;
+            let deps = analyzed.analysis.graph.dependencies(&module_id)?;
             for dep in deps {
-                merged_graph.add_dependency(module.id.clone(), dep).await?;
+                merged_graph.add_dependency(module_id.clone(), dep)?;
             }
         }
 
@@ -152,8 +152,8 @@ async fn execute_components_build(options: BuildOptions) -> Result<BuildResult> 
         bundles.insert(name, analyzed.bundle);
     }
 
-    let stats = fob::analysis::stats::compute_stats(&merged_graph).await?;
-    let symbol_stats = merged_graph.symbol_statistics().await?;
+    let stats = fob::analysis::stats::compute_stats(&merged_graph)?;
+    let symbol_stats = merged_graph.symbol_statistics()?;
     let analysis = fob::analysis::AnalysisResult {
         graph: merged_graph,
         entry_points: all_entry_points,

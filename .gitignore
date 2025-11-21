@@ -75,5 +75,5 @@ examples/**/dist/
 examples/**/output/
 examples/**/demo/dist/
 
-.claude/*
+.claude
 .turbo/*

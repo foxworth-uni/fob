@@ -1,4 +1,5 @@
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
@@ -6,20 +7,25 @@ use super::symbol::SymbolTable;
 use super::{Export, Import, ModuleId};
 
 /// Resolved module metadata used by graph algorithms and builders.
+///
+/// Heavy collections (imports, exports, symbol_table) are wrapped in Arc
+/// to make cloning cheap when returning modules from the graph.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Module {
     pub id: ModuleId,
     pub path: PathBuf,
     pub source_type: SourceType,
-    pub imports: Vec<Import>,
-    pub exports: Vec<Export>,
+    #[serde(with = "arc_vec_serde")]
+    pub imports: Arc<Vec<Import>>,
+    #[serde(with = "arc_vec_serde")]
+    pub exports: Arc<Vec<Export>>,
     pub has_side_effects: bool,
     pub is_entry: bool,
     pub is_external: bool,
     pub original_size: usize,
     pub bundled_size: Option<usize>,
     /// Symbol table from semantic analysis (intra-file dead code detection)
-    pub symbol_table: SymbolTable,
+    pub symbol_table: Arc<SymbolTable>,
     /// Module format (ESM vs CJS) from rolldown analysis
     pub module_format: ModuleFormat,
     /// Export structure kind (ESM, CJS, or None)
@@ -30,6 +36,29 @@ pub struct Module {
     pub execution_order: Option<u32>,
 }
 
+// Serde helper for Arc<Vec<T>>
+mod arc_vec_serde {
+    use super::*;
+    use serde::de::Deserializer;
+    use serde::ser::Serializer;
+
+    pub fn serialize<S, T>(value: &Arc<Vec<T>>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+        T: Serialize,
+    {
+        value.as_ref().serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D, T>(deserializer: D) -> Result<Arc<Vec<T>>, D::Error>
+    where
+        D: Deserializer<'de>,
+        T: Deserialize<'de>,
+    {
+        Vec::deserialize(deserializer).map(Arc::new)
+    }
+}
+
 impl Module {
     /// Create a new module builder with sensible defaults.
     pub fn builder(id: ModuleId, path: PathBuf, source_type: SourceType) -> ModuleBuilder {
@@ -38,14 +67,14 @@ impl Module {
                 id,
                 path,
                 source_type,
-                imports: Vec::new(),
-                exports: Vec::new(),
+                imports: Arc::new(Vec::new()),
+                exports: Arc::new(Vec::new()),
                 has_side_effects: false,
                 is_entry: false,
                 is_external: false,
                 original_size: 0,
                 bundled_size: None,
-                symbol_table: SymbolTable::new(),
+                symbol_table: Arc::new(SymbolTable::new()),
                 module_format: ModuleFormat::Unknown,
                 exports_kind: ExportsKind::None,
                 has_star_exports: false,
@@ -74,7 +103,19 @@ impl Module {
         self.bundled_size = size;
     }
 
+    /// Get an iterator over imports.
+    pub fn imports_iter(&self) -> impl Iterator<Item = &Import> {
+        self.imports.iter()
+    }
+
+    /// Get an iterator over exports.
+    pub fn exports_iter(&self) -> impl Iterator<Item = &Export> {
+        self.exports.iter()
+    }
+
     /// Get mutable access to exports (for external tools like framework rules).
+    ///
+    /// This uses Arc::make_mut to create a mutable copy only when needed.
     ///
     /// # Example
     ///
@@ -85,8 +126,8 @@ impl Module {
     ///     }
     /// }
     /// ```
-    pub fn exports_mut(&mut self) -> &mut [Export] {
-        &mut self.exports
+    pub fn exports_mut(&mut self) -> &mut Vec<Export> {
+        Arc::make_mut(&mut self.exports)
     }
 
     /// Get imports that reference a specific module.
@@ -145,12 +186,12 @@ pub struct ModuleBuilder {
 
 impl ModuleBuilder {
     pub fn imports(mut self, imports: Vec<Import>) -> Self {
-        self.module.imports = imports;
+        self.module.imports = Arc::new(imports);
         self
     }
 
     pub fn exports(mut self, exports: Vec<Export>) -> Self {
-        self.module.exports = exports;
+        self.module.exports = Arc::new(exports);
         self
     }
 
@@ -180,7 +221,7 @@ impl ModuleBuilder {
     }
 
     pub fn symbol_table(mut self, symbol_table: SymbolTable) -> Self {
-        self.module.symbol_table = symbol_table;
+        self.module.symbol_table = Arc::new(symbol_table);
         self
     }
 

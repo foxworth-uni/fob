@@ -49,7 +49,7 @@ pub struct PendingImport {
 // PendingModule is no longer used - conversion happens directly in memory.rs and core.rs
 
 // Helper functions for converting CollectionState to ModuleGraph
-// These are used by both memory and storage-backed implementations
+// These are used by the in-memory ModuleGraph implementation
 
 pub fn convert_collected_module_id(path: &str) -> Result<ModuleId, CollectionGraphError> {
     let path_buf = PathBuf::from(path);

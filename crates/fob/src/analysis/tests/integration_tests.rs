@@ -33,8 +33,8 @@ async fn test_analyzer_vs_builder_same_graph() {
         .unwrap();
 
     // Both should produce same module count
-    let analyzer_modules = analyzer_result.graph.modules().await.unwrap();
-    let builder_modules = builder_result.graph.modules().await.unwrap();
+    let analyzer_modules = analyzer_result.graph.modules().unwrap();
+    let builder_modules = builder_result.graph.modules().unwrap();
 
     assert_eq!(analyzer_modules.len(), builder_modules.len());
 }
@@ -72,7 +72,7 @@ async fn test_detect_unused_exports() {
         .await
         .unwrap();
 
-    let unused = analysis.unused_exports().await.unwrap();
+    let unused = analysis.unused_exports().unwrap();
     assert!(unused.iter().any(|u| u.export.name == "unused"));
 }
 
@@ -90,7 +90,7 @@ async fn test_detect_circular_dependencies() {
         .await
         .unwrap();
 
-    assert!(assert_has_circular_dependency(&analysis).await);
+    assert!(assert_has_circular_dependency(&analysis));
 }
 
 #[tokio::test]
@@ -222,7 +222,7 @@ async fn test_analyze_with_path_aliases_integration() {
         .unwrap();
 
     assert!(analysis.is_ok());
-    assert!(assert_graph_contains_module(&analysis.graph, "Button").await);
+    assert!(assert_graph_contains_module(&analysis.graph, "Button"));
 }
 
 #[tokio::test]
@@ -355,7 +355,7 @@ async fn test_builder_analyze_only_respects_config() {
         .await
         .unwrap();
 
-    let externals = analysis.external_dependencies().await.unwrap();
+    let externals = analysis.external_dependencies().unwrap();
     assert!(externals.iter().any(|d| d.specifier == "react"));
     assert!(externals.iter().any(|d| d.specifier == "lodash"));
 }
@@ -399,13 +399,13 @@ async fn test_dependency_chains() {
         .await
         .unwrap();
 
-    let modules = analysis.graph.modules().await.unwrap();
+    let modules = analysis.graph.modules().unwrap();
     let b_module = modules
         .iter()
         .find(|m| m.path.to_string_lossy().contains("b.ts"))
         .unwrap();
 
-    let chains = analysis.dependency_chains_to(&b_module.id).await.unwrap();
+    let chains = analysis.dependency_chains_to(&b_module.id).unwrap();
     assert!(!chains.is_empty());
     // Should have chain: index -> a -> b
     assert!(chains.iter().any(|c| c.path.len() == 3));
@@ -454,7 +454,7 @@ async fn test_error_recovery_continues_on_parse_errors() {
 
     // Should still complete and include valid modules
     assert!(analysis.is_ok());
-    assert!(assert_graph_contains_module(&analysis.graph, "utils").await);
+    assert!(assert_graph_contains_module(&analysis.graph, "utils"));
 }
 
 #[tokio::test]

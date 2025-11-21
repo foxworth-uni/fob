@@ -16,13 +16,13 @@ pub struct AnalysisResult {
 
 impl AnalysisResult {
     /// Get all unused exports in the module graph.
-    pub async fn unused_exports(&self) -> crate::Result<Vec<crate::graph::UnusedExport>> {
-        self.graph.unused_exports().await
+    pub fn unused_exports(&self) -> crate::Result<Vec<crate::graph::UnusedExport>> {
+        self.graph.unused_exports()
     }
 
     /// Get all external dependencies.
-    pub async fn external_dependencies(&self) -> crate::Result<Vec<ExternalDependency>> {
-        self.graph.external_dependencies().await
+    pub fn external_dependencies(&self) -> crate::Result<Vec<ExternalDependency>> {
+        self.graph.external_dependencies()
     }
 
     /// Check if the analysis completed without errors.
@@ -38,22 +38,22 @@ impl AnalysisResult {
     /// Get all dependency chains to a target module.
     ///
     /// Useful for understanding why a module is included or finding circular dependencies.
-    pub async fn dependency_chains_to(
+    pub fn dependency_chains_to(
         &self,
         target: &ModuleId,
     ) -> crate::Result<Vec<DependencyChain>> {
-        self.graph.dependency_chains_to(target).await
+        self.graph.dependency_chains_to(target)
     }
 
     /// Find circular dependencies in the module graph.
     ///
     /// Returns chains that contain cycles (same module appears multiple times).
-    pub async fn find_circular_dependencies(&self) -> crate::Result<Vec<DependencyChain>> {
-        let modules = self.graph.modules().await?;
+    pub fn find_circular_dependencies(&self) -> crate::Result<Vec<DependencyChain>> {
+        let modules = self.graph.modules()?;
         let mut circular = Vec::new();
 
         for module in modules {
-            let chains = self.graph.dependency_chains_to(&module.id).await?;
+            let chains = self.graph.dependency_chains_to(&module.id)?;
             for chain in chains {
                 if chain.has_cycle() {
                     circular.push(chain);

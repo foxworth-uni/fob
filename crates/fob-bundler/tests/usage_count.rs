@@ -57,7 +57,7 @@ async fn test_simple_usage_once() -> Result<()> {
     // Module B imports { foo } from A
     // Expected: foo has usage_count = 1
 
-    let graph = ModuleGraph::new().await?;
+    let graph = ModuleGraph::new()?;
 
     let module_a = create_module("a.js", vec![("foo", ExportKind::Named)], vec![]);
     let module_b = create_module(
@@ -70,19 +70,19 @@ async fn test_simple_usage_once() -> Result<()> {
         )],
     );
 
-    graph.add_module(module_a).await?;
-    graph.add_module(module_b.clone()).await?;
+    graph.add_module(module_a)?;
+    graph.add_module(module_b.clone())?;
     graph
         .add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())
-        .await?;
+        ?;
 
     // Compute usage counts
-    graph.compute_export_usage_counts().await?;
+    graph.compute_export_usage_counts()?;
 
     // Verify
     let module_a = graph
         .module(&ModuleId::new("a.js").unwrap())
-        .await?
+        ?
         .unwrap();
     assert_eq!(module_a.exports.len(), 1);
     assert_eq!(module_a.exports[0].name, "foo");
@@ -98,7 +98,7 @@ async fn test_multiple_importers() -> Result<()> {
     // Module C imports { foo } from A
     // Expected: foo has usage_count = 2
 
-    let graph = ModuleGraph::new().await?;
+    let graph = ModuleGraph::new()?;
 
     let module_a = create_module("a.js", vec![("foo", ExportKind::Named)], vec![]);
     let module_b = create_module(
@@ -120,21 +120,21 @@ async fn test_multiple_importers() -> Result<()> {
         )],
     );
 
-    graph.add_module(module_a).await?;
-    graph.add_module(module_b.clone()).await?;
-    graph.add_module(module_c.clone()).await?;
+    graph.add_module(module_a)?;
+    graph.add_module(module_b.clone())?;
+    graph.add_module(module_c.clone())?;
     graph
         .add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())
-        .await?;
+        ?;
     graph
         .add_dependency(module_c.id.clone(), ModuleId::new("a.js").unwrap())
-        .await?;
+        ?;
 
-    graph.compute_export_usage_counts().await?;
+    graph.compute_export_usage_counts()?;
 
     let module_a = graph
         .module(&ModuleId::new("a.js").unwrap())
-        .await?
+        ?
         .unwrap();
     assert_eq!(module_a.exports[0].usage_count(), Some(2));
 
@@ -147,7 +147,7 @@ async fn test_unused_export() -> Result<()> {
     // Module B imports { foo } from A
     // Expected: foo has usage_count = 1, bar has usage_count = 0
 
-    let graph = ModuleGraph::new().await?;
+    let graph = ModuleGraph::new()?;
 
     let module_a = create_module(
         "a.js",
@@ -164,17 +164,17 @@ async fn test_unused_export() -> Result<()> {
         )],
     );
 
-    graph.add_module(module_a).await?;
-    graph.add_module(module_b.clone()).await?;
+    graph.add_module(module_a)?;
+    graph.add_module(module_b.clone())?;
     graph
         .add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())
-        .await?;
+        ?;
 
-    graph.compute_export_usage_counts().await?;
+    graph.compute_export_usage_counts()?;
 
     let module_a = graph
         .module(&ModuleId::new("a.js").unwrap())
-        .await?
+        ?
         .unwrap();
     let foo = module_a.exports.iter().find(|e| e.name == "foo").unwrap();
     let bar = module_a.exports.iter().find(|e| e.name == "bar").unwrap();
@@ -191,7 +191,7 @@ async fn test_namespace_import() -> Result<()> {
     // Module B: import * as A from "a.js"
     // Expected: both exports have usage_count = 1
 
-    let graph = ModuleGraph::new().await?;
+    let graph = ModuleGraph::new()?;
 
     let module_a = create_module(
         "a.js",
@@ -208,17 +208,17 @@ async fn test_namespace_import() -> Result<()> {
         )],
     );
 
-    graph.add_module(module_a).await?;
-    graph.add_module(module_b.clone()).await?;
+    graph.add_module(module_a)?;
+    graph.add_module(module_b.clone())?;
     graph
         .add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())
-        .await?;
+        ?;
 
-    graph.compute_export_usage_counts().await?;
+    graph.compute_export_usage_counts()?;
 
     let module_a = graph
         .module(&ModuleId::new("a.js").unwrap())
-        .await?
+        ?
         .unwrap();
     let foo = module_a.exports.iter().find(|e| e.name == "foo").unwrap();
     let bar = module_a.exports.iter().find(|e| e.name == "bar").unwrap();
@@ -236,7 +236,7 @@ async fn test_default_export() -> Result<()> {
     // Module B: import A from "a.js"
     // Expected: default export has usage_count = 1
 
-    let graph = ModuleGraph::new().await?;
+    let graph = ModuleGraph::new()?;
 
     let module_a = create_module("a.js", vec![("default", ExportKind::Default)], vec![]);
     let module_b = create_module(
@@ -249,17 +249,17 @@ async fn test_default_export() -> Result<()> {
         )],
     );
 
-    graph.add_module(module_a).await?;
-    graph.add_module(module_b.clone()).await?;
+    graph.add_module(module_a)?;
+    graph.add_module(module_b.clone())?;
     graph
         .add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())
-        .await?;
+        ?;
 
-    graph.compute_export_usage_counts().await?;
+    graph.compute_export_usage_counts()?;
 
     let module_a = graph
         .module(&ModuleId::new("a.js").unwrap())
-        .await?
+        ?
         .unwrap();
     let default_export = module_a
         .exports
@@ -278,7 +278,7 @@ async fn test_multiple_imports_same_module() -> Result<()> {
     // Module B imports { foo, bar } from A
     // Expected: foo has usage_count = 1, bar has usage_count = 1
 
-    let graph = ModuleGraph::new().await?;
+    let graph = ModuleGraph::new()?;
 
     let module_a = create_module(
         "a.js",
@@ -298,17 +298,17 @@ async fn test_multiple_imports_same_module() -> Result<()> {
         )],
     );
 
-    graph.add_module(module_a).await?;
-    graph.add_module(module_b.clone()).await?;
+    graph.add_module(module_a)?;
+    graph.add_module(module_b.clone())?;
     graph
         .add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())
-        .await?;
+        ?;
 
-    graph.compute_export_usage_counts().await?;
+    graph.compute_export_usage_counts()?;
 
     let module_a = graph
         .module(&ModuleId::new("a.js").unwrap())
-        .await?
+        ?
         .unwrap();
     let foo = module_a.exports.iter().find(|e| e.name == "foo").unwrap();
     let bar = module_a.exports.iter().find(|e| e.name == "bar").unwrap();
@@ -325,7 +325,7 @@ async fn test_same_export_multiple_imports() -> Result<()> {
     // Module B has two separate import statements both importing foo
     // Expected: foo has usage_count = 2
 
-    let graph = ModuleGraph::new().await?;
+    let graph = ModuleGraph::new()?;
 
     let module_a = create_module("a.js", vec![("foo", ExportKind::Named)], vec![]);
     let module_b = create_module(
@@ -345,17 +345,17 @@ async fn test_same_export_multiple_imports() -> Result<()> {
         ],
     );
 
-    graph.add_module(module_a).await?;
-    graph.add_module(module_b.clone()).await?;
+    graph.add_module(module_a)?;
+    graph.add_module(module_b.clone())?;
     graph
         .add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())
-        .await?;
+        ?;
 
-    graph.compute_export_usage_counts().await?;
+    graph.compute_export_usage_counts()?;
 
     let module_a = graph
         .module(&ModuleId::new("a.js").unwrap())
-        .await?
+        ?
         .unwrap();
     let foo = module_a.exports.iter().find(|e| e.name == "foo").unwrap();
 
@@ -370,17 +370,17 @@ async fn test_no_imports() -> Result<()> {
     // Module A exports "foo" but no one imports it
     // Expected: foo has usage_count = 0
 
-    let graph = ModuleGraph::new().await?;
+    let graph = ModuleGraph::new()?;
 
     let module_a = create_module("a.js", vec![("foo", ExportKind::Named)], vec![]);
 
-    graph.add_module(module_a).await?;
+    graph.add_module(module_a)?;
 
-    graph.compute_export_usage_counts().await?;
+    graph.compute_export_usage_counts()?;
 
     let module_a = graph
         .module(&ModuleId::new("a.js").unwrap())
-        .await?
+        ?
         .unwrap();
     let foo = module_a.exports.iter().find(|e| e.name == "foo").unwrap();
 

@@ -25,7 +25,7 @@ export function getFileCache() {
 /**
  * Initialize WASM (stub - just sets flag)
  */
-export async function initialize(wasmBytes, fsBindings) {
+export async function initialize(_wasmBytes, _fsBindings) {
   console.log('[WASM-STUB] Initialize called');
   wasmInitialized = true;
   return Promise.resolve();

@@ -52,7 +52,7 @@
 //! let project_root = PathBuf::from("./examples/my-app");
 //! // Note: analyze() uses current directory by default, or use Analyzer::new().cwd(...)
 //! let result = analyze(&[project_root.join("src/index.js")]).await?;
-//! println!("modules: {}", result.graph.len().await?);
+//! println!("modules: {}", result.graph.len()?);
 //! # Ok(())
 //! # }
 //! ```
@@ -76,30 +76,18 @@ pub mod span;
 pub mod statistics;
 pub mod symbol;
 
-// ModuleGraph implementations
-// Default: in-memory implementation (WASM-compatible)
+// ModuleGraph implementation
+// In-memory implementation (WASM-compatible)
 mod memory;
 
-// Storage-backed implementation (via fob-store when storage feature enabled)
-#[cfg(feature = "storage")]
-mod core;
-
-// Re-export the appropriate ModuleGraph implementation
-#[cfg(feature = "storage")]
-pub use core::{
-    ClassMemberInfo, EnumMemberInfo, ModuleGraph, NamespaceImportInfo, SideEffectImport,
-    TypeOnlyImport, UnusedExport,
-};
-#[cfg(not(feature = "storage"))]
+// Re-export ModuleGraph implementation
 pub use memory::{
     ClassMemberInfo, EnumMemberInfo, ModuleGraph, NamespaceImportInfo, SideEffectImport,
     TypeOnlyImport,
 };
 
-// UnusedExport is defined in core.rs for storage feature,
-// but we need to define it for memory feature too
-#[cfg(not(feature = "storage"))]
-#[derive(Debug, Clone)]
+/// Output entry for unused exports.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnusedExport {
     pub module_id: module_id::ModuleId,
     pub export: export::Export,

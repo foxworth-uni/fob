@@ -26,7 +26,7 @@
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let analysis = analyze(["./src/index.js"]).await?;
-//! for unused in analysis.graph.unused_exports().await? {
+//! for unused in analysis.graph.unused_exports()? {
 //!     println!("unused: {} from {}", unused.export.name, unused.module_id);
 //! }
 //! # Ok(()) }
@@ -46,11 +46,12 @@
 //!     .analyze()
 //!     .await?;
 //!
-//! println!("Unused exports: {}", analysis.unused_exports().await?.len());
+//! println!("Unused exports: {}", analysis.unused_exports()?.len());
 //! # Ok(()) }
 //! ```
 
 pub mod analysis;
+pub mod extractors;
 pub mod graph;
 pub mod runtime;
 
@@ -59,9 +60,10 @@ pub use analysis::analyzer::Analyzer;
 pub use analysis::{analyze, analyze_with_options};
 
 // Test utilities (available in test builds and when test-utils feature is enabled)
+// Note: test_utils requires tokio, so it's only available on native platforms
 #[cfg(any(
     all(any(test, doctest), not(target_family = "wasm")),
-    feature = "test-utils"
+    all(feature = "test-utils", not(target_family = "wasm"))
 ))]
 pub mod test_utils;
 

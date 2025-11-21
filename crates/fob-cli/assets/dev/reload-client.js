@@ -51,7 +51,7 @@
         }
       });
 
-      eventSource.addEventListener('error', (event) => {
+      eventSource.addEventListener('error', (_event) => {
         console.warn('[Fob] Connection lost, reconnecting...');
         eventSource.close();
         scheduleReconnect();

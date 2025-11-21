@@ -107,15 +107,6 @@ impl ModuleId {
     fn from_serialized_path(path: PathBuf) -> Self {
         Self(path)
     }
-
-    #[cfg(feature = "storage")]
-    pub fn from_rolldown(id: &rolldown_common::ModuleId) -> Result<Self, ModuleIdError> {
-        let raw = id.as_ref();
-        if raw.starts_with('\0') || raw.starts_with("rolldown:") {
-            return Ok(Self::new_virtual(raw.to_string()));
-        }
-        Self::new(raw)
-    }
 }
 
 impl fmt::Display for ModuleId {

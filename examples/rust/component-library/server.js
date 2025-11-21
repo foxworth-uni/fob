@@ -13,6 +13,7 @@ app.get('/', (c) => {
     const html = readFileSync(join(__dirname, 'demo/index.html'), 'utf-8');
     return c.html(html);
   } catch (error) {
+    console.error('Failed to read demo HTML:', error);
     return c.text('Demo not found. Make sure demo/index.html exists.', 404);
   }
 });
@@ -32,6 +33,7 @@ app.get('/demo/dist/*', (c) => {
     
     return c.body(file, 200, { 'Content-Type': contentType });
   } catch (error) {
+    console.error('Failed to read demo file:', error);
     return c.text(`Demo file not found: ${c.req.path}. Did you run 'cargo run' to build?`, 404);
   }
 });
@@ -52,6 +54,7 @@ app.get('/dist/*', (c) => {
     
     return c.body(file, 200, { 'Content-Type': contentType });
   } catch (error) {
+    console.error('Failed to read library file:', error);
     return c.text(`Library file not found: ${c.req.path}`, 404);
   }
 });

@@ -16,4 +16,4 @@ const view = new EditorView({
   parent: document.body,
 });
 
-console.log("CodeMirror editor initialized!");
+console.log("CodeMirror editor initialized!", view);

@@ -10,6 +10,7 @@ use std::sync::Arc;
 use path_clean::PathClean;
 use rustc_hash::FxHashSet;
 
+use crate::extractors::{extract_scripts, ExtractorError};
 use crate::graph::collection::{
     parse_module_structure, CollectedExport, CollectedImport, CollectedImportKind, CollectedModule, CollectionState,
 };
@@ -39,6 +40,13 @@ pub enum WalkerError {
         specifier: String,
         from: PathBuf,
         reason: String,
+    },
+
+    #[error("Failed to extract scripts from '{path}': {source}")]
+    ExtractionFailed {
+        path: PathBuf,
+        #[source]
+        source: ExtractorError,
     },
 }
 
@@ -89,9 +97,14 @@ impl GraphWalker {
             // Mark as visited
             visited.insert(current_path.clone());
 
-            // Read and parse the file
+            // Read the file
             let code = self.read_file(&current_path, runtime.as_ref()).await?;
-            let (mut imports, exports, has_side_effects) = self.parse_module(&code);
+            
+            // Extract scripts from framework files if needed
+            let code_to_parse = self.extract_if_framework(&current_path, &code)?;
+            
+            // Parse the module
+            let (mut imports, exports, has_side_effects) = self.parse_module(&code_to_parse);
 
             // Determine if this is an entry point
             let is_entry = self.config.entries.iter().any(|e| {
@@ -223,6 +236,29 @@ impl GraphWalker {
             path: path.to_path_buf(),
             source: RuntimeError::Other(format!("Invalid UTF-8: {}", e)),
         })
+    }
+
+    /// Extract scripts from framework files if applicable.
+    ///
+    /// For framework files (.astro, .svelte, .vue), extracts JavaScript/TypeScript
+    /// from the component structure. For other files, returns the content as-is.
+    fn extract_if_framework(&self, path: &Path, content: &str) -> Result<String, WalkerError> {
+        let scripts = extract_scripts(path, content).map_err(|e| WalkerError::ExtractionFailed {
+            path: path.to_path_buf(),
+            source: e,
+        })?;
+
+        if scripts.is_empty() {
+            // Not a framework file or no scripts found, return as-is
+            return Ok(content.to_string());
+        }
+
+        // Combine multiple scripts with blank lines (same as plugin behavior)
+        let combined: Vec<String> = scripts
+            .iter()
+            .map(|s| s.source_text.to_string())
+            .collect();
+        Ok(combined.join("\n\n"))
     }
 
     /// Parse a module to extract imports and exports.

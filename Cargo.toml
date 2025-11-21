@@ -4,13 +4,15 @@ members = [
     "crates/fob-wasm",
     "crates/fob-config",
     "crates/fob",
-    "crates/fob-store",
     "crates/fob-bundler",
     "crates/fob-native",
     "crates/fob-cli",
     "crates/fob-plugin-css",
     "crates/fob-plugin-mdx",
     "crates/fob-plugin-tailwind",
+    "crates/fob-plugin-vue",
+    "crates/fob-plugin-svelte",
+    "crates/fob-plugin-astro",
     "crates/fob-gen",
     "crates/fob-browser-test",
     "examples/rust/*",
@@ -19,13 +21,15 @@ members = [
 default-members = [
     "crates/fob-config",
     "crates/fob",
-    "crates/fob-store",
     "crates/fob-bundler",
     "crates/fob-native",
     "crates/fob-cli",
     "crates/fob-plugin-css",
     "crates/fob-plugin-mdx",
     "crates/fob-plugin-tailwind",
+    "crates/fob-plugin-vue",
+    "crates/fob-plugin-svelte",
+    "crates/fob-plugin-astro",
     "crates/fob-gen",
     "crates/fob-browser-test",
     "examples/rust/*",
@@ -89,6 +93,7 @@ phf = "0.11"  # Perfect hash function for embedded data
 path-clean = "1.0.1"
 ignore = "0.4.23"
 walkdir = "2.5"
+memchr = "2.7"  # Efficient byte searching for parsing
 
 # Async runtime (for future build-as-service)
 # Base tokio with no features - individual crates opt-in to what they need
@@ -147,9 +152,6 @@ markdown = "1.0.0-alpha.21"
 
 # CSS parsing and transformation
 lightningcss = "1.0.0-alpha.68"
-
-# Graph database storage
-surrealdb = { version = "2", default-features = false }
 
 # WASM support - getrandom 0.3 provides random number generation for WASM targets
 # Note: For wasm32-unknown-unknown (browser), use "wasm_js" feature to enable browser's Crypto.getRandomValues()

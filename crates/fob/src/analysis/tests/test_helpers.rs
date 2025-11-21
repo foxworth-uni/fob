@@ -152,15 +152,15 @@ pub fn create_deep_project(temp: &TempDir, depth: usize) -> PathBuf {
 }
 
 /// Assert that a graph contains a module with the given path.
-pub async fn assert_graph_contains_module(graph: &crate::graph::ModuleGraph, path: &str) -> bool {
-    let modules = graph.modules().await.unwrap();
+pub fn assert_graph_contains_module(graph: &crate::graph::ModuleGraph, path: &str) -> bool {
+    let modules = graph.modules().unwrap();
     modules
         .iter()
         .any(|m| m.path.to_string_lossy().contains(path))
 }
 
 /// Assert that analysis found a circular dependency.
-pub async fn assert_has_circular_dependency(analysis: &crate::analysis::AnalysisResult) -> bool {
-    let circular = analysis.find_circular_dependencies().await.unwrap();
+pub fn assert_has_circular_dependency(analysis: &crate::analysis::AnalysisResult) -> bool {
+    let circular = analysis.find_circular_dependencies().unwrap();
     !circular.is_empty()
 }

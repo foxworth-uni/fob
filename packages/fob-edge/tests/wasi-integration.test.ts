@@ -5,7 +5,7 @@
  * Complements bundler-integration.test.ts which focuses on WIT marshalling.
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { Fob, bundleInMemory } from '../src/bundler.js';
 
 describe('WASI Integration with @wasmer/wasi', () => {
@@ -123,7 +123,7 @@ describe('WASI Bridge', () => {
         }
         throw new Error('File not found');
       },
-      write: async (path: string, content: Uint8Array) => {
+      write: async (_path: string, _content: Uint8Array) => {
         // Mock write
       },
       exists: async (path: string) => path === 'test.txt',

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 #![cfg(feature = "bundler")]
 
 use std::path::PathBuf;
@@ -45,7 +47,7 @@ async fn test_module_collection_plugin_integration() {
     let graph = &result.analysis.graph;
 
     // Should have at least the entry and one dependency (utils.js)
-    let module_count = graph.len().await.expect("get module count");
+    let module_count = graph.len().expect("get module count");
     assert!(
         module_count >= 2,
         "Expected at least 2 modules, got {}",
@@ -53,14 +55,14 @@ async fn test_module_collection_plugin_integration() {
     );
 
     // Verify entry points were captured
-    let entry_points = graph.entry_points().await.expect("get entry points");
+    let entry_points = graph.entry_points().expect("get entry points");
     assert!(
         !entry_points.is_empty(),
         "Expected at least one entry point"
     );
 
     // Verify unused exports were detected
-    let unused_exports = graph.unused_exports().await.expect("get unused exports");
+    let unused_exports = graph.unused_exports().expect("get unused exports");
 
     // The simple fixture has an unused export in utils.js
     assert!(

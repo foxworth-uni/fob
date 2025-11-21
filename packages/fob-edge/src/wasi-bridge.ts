@@ -88,7 +88,7 @@ export function createWASIFilesystemBindings(cache: FileCache) {
 
   return {
     // File operations
-    openSync(path: string, flags: number, mode?: number): number {
+    openSync(path: string, flags: number, _mode?: number): number {
       console.log('[WASI] openSync:', path, flags);
       
       const fd = nextFd++;

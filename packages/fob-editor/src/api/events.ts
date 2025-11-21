@@ -36,10 +36,12 @@ export class Events implements EventAPI {
     event: E,
     handler: EventHandlers[E]
   ): Unsubscribe {
-    const wrappedHandler = ((context: any) => {
-      handler(context);
-      this.off(event, wrappedHandler as EventHandlers[E]);
-    }) as EventHandlers[E];
+    const wrappedHandler = (
+      (context: Parameters<EventHandlers[E]>[0]) => {
+        handler(context);
+        this.off(event, wrappedHandler as EventHandlers[E]);
+      }
+    ) as EventHandlers[E];
 
     return this.on(event, wrappedHandler);
   }

@@ -42,7 +42,6 @@ pub async fn from_rolldown_parts(
     entry_points: &[EntryPoint],
 ) -> Result<ModuleGraph, RolldownGraphError> {
     let graph = ModuleGraph::new()
-        .await
         .map_err(|_| RolldownGraphError::ModuleIdConversion {
             path: "graph initialization".to_string(),
             source: ModuleIdError::EmptyPath,
@@ -130,7 +129,6 @@ pub async fn from_rolldown_parts(
                     pending_import.import.resolved_to = Some(target_id.clone());
                     graph
                         .add_dependency(module_id.clone(), target_id.clone())
-                        .await
                         .map_err(|_e| RolldownGraphError::ModuleIdConversion {
                             path: format!("dependency {} -> {}", module_id, target_id),
                             source: ModuleIdError::EmptyPath,
@@ -146,10 +144,9 @@ pub async fn from_rolldown_parts(
         }
 
         // Update module with resolved imports before adding
-        module.imports = resolved_imports;
+        module.imports = std::sync::Arc::new(resolved_imports);
         graph
             .add_module(module)
-            .await
             .map_err(|_e| RolldownGraphError::ModuleIdConversion {
                 path: module_id.to_string(),
                 source: ModuleIdError::EmptyPath,
@@ -158,7 +155,7 @@ pub async fn from_rolldown_parts(
 
     for dep in external_aggregate.into_values() {
         let specifier = dep.specifier.clone();
-        graph.add_external_dependency(dep).await.map_err(|_| {
+        graph.add_external_dependency(dep).map_err(|_| {
             RolldownGraphError::ModuleIdConversion {
                 path: specifier,
                 source: ModuleIdError::EmptyPath,

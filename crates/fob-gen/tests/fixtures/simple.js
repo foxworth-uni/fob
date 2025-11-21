@@ -7,11 +7,14 @@ function greet(name) {
     return `Hello, ${name}!`;
 }
 
-const double = (x) => x * 2;
+const double = (value) => value * 2;
+
+const greeting = greet(y);
+const doubled = double(x);
 
 if (x > 0) {
-    console.log("positive");
+    console.log("positive", greeting, doubled, z);
 } else {
-    console.log("negative");
+    console.log("negative", greeting, doubled, z);
 }
 

@@ -126,4 +126,9 @@ export interface EventAPI {
     event: E,
     context: Parameters<EventHandlers[E]>[0]
   ): void;
+
+  /**
+   * Clear handlers for a specific event or all events
+   */
+  clear(event?: EditorEvent): void;
 }

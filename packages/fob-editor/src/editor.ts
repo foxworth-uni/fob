@@ -229,7 +229,7 @@ class Editor implements EditorInstance {
 
   destroy(): void {
     // Clear all event listeners
-    (this.events as any).clear?.();
+    this.events.clear();
     this.view.destroy();
   }
 }

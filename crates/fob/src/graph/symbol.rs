@@ -357,9 +357,10 @@ impl Default for CodeQualityMetadata {
 }
 
 /// Symbol metadata (extensible for different symbol kinds)
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum SymbolMetadata {
     /// No additional metadata
+    #[default]
     None,
     /// Class member metadata
     ClassMember(ClassMemberMetadata),
@@ -367,12 +368,6 @@ pub enum SymbolMetadata {
     EnumMember(EnumMemberMetadata),
     /// Code quality metrics (for functions and classes)
     CodeQuality(CodeQualityMetadata),
-}
-
-impl Default for SymbolMetadata {
-    fn default() -> Self {
-        Self::None
-    }
 }
 
 /// Source location information for a symbol.

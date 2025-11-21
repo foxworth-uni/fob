@@ -74,7 +74,7 @@ describe('Bundler Integration', () => {
     
     await fob.init();
     
-    const result = await fob.bundle({
+    await fob.bundle({
       entries: ['app.js', 'styles.js'],
       outputDir: 'out'
     }).catch(err => {
@@ -99,7 +99,7 @@ describe('Bundler Integration', () => {
     await fob.init();
     
     // Test with different options
-    const result = await fob.bundle({
+    await fob.bundle({
       entries: ['main.js'],
       outputDir: 'dist',
       format: 'esm',

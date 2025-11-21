@@ -1,27 +1,23 @@
 use serde::{Deserialize, Serialize};
 
 /// Output format for bundles
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum OutputFormat {
     /// Standard ESM bundle with runtime
+    #[default]
     Esm,
     /// Preserve module structure (experimental)
     #[serde(rename = "preserve-modules")]
     PreserveModules,
 }
 
-impl Default for OutputFormat {
-    fn default() -> Self {
-        Self::Esm
-    }
-}
-
 /// Target platform
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Platform {
     /// Browser environment (default)
+    #[default]
     Browser,
     /// Node.js (ESM mode only)
     Node,
@@ -31,14 +27,8 @@ pub enum Platform {
     Deno,
 }
 
-impl Default for Platform {
-    fn default() -> Self {
-        Self::Browser
-    }
-}
-
 /// Source map generation options
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum SourceMapOptions {
     /// No source maps
@@ -46,15 +36,10 @@ pub enum SourceMapOptions {
     /// Inline source maps (base64)
     Inline,
     /// External .map files
+    #[default]
     External,
     /// External with source content embedded
     ExternalWithContent,
-}
-
-impl Default for SourceMapOptions {
-    fn default() -> Self {
-        Self::External
-    }
 }
 
 /// Experimental features (unstable APIs)
@@ -78,7 +63,7 @@ pub struct ExperimentalOptions {
 }
 
 /// Target ECMAScript version for transpilation
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum EsTarget {
     /// ECMAScript 2015 (ES6)
@@ -96,6 +81,7 @@ pub enum EsTarget {
     /// ECMAScript 2021
     ES2021,
     /// ECMAScript 2022 (default)
+    #[default]
     ES2022,
     /// ECMAScript 2023
     ES2023,
@@ -105,56 +91,35 @@ pub enum EsTarget {
     ESNext,
 }
 
-impl Default for EsTarget {
-    fn default() -> Self {
-        Self::ES2022
-    }
-}
-
 /// Type-checking mode for TypeScript
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum TypeCheckMode {
     /// No type-checking (transpile-only)
+    #[default]
     None,
     // Future: Semantic type-checking (experimental, may use oxc_isolated_declarations or tsc)
     // Semantic,
 }
 
-impl Default for TypeCheckMode {
-    fn default() -> Self {
-        Self::None
-    }
-}
-
 /// JSX transformation runtime mode
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum JsxRuntime {
     /// Classic runtime: React.createElement (legacy)
     Classic,
     /// Automatic runtime: react/jsx-runtime (modern, default)
+    #[default]
     Automatic,
 }
 
-impl Default for JsxRuntime {
-    fn default() -> Self {
-        Self::Automatic
-    }
-}
-
 /// Type of built-in HTML template to use
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum HtmlTemplateType {
     /// Single-page application template (default)
+    #[default]
     Spa,
     /// Multi-page application template
     Mpa,
-}
-
-impl Default for HtmlTemplateType {
-    fn default() -> Self {
-        Self::Spa
-    }
 }

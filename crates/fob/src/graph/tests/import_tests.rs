@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use serde_json::{from_str, to_string};
 
 use super::super::{Import, ImportKind, ImportSpecifier, ModuleId, SourceSpan};
