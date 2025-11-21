@@ -667,7 +667,7 @@ dependencies = [
 [[package]]
 name = "bunny-mdx"
 version = "0.1.0"
-source = "git+https://github.com/foxworth-uni/bunny?branch=main#03d870a88a4510f33c225abe24dc1dfe9bbfc0d6"
+source = "git+https://github.com/foxworth-uni/bunny?branch=main#2d748f0b84cde38f1bc07ff2fa86c98cf0169167"
 dependencies = [
  "anyhow",
  "markdown",
