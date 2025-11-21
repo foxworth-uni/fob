@@ -518,6 +518,74 @@ docs-open:
 # Release Management
 # =============================================================================
 
+# Interactive version bump and git tag (mirrors danny workflow)
+tag:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Require gum for interactive prompts
+    if ! command -v gum &> /dev/null; then
+        echo "❌ gum is required. Install with: brew install gum"
+        exit 1
+    fi
+
+    # Get current workspace version from root Cargo.toml
+    CURRENT_VERSION=$(grep -m1 '^version = ' Cargo.toml | cut -d '"' -f2)
+    echo "📦 Current version: $CURRENT_VERSION"
+
+    # Choose version bump
+    BUMP=$(gum choose "patch" "minor" "major" "custom" --header "Select version increment")
+
+    if [ "$BUMP" = "custom" ]; then
+        NEW_VERSION=$(gum input --placeholder "e.g. 0.2.0" --value "$CURRENT_VERSION")
+    else
+        IFS='.' read -r -a PARTS <<< "$CURRENT_VERSION"
+        MAJOR="${PARTS[0]}"
+        MINOR="${PARTS[1]}"
+        PATCH="${PARTS[2]}"
+
+        case "$BUMP" in
+            patch) PATCH=$((PATCH + 1)) ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+        esac
+        NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+    fi
+
+    echo "🚀 Preparing to bump: $CURRENT_VERSION -> $NEW_VERSION"
+    if ! gum confirm "Proceed?"; then
+        echo "Cancelled"
+        exit 0
+    fi
+
+    # Update workspace Cargo.toml
+    sed -i '' "s/^version = \"${CURRENT_VERSION}\"/version = \"${NEW_VERSION}\"/" Cargo.toml
+
+    # Keep fob-cli crate version in sync if it has an explicit version
+    if grep -q '^version = "' crates/fob-cli/Cargo.toml; then
+        sed -i '' "s/^version = \"${CURRENT_VERSION}\"/version = \"${NEW_VERSION}\"/" crates/fob-cli/Cargo.toml
+    fi
+
+    echo "🔄 Updating lockfile..."
+    cargo check --workspace > /dev/null
+
+    git diff Cargo.toml crates/fob-cli/Cargo.toml Cargo.lock || true
+
+    if gum confirm "Commit and tag v${NEW_VERSION}?"; then
+        git add Cargo.toml crates/fob-cli/Cargo.toml Cargo.lock
+        git commit -m "chore: bump version to v${NEW_VERSION}"
+        git tag -a "v${NEW_VERSION}" -m "Release v${NEW_VERSION}"
+        echo "✨ Tagged v${NEW_VERSION}"
+
+        if gum confirm "Push to origin?"; then
+            git push && git push --tags
+        else
+            echo "💡 Run: git push && git push --tags"
+        fi
+    else
+        echo "⚠️  Changes applied to files but not committed."
+    fi
+
 # Build release artifacts for all targets
 release: build-native-release build-wasm-release build-napi-release
     @echo "✓ Release build complete!"

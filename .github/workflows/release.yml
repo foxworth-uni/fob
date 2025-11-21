@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build fob CLI
+        run: cargo build --release --package fob-cli
+
+      - name: Package Linux binary artifact
+        run: |
+          mkdir -p dist
+          cp target/release/fob dist/
+          tar czf dist/fob-${GITHUB_REF_NAME}-x86_64-unknown-linux-gnu.tar.gz -C dist fob
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
