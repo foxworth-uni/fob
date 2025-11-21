@@ -327,9 +327,6 @@ run-cli *args:
 test-config:
     @cargo test --package fob-config --all-features
 
-test-config-eval:
-    @cargo test --package fob-config --features eval
-
 # fob-gen
 test-gen:
     @cargo test --package fob-gen --all-features

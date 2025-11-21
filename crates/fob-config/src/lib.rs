@@ -6,9 +6,6 @@ pub mod error;
 pub mod settings;
 pub mod validation;
 
-#[cfg(feature = "eval")]
-pub mod eval;
-
 // Re-export main types
 pub use bundle::*;
 pub use config::*;

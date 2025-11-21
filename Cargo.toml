@@ -164,8 +164,6 @@ getrandom = { version = "0.3", features = ["wasm_js"] }
 
 # External Workspace Dependencies
 bunny-mdx = { git = "https://github.com/foxworth-uni/bunny", package = "bunny-mdx", branch = "main" }
-funtime = { path = "../funtime/crates/funtime" }
-funtime-boa = { path = "../funtime/crates/funtime-boa" }
 tailwindcss-oxide = { git = "https://github.com/tailwindlabs/tailwindcss", package = "tailwindcss-oxide" }
 
 # Native Bindings

@@ -1,6 +1,6 @@
 //! Tests for config file discovery and loading
 //!
-//! Only TOML + TypeScript formats are supported (JSON/YAML removed in v2.0)
+//! Only TOML and package.json/`fob` formats are supported (JSON/YAML removed in v2.0)
 
 use fob_config::ConfigDiscovery;
 use std::fs;
@@ -29,48 +29,7 @@ minify = true
     assert!(config.bundle.minify);
 }
 
-#[cfg(feature = "eval")]
-#[test]
-fn discovers_joy_config_ts() {
-    let dir = TempDir::new().unwrap();
-    fs::write(
-        dir.path().join("fob.config.ts"),
-        r#"
-export default {
-  bundle: {
-    entries: ["index.ts"],
-    minify: true
-  }
-}
-"#,
-    )
-    .unwrap();
-
-    let discovery = ConfigDiscovery::new(dir.path());
-    let found = discovery.find().unwrap();
-    assert_eq!(found.file_name().unwrap(), "fob.config.ts");
-}
-
-#[cfg(feature = "eval")]
-#[test]
-fn discovers_joy_config_mts() {
-    let dir = TempDir::new().unwrap();
-    fs::write(
-        dir.path().join("fob.config.mts"),
-        r#"
-export default {
-  bundle: {
-    entries: ["index.ts"]
-  }
-}
-"#,
-    )
-    .unwrap();
-
-    let discovery = ConfigDiscovery::new(dir.path());
-    let found = discovery.find().unwrap();
-    assert_eq!(found.file_name().unwrap(), "fob.config.mts");
-}
+// JS/TS config discovery tests have been removed; only TOML and package.json are supported.
 
 #[test]
 fn discovers_package_json() {
@@ -98,42 +57,7 @@ fn discovers_package_json() {
     assert!(!config.bundle.minify);
 }
 
-#[test]
-fn typescript_takes_precedence_over_toml() {
-    let dir = TempDir::new().unwrap();
-    fs::write(
-        dir.path().join("fob.toml"),
-        r#"
-[bundle]
-entries = ["toml.ts"]
-minify = false
-"#,
-    )
-    .unwrap();
-
-    #[cfg(feature = "eval")]
-    fs::write(
-        dir.path().join("fob.config.ts"),
-        r#"
-export default {
-  bundle: {
-    entries: ["ts.ts"],
-    minify: true
-  }
-}
-"#,
-    )
-    .unwrap();
-
-    let discovery = ConfigDiscovery::new(dir.path());
-    let found = discovery.find().unwrap();
-
-    #[cfg(feature = "eval")]
-    assert_eq!(found.file_name().unwrap(), "fob.config.ts");
-
-    #[cfg(not(feature = "eval"))]
-    assert_eq!(found.file_name().unwrap(), "fob.toml");
-}
+// JS/TS vs TOML precedence tests have been removed; only TOML and package.json are supported.
 
 #[test]
 fn toml_takes_precedence_over_package_json() {

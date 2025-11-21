@@ -38,30 +38,9 @@ impl ConfigDiscovery {
     /// Find a config file in the root directory
     ///
     /// Searches in this order:
-    /// 1. JS/TS configs: fob.config.ts, fob.config.js (highest priority for flexibility)
-    /// 2. TOML config: fob.toml
-    /// 3. package.json (fob field)
+/// 1. TOML config: fob.toml
+/// 2. package.json (fob field)
     pub fn find(&self) -> Option<PathBuf> {
-        // JS/TS configs (highest priority for flexibility)
-        #[cfg(feature = "eval")]
-        {
-            let ts_path = self.root.join("fob.config.ts");
-            if ts_path.exists() {
-                return Some(ts_path);
-            }
-
-            let mts_path = self.root.join("fob.config.mts");
-            if mts_path.exists() {
-                return Some(mts_path);
-            }
-
-            let js_path = self.root.join("fob.config.js");
-            if js_path.exists() {
-                return Some(js_path);
-            }
-        }
-
-        // TOML config
         let toml_path = self.root.join("fob.toml");
         if toml_path.exists() {
             return Some(toml_path);
@@ -106,7 +85,7 @@ impl ConfigDiscovery {
             return self.load_from_package_json(path);
         }
 
-        // TOML/JSON only - TypeScript/JavaScript config evaluation removed for simplicity
+        // TOML only - JavaScript/TypeScript config evaluation has been removed
         let content = fs::read_to_string(path)
             .map_err(|e| ConfigError::InvalidValue(format!("Failed to read config file: {}", e)))?;
 
