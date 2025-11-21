@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@napi-rs/cli": "3.3.0",
-    "@prettier/plugin-oxc": "^0.0.4",
+    "@prettier/plugin-oxc": "^0.0.5",
     "glob": "^11.0.0",
     "oxlint": "^1.26.0",
     "prettier": "^3.6.2",
@@ -48,7 +48,7 @@
     "@codemirror/lang-javascript": "^6.2.2",
     "@codemirror/language": "^6.10.3",
     "@codemirror/state": "^6.4.1",
-    "@codemirror/view": "^6.34.0",
+    "@codemirror/view": "^6.38.8",
     "@tanstack/react-router": "^1.136.1"
   }
 }
