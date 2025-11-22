@@ -1,0 +1,66 @@
+# This workflow is responsible for publishing the @fob/bundler NPM package
+# and its platform-specific native addons.
+#
+# It is triggered manually or when a new tag matching 'v*' is pushed.
+#
+name: Release NPM
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish NPM Packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Fetch all history and tags to allow version bumping
+          fetch-depth: 0
+      
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+      
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          # Use the public NPM registry
+          registry-url: 'https://registry.npmjs.org'
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
+
+      - name: Install pnpm dependencies
+        run: pnpm install
+      
+      # The `napi publish` command is a high-level command from the @napi-rs/cli.
+      # It performs the following steps:
+      # 1. Builds the native binaries for all target platforms defined in `packages/fob-bundler/package.json`.
+      # 2. Publishes each platform-specific package (e.g., @fob/bundler-darwin-arm64) to NPM.
+      # 3. Updates the version of the main package (`@fob/bundler`) according to the tag.
+      # 4. Commits the version change and pushes it back to the repository.
+      #
+      # UNCOMMENT THE FOLLOWING STEP TO ENABLE AUTOMATIC PUBLISHING
+      # - name: Publish to NPM
+      #   run: pnpm --filter @fob/bundler publish --access public
+      #   env:
+      #     # The NODE_AUTH_TOKEN is automatically provided by the setup-node action
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

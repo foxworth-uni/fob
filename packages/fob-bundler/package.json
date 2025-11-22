@@ -36,18 +36,23 @@
     "test:coverage": "vitest run --coverage"
   },
   "napi": {
-    "name": "fob-bundler",
-    "triples": {
-      "defaults": false,
-      "additional": [
-        "x86_64-apple-darwin",
-        "aarch64-apple-darwin",
-        "x86_64-unknown-linux-gnu",
-        "x86_64-unknown-linux-musl",
-        "aarch64-unknown-linux-gnu",
-        "x86_64-pc-windows-msvc"
-      ]
-    }
+    "binaryName": "fob-native",
+    "targets": [
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin",
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-linux-musl",
+      "aarch64-unknown-linux-gnu",
+      "x86_64-pc-windows-msvc"
+    ]
+  },  "devDependencies": {
+    "typescript": "^5.6.3",
+    "@types/node": "^20.16.10",
+    "vitest": "^2.1.0",
+    "@napi-rs/cli": "3.3.0"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "optionalDependencies": {
     "@fob/bundler-darwin-x64": "0.1.0",
@@ -56,14 +61,5 @@
     "@fob/bundler-linux-x64-musl": "0.1.0",
     "@fob/bundler-linux-arm64-gnu": "0.1.0",
     "@fob/bundler-win32-x64-msvc": "0.1.0"
-  },
-  "devDependencies": {
-    "typescript": "^5.6.3",
-    "@types/node": "^20.16.10",
-    "vitest": "^2.1.0",
-    "@napi-rs/cli": "3.3.0"
-  },
-  "engines": {
-    "node": ">=18"
   }
 }
