@@ -132,11 +132,11 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
       vite:
-        specifier: ^6.0.5
-        version: 6.4.1(@types/node@20.19.25)
+        specifier: ^7.2.4
+        version: 7.2.4(@types/node@20.19.25)
       vite-plugin-dts:
         specifier: ^4.3.0
-        version: 4.5.4(@types/node@20.19.25)(rollup@4.53.3)(typescript@5.9.3)(vite@6.4.1(@types/node@20.19.25))
+        version: 4.5.4(@types/node@20.19.25)(rollup@4.53.3)(typescript@5.9.3)(vite@7.2.4(@types/node@20.19.25))
 
   packages/fob-plot:
     dependencies:
@@ -2585,6 +2585,46 @@ packages:
       yaml:
         optional: true
 
+  vite@7.2.4:
+    resolution: {integrity: sha512-NL8jTlbo0Tn4dUEXEsUg8KeyG/Lkmc4Fnzb8JXN/Ykm9G4HNImjtABMJgkQoVjOBN/j2WAwDTRytdqJbZsah7w==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    hasBin: true
+    peerDependencies:
+      '@types/node': ^20.19.0 || >=22.12.0
+      jiti: '>=1.21.0'
+      less: ^4.0.0
+      lightningcss: ^1.21.0
+      sass: ^1.70.0
+      sass-embedded: ^1.70.0
+      stylus: '>=0.54.8'
+      sugarss: ^5.0.0
+      terser: ^5.16.0
+      tsx: ^4.8.1
+      yaml: ^2.4.2
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      jiti:
+        optional: true
+      less:
+        optional: true
+      lightningcss:
+        optional: true
+      sass:
+        optional: true
+      sass-embedded:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      terser:
+        optional: true
+      tsx:
+        optional: true
+      yaml:
+        optional: true
+
   vitest@2.1.9:
     resolution: {integrity: sha512-MSmPM9REYqDGBI8439mA4mWhV5sKmDlBKWIYbA3lRb2PTHACE0mgKwA8yQ2xq9vxDTuk4iPrECBAEW2aoFXY0Q==}
     engines: {node: ^18.0.0 || >=20.0.0}
@@ -4808,7 +4848,7 @@ snapshots:
       - supports-color
       - terser
 
-  vite-plugin-dts@4.5.4(@types/node@20.19.25)(rollup@4.53.3)(typescript@5.9.3)(vite@6.4.1(@types/node@20.19.25)):
+  vite-plugin-dts@4.5.4(@types/node@20.19.25)(rollup@4.53.3)(typescript@5.9.3)(vite@7.2.4(@types/node@20.19.25)):
     dependencies:
       '@microsoft/api-extractor': 7.55.1(@types/node@20.19.25)
       '@rollup/pluginutils': 5.3.0(rollup@4.53.3)
@@ -4821,7 +4861,7 @@ snapshots:
       magic-string: 0.30.21
       typescript: 5.9.3
     optionalDependencies:
-      vite: 6.4.1(@types/node@20.19.25)
+      vite: 7.2.4(@types/node@20.19.25)
     transitivePeerDependencies:
       - '@types/node'
       - rollup
@@ -4837,6 +4877,18 @@ snapshots:
       fsevents: 2.3.3
 
   vite@6.4.1(@types/node@20.19.25):
+    dependencies:
+      esbuild: 0.25.12
+      fdir: 6.5.0(picomatch@4.0.3)
+      picomatch: 4.0.3
+      postcss: 8.5.6
+      rollup: 4.53.3
+      tinyglobby: 0.2.15
+    optionalDependencies:
+      '@types/node': 20.19.25
+      fsevents: 2.3.3
+
+  vite@7.2.4(@types/node@20.19.25):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.3)
