@@ -16,11 +16,11 @@ export function createServer() {
 
       if (handler) {
         return new Response(handler(), {
-          headers: { 'Content-Type': 'text/html' }
+          headers: { 'Content-Type': 'text/html' },
         });
       }
 
       return new Response('Not found', { status: 404 });
-    }
+    },
   };
 }

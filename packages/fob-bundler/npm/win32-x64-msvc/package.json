@@ -1,0 +1,31 @@
+{
+  "name": "@fob/bundler-win32-x64-msvc",
+  "version": "0.1.0",
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "fob-bundler.win32-x64-msvc.node",
+  "files": [
+    "fob-bundler.win32-x64-msvc.node"
+  ],
+  "description": "Native bindings for @fob/bundler on win32 x64 msvc",
+  "keywords": [
+    "napi-rs",
+    "NAPI",
+    "N-API",
+    "Rust",
+    "node-addon",
+    "node-addon-api"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": "https://github.com/nine-gen/fob"
+}

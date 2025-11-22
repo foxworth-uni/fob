@@ -36,7 +36,7 @@ async fn test_build_successful_single_entry() {
 
     // Build
     let args = BuildArgs {
-        entry: vec!["src/index.ts".to_string()],
+        entry: Some(vec!["src/index.ts".to_string()]),
         format: Format::Esm,
         out_dir: PathBuf::from("dist"),
         dts: false,
@@ -102,7 +102,7 @@ async fn test_build_missing_entry_point() {
     .unwrap();
 
     let args = BuildArgs {
-        entry: vec!["src/index.ts".to_string()],
+        entry: Some(vec!["src/index.ts".to_string()]),
         format: Format::Esm,
         out_dir: PathBuf::from("dist"),
         dts: false,
@@ -164,7 +164,7 @@ async fn test_build_clean_output_dir() {
     fs::write(dist_dir.join("old.txt"), "old text").unwrap();
 
     let args = BuildArgs {
-        entry: vec!["src/index.ts".to_string()],
+        entry: Some(vec!["src/index.ts".to_string()]),
         format: Format::Esm,
         out_dir: PathBuf::from("dist"),
         dts: false,
@@ -226,7 +226,7 @@ async fn test_build_empty_entry_list() {
     let project_dir = temp.path();
 
     let args = BuildArgs {
-        entry: vec![], // Empty entry list
+        entry: Some(vec![]), // Empty entry list
         format: Format::Esm,
         out_dir: PathBuf::from("dist"),
         dts: false,

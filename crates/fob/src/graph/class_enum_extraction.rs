@@ -152,9 +152,7 @@ impl<'a, 'table> ClassEnumExtractor<'a, 'table> {
 
             if let Some(member_name) = member_name {
                 let value = member.initializer.as_ref().map(|init| match init {
-                    Expression::NumericLiteral(lit) => {
-                        EnumMemberValue::Number(lit.value as i64)
-                    }
+                    Expression::NumericLiteral(lit) => EnumMemberValue::Number(lit.value as i64),
                     Expression::StringLiteral(lit) => {
                         EnumMemberValue::String(lit.value.to_string())
                     }

@@ -26,7 +26,6 @@ export default function main() {
   return {
     name: APP_NAME,
     version: VERSION,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 }
-

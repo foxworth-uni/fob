@@ -1,6 +1,6 @@
 /**
  * Example of a simple file watcher with rebuild
- * 
+ *
  * This demonstrates:
  * - Watching for file changes
  * - Rebuilding on changes
@@ -26,13 +26,13 @@ async function build() {
     needsRebuild = true;
     return;
   }
-  
+
   isBuilding = true;
   needsRebuild = false;
-  
+
   const startTime = Date.now();
   console.log(`\n🔨 Building... [${new Date().toLocaleTimeString()}]`);
-  
+
   try {
     const result = await bundle({
       entries: [join(srcDir, 'index.js')],
@@ -42,19 +42,20 @@ async function build() {
       sourceMaps: 'inline',
       codeSplitting: true,
     });
-    
+
     const duration = Date.now() - startTime;
-    console.log(`✅ Built in ${duration}ms (${result.stats.totalChunks} chunks, ${(result.stats.totalSize / 1024).toFixed(2)} KB)`);
-    
+    console.log(
+      `✅ Built in ${duration}ms (${result.stats.totalChunks} chunks, ${(result.stats.totalSize / 1024).toFixed(2)} KB)`
+    );
   } catch (error) {
     console.error('❌ Build failed:', error.message);
-    
+
     if (error.details) {
       console.error('   Type:', error.details.type);
     }
   } finally {
     isBuilding = false;
-    
+
     // If a change occurred during build, rebuild
     if (needsRebuild) {
       setTimeout(build, 100);
@@ -82,4 +83,3 @@ process.on('SIGINT', () => {
   watcher.close();
   process.exit(0);
 });
-

@@ -14,6 +14,7 @@ import {
   type MissingExportError,
   type TransformError,
   type CircularDependencyError,
+  type MultipleDiagnostics,
 } from '../dist/types.js';
 
 // Test: FobError class with structured details
@@ -255,4 +256,69 @@ test('formatFobError includes help text in diagnostics', () => {
   const formatted = formatFobError(error);
 
   expect(formatted).toContain('Help: Install the missing package');
+});
+
+// Test: formatFobError for multiple diagnostics
+test('formatFobError formats multiple diagnostics correctly', () => {
+  const error: MultipleDiagnostics = {
+    type: 'multiple',
+    primary_message: 'Multiple bundler errors',
+    errors: [
+      {
+        type: 'missing_export',
+        export_name: 'Button',
+        module_id: 'components/Button.tsx',
+        available_exports: ['default'],
+      },
+      {
+        type: 'transform',
+        path: 'src/app.tsx',
+        diagnostics: [
+          {
+            message: 'Syntax error',
+            line: 10,
+            column: 5,
+            severity: 'error',
+          },
+        ],
+      },
+    ],
+  };
+
+  const formatted = formatFobError(error);
+
+  expect(formatted).toContain('Multiple errors (2):');
+  expect(formatted).toContain("1. Named export 'Button' not found");
+  expect(formatted).toContain('2. Transform failed in src/app.tsx');
+});
+
+// Test: Multiple diagnostics serialization round-trip
+test('Multiple diagnostics serialize and deserialize correctly', () => {
+  const error: MultipleDiagnostics = {
+    type: 'multiple',
+    primary_message: 'Multiple errors occurred',
+    errors: [
+      {
+        type: 'missing_export',
+        export_name: 'Foo',
+        module_id: 'bar.js',
+        available_exports: [],
+      },
+      {
+        type: 'runtime',
+        message: 'Something went wrong',
+      },
+    ],
+  };
+
+  const json = JSON.stringify(error);
+  const deserialized = JSON.parse(json) as FobErrorDetails;
+
+  expect(deserialized.type).toBe('multiple');
+  if (deserialized.type === 'multiple') {
+    expect(deserialized.primary_message).toBe('Multiple errors occurred');
+    expect(deserialized.errors).toHaveLength(2);
+    expect(deserialized.errors[0].type).toBe('missing_export');
+    expect(deserialized.errors[1].type).toBe('runtime');
+  }
 });

@@ -311,7 +311,12 @@ mod tests {
     fn test_combine_multiple_scripts() {
         use fob::extractors::ScriptContext;
         let scripts = vec![
-            ExtractedScript::new("const title = 'Page'", 4, ScriptContext::AstroFrontmatter, "ts"),
+            ExtractedScript::new(
+                "const title = 'Page'",
+                4,
+                ScriptContext::AstroFrontmatter,
+                "ts",
+            ),
             ExtractedScript::new("console.log(title)", 100, ScriptContext::AstroScript, "js"),
             ExtractedScript::new("alert('hello')", 200, ScriptContext::AstroScript, "js"),
         ];

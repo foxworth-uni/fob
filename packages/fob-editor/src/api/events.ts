@@ -1,9 +1,4 @@
-import type {
-  EventAPI,
-  EditorEvent,
-  EventHandlers,
-  Unsubscribe,
-} from '../types/index.js';
+import type { EventAPI, EditorEvent, EventHandlers, Unsubscribe } from '../types/index.js';
 
 /**
  * Implementation of the Event API
@@ -12,10 +7,7 @@ import type {
 export class Events implements EventAPI {
   private handlers: Map<EditorEvent, Set<Function>> = new Map();
 
-  on<E extends EditorEvent>(
-    event: E,
-    handler: EventHandlers[E]
-  ): Unsubscribe {
+  on<E extends EditorEvent>(event: E, handler: EventHandlers[E]): Unsubscribe {
     if (!this.handlers.has(event)) {
       this.handlers.set(event, new Set());
     }
@@ -32,24 +24,18 @@ export class Events implements EventAPI {
     }
   }
 
-  once<E extends EditorEvent>(
-    event: E,
-    handler: EventHandlers[E]
-  ): Unsubscribe {
-    const wrappedHandler = (
-      (context: Parameters<EventHandlers[E]>[0]) => {
-        handler(context);
-        this.off(event, wrappedHandler as EventHandlers[E]);
-      }
-    ) as EventHandlers[E];
+  once<E extends EditorEvent>(event: E, handler: EventHandlers[E]): Unsubscribe {
+    const wrappedHandler = ((context: Parameters<EventHandlers[E]>[0]) => {
+      // Type assertion needed because TypeScript sees EventHandlers[E] as a union
+      // but at runtime the types will match correctly
+      (handler as Function)(context);
+      this.off(event, wrappedHandler as EventHandlers[E]);
+    }) as EventHandlers[E];
 
     return this.on(event, wrappedHandler);
   }
 
-  emit<E extends EditorEvent>(
-    event: E,
-    context: Parameters<EventHandlers[E]>[0]
-  ): void {
+  emit<E extends EditorEvent>(event: E, context: Parameters<EventHandlers[E]>[0]): void {
     const handlers = this.handlers.get(event);
     if (handlers) {
       handlers.forEach((handler) => {

@@ -5,7 +5,9 @@
 
 use memchr::memmem;
 
-use super::common::{ExtractedScript, Extractor, ExtractorError, ScriptContext, MAX_FILE_SIZE, MAX_SCRIPT_TAGS};
+use super::common::{
+    ExtractedScript, Extractor, ExtractorError, ScriptContext, MAX_FILE_SIZE, MAX_SCRIPT_TAGS,
+};
 
 /// Astro component script extractor
 #[derive(Debug, Clone, Copy)]
@@ -343,7 +345,10 @@ const x = 1
         let astro = r#"<script>console.log('test')"#;
         let extractor = AstroExtractor;
         let result = extractor.extract(astro);
-        assert!(matches!(result, Err(ExtractorError::UnclosedScriptTag { .. })));
+        assert!(matches!(
+            result,
+            Err(ExtractorError::UnclosedScriptTag { .. })
+        ));
     }
 
     #[test]
@@ -354,4 +359,3 @@ const x = 1
         assert!(matches!(result, Err(ExtractorError::FileTooLarge { .. })));
     }
 }
-

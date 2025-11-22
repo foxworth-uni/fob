@@ -1,7 +1,7 @@
 //! Statistics methods for ModuleGraph.
 
-use super::graph::ModuleGraph;
 use super::super::GraphStatistics;
+use super::graph::ModuleGraph;
 use crate::Result;
 
 impl ModuleGraph {
@@ -24,4 +24,3 @@ impl ModuleGraph {
         ))
     }
 }
-

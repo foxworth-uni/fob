@@ -9,13 +9,7 @@ import './styles/editor.css';
 export { MirrorEditor } from './editor.js';
 
 // Core types
-export type {
-  EditorInstance,
-  EditorConfig,
-  EditorState,
-  Position,
-  Range,
-} from './types/index.js';
+export type { EditorInstance, EditorConfig, EditorState, Position, Range } from './types/index.js';
 
 // API types
 export type { ContentAPI } from './types/index.js';

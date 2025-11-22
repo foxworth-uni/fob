@@ -10,7 +10,7 @@
  * - Graceful handling of server restarts
  */
 
-(function() {
+(function () {
   'use strict';
 
   const SSE_ENDPOINT = '/__fob_sse__';
@@ -56,7 +56,6 @@
         eventSource.close();
         scheduleReconnect();
       });
-
     } catch (e) {
       console.error('[Fob] Failed to create EventSource:', e);
       scheduleReconnect();
@@ -137,5 +136,4 @@
   // Cleanup on page unload
   window.addEventListener('beforeunload', cleanup);
   window.addEventListener('unload', cleanup);
-
 })();

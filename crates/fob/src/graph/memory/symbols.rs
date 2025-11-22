@@ -2,12 +2,12 @@
 
 use rustc_hash::FxHashMap as HashMap;
 
-use super::graph::ModuleGraph;
-use super::types::{ClassMemberInfo, EnumMemberInfo};
 use super::super::symbol::{
     Symbol, SymbolMetadata, SymbolStatistics, UnreachableCode, UnusedSymbol,
 };
 use super::super::ModuleId;
+use super::graph::ModuleGraph;
+use super::types::{ClassMemberInfo, EnumMemberInfo};
 use crate::Result;
 
 impl ModuleGraph {
@@ -90,7 +90,11 @@ impl ModuleGraph {
     pub fn symbol_statistics(&self) -> Result<SymbolStatistics> {
         let inner = self.inner.read();
 
-        let tables: Vec<_> = inner.modules.values().map(|m| m.symbol_table.as_ref()).collect();
+        let tables: Vec<_> = inner
+            .modules
+            .values()
+            .map(|m| m.symbol_table.as_ref())
+            .collect();
 
         Ok(SymbolStatistics::from_tables(tables.into_iter()))
     }
@@ -157,7 +161,10 @@ impl ModuleGraph {
             for symbol in &module.symbol_table.symbols {
                 if symbol.is_unused() {
                     if let SymbolMetadata::ClassMember(metadata) = &symbol.metadata {
-                        if !matches!(metadata.visibility, super::super::symbol::Visibility::Private) {
+                        if !matches!(
+                            metadata.visibility,
+                            super::super::symbol::Visibility::Private
+                        ) {
                             unused.push(UnusedSymbol {
                                 module_id: module.id.clone(),
                                 symbol: symbol.clone(),
@@ -224,4 +231,3 @@ impl ModuleGraph {
         Ok(by_enum)
     }
 }
-

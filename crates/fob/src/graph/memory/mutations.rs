@@ -2,9 +2,9 @@
 
 use std::sync::Arc;
 
-use super::graph::ModuleGraph;
 use super::super::external_dep::ExternalDependency;
 use super::super::Module;
+use super::graph::ModuleGraph;
 use crate::Result;
 
 impl ModuleGraph {
@@ -42,7 +42,11 @@ impl ModuleGraph {
     }
 
     /// Add a dependency edge, creating forward and reverse mappings.
-    pub fn add_dependency(&self, from: super::super::ModuleId, to: super::super::ModuleId) -> Result<()> {
+    pub fn add_dependency(
+        &self,
+        from: super::super::ModuleId,
+        to: super::super::ModuleId,
+    ) -> Result<()> {
         let mut inner = self.inner.write();
 
         // Add forward edge (HashSet prevents duplicates)
@@ -53,11 +57,7 @@ impl ModuleGraph {
             .insert(to.clone());
 
         // Add reverse edge (HashSet prevents duplicates)
-        inner
-            .dependents
-            .entry(to)
-            .or_default()
-            .insert(from);
+        inner.dependents.entry(to).or_default().insert(from);
 
         Ok(())
     }
@@ -95,4 +95,3 @@ impl ModuleGraph {
         Ok(())
     }
 }
-

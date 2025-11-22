@@ -51,18 +51,17 @@ impl DevConfig {
     ///
     /// Returns error if entry point is invalid or configuration is inconsistent
     pub fn from_args(args: &DevArgs) -> Result<Self> {
-        // Convert DevArgs entry (Option<PathBuf>) to BuildArgs entry (Vec<String>)
+        // Convert DevArgs entry (Option<PathBuf>) to BuildArgs entry (Option<Vec<String>>)
         // If entry is provided via CLI, use it (will override config file)
-        // If not provided, use empty vec (allows config file to take precedence)
-        let entry_vec = if let Some(ref entry) = args.entry {
-            vec![entry.to_string_lossy().to_string()]
-        } else {
-            vec![]
-        };
+        // If not provided, use None (allows config file to take precedence)
+        let entry_opt = args
+            .entry
+            .as_ref()
+            .map(|entry| vec![entry.to_string_lossy().to_string()]);
 
         // Create minimal BuildArgs for loading base config
         let build_args = crate::cli::BuildArgs {
-            entry: entry_vec,
+            entry: entry_opt,
             format: crate::cli::Format::Esm,
             out_dir: PathBuf::from("dist"),
             dts: false,

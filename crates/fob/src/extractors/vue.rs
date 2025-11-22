@@ -5,7 +5,9 @@
 
 use memchr::memmem;
 
-use super::common::{ExtractedScript, Extractor, ExtractorError, ScriptContext, MAX_FILE_SIZE, MAX_SCRIPT_TAGS};
+use super::common::{
+    ExtractedScript, Extractor, ExtractorError, ScriptContext, MAX_FILE_SIZE, MAX_SCRIPT_TAGS,
+};
 
 /// Vue SFC script extractor
 #[derive(Debug, Clone, Copy)]
@@ -286,4 +288,3 @@ const count = ref<number>(0)
         assert!(matches!(result, Err(ExtractorError::FileTooLarge { .. })));
     }
 }
-

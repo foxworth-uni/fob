@@ -58,6 +58,7 @@ npm start
 ```
 
 Then visit:
+
 - **http://localhost:3000/** - Home page
 - **http://localhost:3000/about** - About page
 
@@ -92,13 +93,13 @@ The build produces:
 
 ## Key Differences from Component Library Example
 
-| Aspect | Component Library | Meta-Framework |
-|--------|------------------|----------------|
-| Entry points | Single library entry | Multiple route entries |
-| Code splitting | Off | On (critical for routes) |
-| Output | One bundle | Multiple chunks |
-| Use case | Published package | Application framework |
-| Path aliases | Less critical | Essential for DX |
+| Aspect         | Component Library    | Meta-Framework           |
+| -------------- | -------------------- | ------------------------ |
+| Entry points   | Single library entry | Multiple route entries   |
+| Code splitting | Off                  | On (critical for routes) |
+| Output         | One bundle           | Multiple chunks          |
+| Use case       | Published package    | Application framework    |
+| Path aliases   | Less critical        | Essential for DX         |
 
 ## Meta-Framework Concepts
 

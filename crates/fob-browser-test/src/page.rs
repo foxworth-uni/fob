@@ -204,7 +204,10 @@ impl Page {
                         .await
                         .map_err(|e| BrowserError::ScriptExecutionFailed(e.to_string()))?;
 
-                    let exists = result.value().and_then(serde_json::Value::as_bool).unwrap_or(false);
+                    let exists = result
+                        .value()
+                        .and_then(serde_json::Value::as_bool)
+                        .unwrap_or(false);
 
                     Ok(exists)
                 }

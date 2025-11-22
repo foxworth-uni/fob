@@ -38,13 +38,13 @@ pub struct BuildArgs {
     /// Entry points to bundle
     ///
     /// Specify one or more entry points. Each entry point will be bundled
-    /// into a separate output file.
+    /// into a separate output file. If not specified, reads from fob.config.json.
     ///
     /// Examples:
     ///   fob build src/index.ts
     ///   fob build src/main.ts src/worker.ts
-    #[arg(required = true, value_name = "ENTRY")]
-    pub entry: Vec<String>,
+    #[arg(value_name = "ENTRY")]
+    pub entry: Option<Vec<String>>,
 
     /// Output format for the bundle
     ///

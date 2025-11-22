@@ -3,6 +3,8 @@
 //! Native Node.js bindings for Fob bundler core
 
 mod bundle_result;
+mod error;
+mod error_mapper;
 mod runtime;
 
 use bundle_result::BundleResult;
@@ -61,7 +63,10 @@ impl Fob {
     pub async fn bundle(&self) -> Result<BundleResult> {
         // Validation
         if self.config.entries.is_empty() {
-            return Err(Error::from_reason("No entry points provided"));
+            let details = crate::error::FobErrorDetails::NoEntries(crate::error::NoEntriesError {
+                r#type: "no_entries".to_string(),
+            });
+            return Err(Error::from_reason(details.to_json_string()));
         }
 
         // Parse format
@@ -70,20 +75,34 @@ impl Fob {
             Some("cjs") => OutputFormat::Cjs,
             Some("iife") => OutputFormat::Iife,
             None => OutputFormat::Esm,
-            Some(f) => return Err(Error::from_reason(format!("Unknown format: {}", f))),
+            Some(f) => {
+                let details =
+                    crate::error::FobErrorDetails::Validation(crate::error::ValidationError {
+                        r#type: "validation".to_string(),
+                        message: format!("Unknown format: {}", f),
+                    });
+                return Err(Error::from_reason(details.to_json_string()));
+            }
         };
 
         let sourcemap = self.config.sourcemap.unwrap_or(false);
-        let cwd = self
-            .runtime
-            .get_cwd()
-            .map_err(|e| Error::from_reason(format!("Failed to get cwd: {}", e)))?;
+        let cwd = self.runtime.get_cwd().map_err(|e| {
+            let details = crate::error::FobErrorDetails::Runtime(crate::error::RuntimeError {
+                r#type: "runtime".to_string(),
+                message: format!("Failed to get cwd: {}", e),
+            });
+            Error::from_reason(details.to_json_string())
+        })?;
         let out_dir = PathBuf::from(self.config.output_dir.as_deref().unwrap_or("dist"));
 
         // Create output directory
-        fs::create_dir_all(&out_dir)
-            .await
-            .map_err(|e| Error::from_reason(format!("Failed to create output dir: {}", e)))?;
+        fs::create_dir_all(&out_dir).await.map_err(|e| {
+            let details = crate::error::FobErrorDetails::Runtime(crate::error::RuntimeError {
+                r#type: "runtime".to_string(),
+                message: format!("Failed to create output dir: {}", e),
+            });
+            Error::from_reason(details.to_json_string())
+        })?;
 
         // Build
         let build_result = if self.config.entries.len() == 1 {
@@ -103,12 +122,16 @@ impl Fob {
                 .build()
                 .await
         }
-        .map_err(|e| Error::from_reason(format!("Build failed: {}", e)))?;
+        .map_err(|e| {
+            let details = crate::error_mapper::map_bundler_error(&e);
+            Error::from_reason(details.to_json_string())
+        })?;
 
         // Write files to disk using the built-in writer
-        build_result
-            .write_to_force(&out_dir)
-            .map_err(|e| Error::from_reason(format!("Failed to write outputs: {}", e)))?;
+        build_result.write_to_force(&out_dir).map_err(|e| {
+            let details = crate::error_mapper::map_bundler_error(&e);
+            Error::from_reason(details.to_json_string())
+        })?;
 
         // Convert to NAPI result (this uses the From trait)
         Ok(BundleResult::from(build_result))

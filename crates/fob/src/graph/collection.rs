@@ -159,7 +159,11 @@ pub fn parse_module_structure(
 
     // Infer source type from code patterns - use ParseOptions helpers
     let parse_opts = if code.contains("import ") || code.contains("export ") {
-        if code.contains(": ") || code.contains("interface ") || code.contains("import type ") || code.contains("export type ") {
+        if code.contains(": ")
+            || code.contains("interface ")
+            || code.contains("import type ")
+            || code.contains("export type ")
+        {
             ParseOptions::tsx() // TypeScript with JSX
         } else {
             ParseOptions::jsx() // JavaScript with JSX

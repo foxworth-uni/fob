@@ -115,7 +115,7 @@ pub mod oxc {
     pub use oxc_ast_visit::Visit;
 
     /// Re-export span types for source location tracking
-    pub use oxc_span::{GetSpan, Span, SourceType};
+    pub use oxc_span::{GetSpan, SourceType, Span};
 
     /// Re-export parser for code analysis
     pub use oxc_parser::{Parser, ParserReturn};

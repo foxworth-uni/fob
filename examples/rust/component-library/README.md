@@ -41,12 +41,14 @@ cargo run
 This single command builds **both**:
 
 **Component Library** (`dist/`):
+
 1. Bundles `components/index.ts` as the main entry point
 2. Externalizes React and React-DOM (peer dependencies)
 3. Generates TypeScript declarations from `.tsx` files
 4. Outputs to `dist/` directory
 
 **Demo App** (`demo/dist/`):
+
 1. Bundles `demo/app.tsx` with all dependencies
 2. Includes React (bundled for browser)
 3. Transpiles JSX to JavaScript
@@ -64,6 +66,7 @@ npm run dev
 Then visit **http://localhost:3001** to see the components in action!
 
 The demo includes:
+
 - Interactive Button component with click counter
 - Card components with different content
 - Badge components with all variants
@@ -160,16 +163,19 @@ These statistics help monitor build performance and module graph size.
 ## Components Included
 
 ### Button
+
 - **Variants**: `primary`, `secondary`, `danger`
 - **Props**: `children`, `onClick`, `variant`, `disabled`
 - Inline styles with hover effects
 
 ### Card
+
 - **Props**: `title`, `children`
 - Clean, bordered design with padding
 - Perfect for content grouping
 
 ### Badge
+
 - **Variants**: `success`, `warning`, `error`, `info`
 - **Props**: `children`, `variant`
 - Pill-shaped design with color coding

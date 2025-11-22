@@ -222,8 +222,6 @@ fn open_browser(url: &str) {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_open_browser_url_format() {
         // Just verify the function doesn't panic with various URLs

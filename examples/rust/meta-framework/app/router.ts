@@ -11,6 +11,6 @@ export function createRouter() {
     },
     match(path: string) {
       return routes.get(path);
-    }
+    },
   };
 }

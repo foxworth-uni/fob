@@ -5,7 +5,9 @@
 
 use memchr::memmem;
 
-use super::common::{ExtractedScript, Extractor, ExtractorError, ScriptContext, MAX_FILE_SIZE, MAX_SCRIPT_TAGS};
+use super::common::{
+    ExtractedScript, Extractor, ExtractorError, ScriptContext, MAX_FILE_SIZE, MAX_SCRIPT_TAGS,
+};
 
 /// Svelte component script extractor
 #[derive(Debug, Clone, Copy)]
@@ -86,8 +88,8 @@ fn parse_script<'a>(
     let tag_content = &source_text[*pointer..tag_end];
 
     // Parse attributes
-    let is_module_context = tag_content.contains("context=\"module\"")
-        || tag_content.contains("context='module'");
+    let is_module_context =
+        tag_content.contains("context=\"module\"") || tag_content.contains("context='module'");
     let lang = extract_lang_attribute(tag_content);
 
     // Check for self-closing tag <script ... />
@@ -271,4 +273,3 @@ let count: number = 0
         assert!(matches!(result, Err(ExtractorError::FileTooLarge { .. })));
     }
 }
-

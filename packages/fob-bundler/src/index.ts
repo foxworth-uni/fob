@@ -41,10 +41,6 @@ export class Fob {
 
   async bundle(options?: BundleOptions): Promise<BundleResult> {
     const config = options ?? this.defaultOptions;
-    if (!config) {
-      throw new Error('Bundle options are required');
-    }
-
     if (!this.nativeInstance) {
       throwNativeUnavailable();
     }

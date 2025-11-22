@@ -58,6 +58,9 @@ pub mod module_collection_plugin;
 // Bundler-specific analysis
 pub mod analysis;
 
+// Diagnostic extraction
+pub mod diagnostics;
+
 // Re-export core Rolldown types for library users
 pub use rolldown::{
     BundleOutput, Bundler, BundlerOptions, InputItem, OutputFormat, Platform, SourceMapType,
@@ -98,8 +101,8 @@ pub use fob::test_utils;
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// Error from Rolldown bundler.
-    #[error("Rolldown bundler error: {0}")]
-    Bundler(String),
+    #[error("Rolldown bundler error: {}", format_bundler_error(.0))]
+    Bundler(Vec<diagnostics::ExtractedDiagnostic>),
 
     /// Invalid configuration provided.
     #[error("Invalid configuration: {0}")]
@@ -155,3 +158,50 @@ pub enum Error {
 
 /// Result type alias for fob-bundler operations.
 pub type Result<T> = std::result::Result<T, Error>;
+
+impl Error {
+    /// Create a bundler error from a Rolldown error.
+    ///
+    /// Extracts structured diagnostics from Rolldown's error types.
+    pub fn from_rolldown_batch(error: &dyn std::fmt::Debug) -> Self {
+        Error::Bundler(diagnostics::extract_from_rolldown_error(error))
+    }
+}
+
+/// Format bundler error diagnostics for display.
+fn format_bundler_error(diagnostics: &[diagnostics::ExtractedDiagnostic]) -> String {
+    if diagnostics.is_empty() {
+        return "Unknown bundler error".to_string();
+    }
+
+    if diagnostics.len() == 1 {
+        let diag = &diagnostics[0];
+        format!("{}: {}", diag.kind, diag.message)
+    } else {
+        format!(
+            "{} errors: {}",
+            diagnostics.len(),
+            diagnostics
+                .iter()
+                .map(|d| format!("{}: {}", d.kind, d.message))
+                .collect::<Vec<_>>()
+                .join("; ")
+        )
+    }
+}
+
+impl std::fmt::Display for diagnostics::DiagnosticKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            diagnostics::DiagnosticKind::MissingExport => write!(f, "MissingExport"),
+            diagnostics::DiagnosticKind::ParseError => write!(f, "ParseError"),
+            diagnostics::DiagnosticKind::CircularDependency => write!(f, "CircularDependency"),
+            diagnostics::DiagnosticKind::UnresolvedEntry => write!(f, "UnresolvedEntry"),
+            diagnostics::DiagnosticKind::UnresolvedImport => write!(f, "UnresolvedImport"),
+            diagnostics::DiagnosticKind::InvalidOption => write!(f, "InvalidOption"),
+            diagnostics::DiagnosticKind::Plugin => write!(f, "Plugin"),
+            diagnostics::DiagnosticKind::Transform => write!(f, "Transform"),
+            diagnostics::DiagnosticKind::Other(s) => write!(f, "{}", s),
+        }
+    }
+}

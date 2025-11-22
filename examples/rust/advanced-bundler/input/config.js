@@ -10,13 +10,12 @@ export const APP_CONFIG = {
     'Code splitting',
     'Path aliases',
     'Multiple formats',
-    'External dependencies'
-  ]
+    'External dependencies',
+  ],
 };
 
 export const BUILD_CONFIG = {
   minify: true,
   sourceMaps: true,
-  target: 'es2020'
+  target: 'es2020',
 };
-

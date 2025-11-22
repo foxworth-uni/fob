@@ -66,8 +66,6 @@ export class History implements HistoryAPI {
     // TODO: Not yet implemented
     // No direct API to clear history in CodeMirror
     // Would require recreating the editor state to reset history
-    console.warn(
-      'clearHistory() not implemented: Requires recreating editor state'
-    );
+    console.warn('clearHistory() not implemented: Requires recreating editor state');
   }
 }

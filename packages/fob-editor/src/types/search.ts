@@ -67,11 +67,7 @@ export interface SearchAPI {
   /**
    * Replace occurrences of a query
    */
-  replace(
-    query: string | RegExp,
-    replacement: string,
-    options?: FindReplaceOptions
-  ): ReplaceResult;
+  replace(query: string | RegExp, replacement: string, options?: FindReplaceOptions): ReplaceResult;
 
   /**
    * Replace all occurrences

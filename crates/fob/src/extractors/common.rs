@@ -132,4 +132,3 @@ pub const MAX_FILE_SIZE: usize = 10 * 1024 * 1024;
 
 /// Maximum number of script tags to process
 pub const MAX_SCRIPT_TAGS: usize = 100;
-

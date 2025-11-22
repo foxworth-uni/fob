@@ -12,11 +12,11 @@ console.log('');
 function processData(data) {
   const sum = data.reduce((acc, val) => add(acc, val), 0);
   const product = data.reduce((acc, val) => multiply(acc, val), 1);
-  
+
   return {
     sum: formatNumber(sum),
     product: formatNumber(product),
-    count: data.length
+    count: data.length,
   };
 }
 
@@ -30,4 +30,3 @@ console.log(`   Product: ${result.product}`);
 console.log(`   Count: ${result.count}`);
 
 export { processData };
-

@@ -68,6 +68,7 @@ BuildOptions::app(["input/app.js", "input/worker.js"])
 ```
 
 **Benefits:**
+
 - Build everything in one pass
 - Shared code automatically extracted
 - Faster than building separately
@@ -82,6 +83,7 @@ When enabled, shared code is extracted into separate chunks:
 ```
 
 **Result:**
+
 ```
 output/esm/
 ├── app.js           # App-specific code
@@ -90,6 +92,7 @@ output/esm/
 ```
 
 **Benefits:**
+
 - Smaller individual files
 - Better caching (shared code cached once)
 - Parallel loading
@@ -104,11 +107,13 @@ output/esm/
 ```
 
 **Use for:**
+
 - Modern browsers
 - Node.js (with `"type": "module"`)
 - Bundlers (Webpack, Rollup, etc.)
 
 **Features:**
+
 - `import`/`export` syntax
 - Tree shaking support
 - Static analysis
@@ -120,11 +125,13 @@ output/esm/
 ```
 
 **Use for:**
+
 - Node.js (traditional)
 - Older build tools
 - Maximum compatibility
 
 **Features:**
+
 - `require()`/`module.exports`
 - Synchronous loading
 - Wide support
@@ -136,11 +143,13 @@ output/esm/
 ```
 
 **Use for:**
+
 - Browsers without module system
 - `<script>` tags
 - Legacy environments
 
 **Features:**
+
 - Self-executing
 - No module system needed
 - Global variable exposure
@@ -154,6 +163,7 @@ Mark packages as external (not bundled):
 ```
 
 **Use cases:**
+
 - Peer dependencies
 - CDN-hosted libraries
 - Packages provided by environment
@@ -168,16 +178,19 @@ Clean import paths:
 ```
 
 **Before:**
+
 ```javascript
 import { add } from '../../lib/math.js';
 ```
 
 **After:**
+
 ```javascript
 import { add } from '@lib/math';
 ```
 
 **Benefits:**
+
 - Cleaner code
 - Easier refactoring
 - No relative path hell
@@ -185,20 +198,21 @@ import { add } from '@lib/math';
 
 ## Build Configuration Comparison
 
-| Feature | ESM Build | CJS Build | IIFE Build |
-|---------|-----------|-----------|------------|
-| Entry points | 2 (app + worker) | 1 (app only) | 1 (app only) |
-| Code splitting | ✅ Yes | ❌ No | ❌ No |
-| Minification | ✅ Yes | ❌ No | ✅ Yes |
-| Source maps | ✅ Yes | ✅ Yes | ✅ Yes |
-| External deps | ✅ lodash | ❌ None | ❌ None |
-| Use case | Modern apps | Node.js | Legacy browsers |
+| Feature        | ESM Build        | CJS Build    | IIFE Build      |
+| -------------- | ---------------- | ------------ | --------------- |
+| Entry points   | 2 (app + worker) | 1 (app only) | 1 (app only)    |
+| Code splitting | ✅ Yes           | ❌ No        | ❌ No           |
+| Minification   | ✅ Yes           | ❌ No        | ✅ Yes          |
+| Source maps    | ✅ Yes           | ✅ Yes       | ✅ Yes          |
+| External deps  | ✅ lodash        | ❌ None      | ❌ None         |
+| Use case       | Modern apps      | Node.js      | Legacy browsers |
 
 ## Real-World Use Cases
 
 ### ESM Build
 
 Perfect for:
+
 - Modern web applications
 - Micro-frontends
 - Progressive web apps
@@ -207,6 +221,7 @@ Perfect for:
 ### CJS Build
 
 Perfect for:
+
 - Node.js libraries
 - CLI tools
 - Serverless functions
@@ -215,6 +230,7 @@ Perfect for:
 ### IIFE Build
 
 Perfect for:
+
 - Browser extensions
 - Bookmarklets
 - Embedded widgets
@@ -267,6 +283,7 @@ Improves tree shaking:
 ### Code splitting not working
 
 Make sure you have:
+
 1. Multiple entry points
 2. `.splitting(true)` enabled
 3. Shared code between entries
@@ -274,6 +291,7 @@ Make sure you have:
 ### External dependencies not working
 
 Check that:
+
 1. Package name matches exactly
 2. Package is imported in the code
 3. Package exists in node_modules (for resolution)
@@ -299,4 +317,3 @@ After mastering advanced bundling:
 - [fob-core documentation](../../../crates/fob-core/)
 - [Basic bundler example](../basic-bundler/)
 - [Component library example](../component-library/)
-

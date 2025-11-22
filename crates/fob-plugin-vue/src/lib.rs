@@ -213,7 +213,7 @@ impl Plugin for FobVuePlugin {
 /// ```
 fn combine_scripts(scripts: &[ExtractedScript]) -> (String, ModuleType) {
     use fob::extractors::ScriptContext;
-    
+
     // Single script case
     if scripts.len() == 1 {
         let script = &scripts[0];

@@ -97,35 +97,23 @@ export interface EventAPI {
    * Subscribe to an event
    * @returns Unsubscribe function
    */
-  on<E extends EditorEvent>(
-    event: E,
-    handler: EventHandlers[E]
-  ): Unsubscribe;
+  on<E extends EditorEvent>(event: E, handler: EventHandlers[E]): Unsubscribe;
 
   /**
    * Unsubscribe from an event
    */
-  off<E extends EditorEvent>(
-    event: E,
-    handler: EventHandlers[E]
-  ): void;
+  off<E extends EditorEvent>(event: E, handler: EventHandlers[E]): void;
 
   /**
    * Subscribe to an event for one occurrence only
    * @returns Unsubscribe function
    */
-  once<E extends EditorEvent>(
-    event: E,
-    handler: EventHandlers[E]
-  ): Unsubscribe;
+  once<E extends EditorEvent>(event: E, handler: EventHandlers[E]): Unsubscribe;
 
   /**
    * Emit an event (for internal use or custom events)
    */
-  emit<E extends EditorEvent>(
-    event: E,
-    context: Parameters<EventHandlers[E]>[0]
-  ): void;
+  emit<E extends EditorEvent>(event: E, context: Parameters<EventHandlers[E]>[0]): void;
 
   /**
    * Clear handlers for a specific event or all events

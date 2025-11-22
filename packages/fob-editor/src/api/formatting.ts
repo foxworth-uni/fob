@@ -174,9 +174,7 @@ export class Formatting implements FormattingAPI {
       return {
         success,
         changes: [],
-        error: success
-          ? undefined
-          : 'Cannot move line down (already at bottom)',
+        error: success ? undefined : 'Cannot move line down (already at bottom)',
       };
     } catch (error) {
       return {

@@ -29,4 +29,3 @@ pub(super) struct GraphInner {
     /// External dependencies
     pub external_deps: HashMap<String, ExternalDependency>,
 }
-

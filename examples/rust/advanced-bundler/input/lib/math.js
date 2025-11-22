@@ -30,4 +30,3 @@ export function sqrt(n) {
   }
   return Math.sqrt(n);
 }
-

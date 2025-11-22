@@ -44,4 +44,3 @@ pub struct TypeOnlyImport {
     pub specifiers: Vec<ImportSpecifier>,
     pub span: SourceSpan,
 }
-

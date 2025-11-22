@@ -3,103 +3,107 @@
 /** Fob bundler for Node.js */
 export declare class Fob {
   /** Create a new bundler instance */
-  constructor(config: BundleConfig)
+  constructor(config: BundleConfig);
   /** Bundle the configured entries and return detailed bundle information */
-  bundle(): Promise<BundleResult>
+  bundle(): Promise<BundleResult>;
 }
 
 /** Asset information */
 export interface AssetInfo {
-  publicPath: string
-  relativePath: string
-  size: number
-  format?: string
+  publicPath: string;
+  relativePath: string;
+  size: number;
+  format?: string;
 }
 
 /** Build statistics */
 export interface BuildStatsInfo {
-  totalModules: number
-  totalChunks: number
-  totalSize: number
-  durationMs: number
-  cacheHitRate: number
+  totalModules: number;
+  totalChunks: number;
+  totalSize: number;
+  durationMs: number;
+  cacheHitRate: number;
 }
 
 /** Bundle configuration */
 export interface BundleConfig {
   /** Entry points to bundle */
-  entries: Array<string>
+  entries: Array<string>;
   /** Output directory */
-  outputDir: string
+  outputDir: string;
   /** Output format (esm, cjs, iife) */
-  format?: string
+  format?: string;
   /** Enable source maps */
-  sourcemap?: boolean
+  sourcemap?: boolean;
   /** Working directory for resolution */
-  cwd?: string
+  cwd?: string;
 }
 
 /** Result of a bundle operation */
 export interface BundleResult {
   /** Generated chunks */
-  chunks: Array<ChunkInfo>
+  chunks: Array<ChunkInfo>;
   /** Bundle manifest */
-  manifest: ManifestInfo
+  manifest: ManifestInfo;
   /** Build statistics */
-  stats: BuildStatsInfo
+  stats: BuildStatsInfo;
   /** Static assets */
-  assets: Array<AssetInfo>
+  assets: Array<AssetInfo>;
 }
 
 /** Quick helper to bundle a single entry */
-export declare function bundleSingle(entry: string, outputDir: string, format?: string | undefined | null): Promise<BundleResult>
+export declare function bundleSingle(
+  entry: string,
+  outputDir: string,
+  format?: string | undefined | null
+): Promise<BundleResult>;
 
 /** Detailed chunk information */
 export interface ChunkInfo {
   /** Chunk identifier */
-  id: string
+  id: string;
   /** Chunk type: "entry" | "async" | "shared" */
-  kind: string
+  kind: string;
   /** Output file name */
-  fileName: string
+  fileName: string;
   /** Generated code */
-  code: string
+  code: string;
   /** Source map (optional) */
-  sourceMap?: string
+  sourceMap?: string;
   /** Modules in this chunk */
-  modules: Array<ModuleInfo>
+  modules: Array<ModuleInfo>;
   /** Static imports */
-  imports: Array<string>
+  imports: Array<string>;
   /** Dynamic imports */
-  dynamicImports: Array<string>
+  dynamicImports: Array<string>;
   /** Size in bytes */
-  size: number
+  size: number;
 }
 
 /** Chunk metadata */
 export interface ChunkMetadata {
-  file: string
-  imports: Array<string>
-  dynamicImports: Array<string>
-  css: Array<string>
+  file: string;
+  imports: Array<string>;
+  dynamicImports: Array<string>;
+  css: Array<string>;
 }
 
 /** Bundle manifest */
 export interface ManifestInfo {
   /** Entry mappings */
-  entries: Record<string, string>
+  entries: Record<string, string>;
   /** Chunk metadata */
-  chunks: Record<string, ChunkMetadata>
+  chunks: Record<string, ChunkMetadata>;
   /** Version */
-  version: string
+  version: string;
 }
 
 /** Module information */
 export interface ModuleInfo {
   /** Module path */
-  path: string
+  path: string;
   /** Module size */
-  size: number
+  size: number;
   /** Has side effects */
-  hasSideEffects: boolean
+  hasSideEffects: boolean;
 }

@@ -494,21 +494,23 @@ async fn test_walk_extracts_astro_frontmatter() {
     let temp = TempDir::new().unwrap();
     let root = create_test_project(
         &temp,
-        &[(
-            "src/Component.astro",
-            r#"---
+        &[
+            (
+                "src/Component.astro",
+                r#"---
 import { helper } from './utils';
 const message = helper();
 ---
 <div>{message}</div>
 "#,
-        ),
-        (
-            "src/utils.ts",
-            r#"
+            ),
+            (
+                "src/utils.ts",
+                r#"
 export const helper = () => 'hello';
 "#,
-        )],
+            ),
+        ],
     );
 
     let mut config = AnalyzerConfig::default();
@@ -534,9 +536,10 @@ async fn test_walk_extracts_astro_script_tags() {
     let temp = TempDir::new().unwrap();
     let root = create_test_project(
         &temp,
-        &[(
-            "src/Component.astro",
-            r#"---
+        &[
+            (
+                "src/Component.astro",
+                r#"---
 const serverData = 'server';
 ---
 <div>{serverData}</div>
@@ -545,13 +548,14 @@ import { clientHelper } from './client-utils';
 const clientData = clientHelper();
 </script>
 "#,
-        ),
-        (
-            "src/client-utils.ts",
-            r#"
+            ),
+            (
+                "src/client-utils.ts",
+                r#"
 export const clientHelper = () => 'client';
 "#,
-        )],
+            ),
+        ],
     );
 
     let mut config = AnalyzerConfig::default();
@@ -569,7 +573,10 @@ export const clientHelper = () => 'client';
     assert!(astro_module.is_some());
     let astro = astro_module.unwrap();
     // Should have import from script tag
-    assert!(astro.imports.iter().any(|imp| imp.source == "./client-utils"));
+    assert!(astro
+        .imports
+        .iter()
+        .any(|imp| imp.source == "./client-utils"));
 }
 
 #[tokio::test]
@@ -577,9 +584,10 @@ async fn test_walk_extracts_svelte_module_context() {
     let temp = TempDir::new().unwrap();
     let root = create_test_project(
         &temp,
-        &[(
-            "src/Component.svelte",
-            r#"<script context="module">
+        &[
+            (
+                "src/Component.svelte",
+                r#"<script context="module">
 import { shared } from './shared';
 export const moduleValue = shared();
 </script>
@@ -590,13 +598,14 @@ let local = 'local';
 
 <div>{local}</div>
 "#,
-        ),
-        (
-            "src/shared.ts",
-            r#"
+            ),
+            (
+                "src/shared.ts",
+                r#"
 export const shared = () => 'shared';
 "#,
-        )],
+            ),
+        ],
     );
 
     let mut config = AnalyzerConfig::default();
@@ -622,22 +631,24 @@ async fn test_walk_extracts_svelte_component_script() {
     let temp = TempDir::new().unwrap();
     let root = create_test_project(
         &temp,
-        &[(
-            "src/Component.svelte",
-            r#"<script>
+        &[
+            (
+                "src/Component.svelte",
+                r#"<script>
 import { helper } from './utils';
 let value = helper();
 </script>
 
 <div>{value}</div>
 "#,
-        ),
-        (
-            "src/utils.ts",
-            r#"
+            ),
+            (
+                "src/utils.ts",
+                r#"
 export const helper = () => 'hello';
 "#,
-        )],
+            ),
+        ],
     );
 
     let mut config = AnalyzerConfig::default();
@@ -663,9 +674,10 @@ async fn test_walk_extracts_vue_setup_script() {
     let temp = TempDir::new().unwrap();
     let root = create_test_project(
         &temp,
-        &[(
-            "src/Component.vue",
-            r#"<script setup>
+        &[
+            (
+                "src/Component.vue",
+                r#"<script setup>
 import { computed } from 'vue';
 import { helper } from './utils';
 
@@ -676,13 +688,14 @@ const value = computed(() => helper());
   <div>{{ value }}</div>
 </template>
 "#,
-        ),
-        (
-            "src/utils.ts",
-            r#"
+            ),
+            (
+                "src/utils.ts",
+                r#"
 export const helper = () => 'hello';
 "#,
-        )],
+            ),
+        ],
     );
 
     let mut config = AnalyzerConfig::default();
@@ -708,9 +721,10 @@ async fn test_walk_extracts_vue_regular_script() {
     let temp = TempDir::new().unwrap();
     let root = create_test_project(
         &temp,
-        &[(
-            "src/Component.vue",
-            r#"<script>
+        &[
+            (
+                "src/Component.vue",
+                r#"<script>
 import { helper } from './utils';
 
 export default {
@@ -724,13 +738,14 @@ export default {
   <div>{{ helper() }}</div>
 </template>
 "#,
-        ),
-        (
-            "src/utils.ts",
-            r#"
+            ),
+            (
+                "src/utils.ts",
+                r#"
 export const helper = () => 'hello';
 "#,
-        )],
+            ),
+        ],
     );
 
     let mut config = AnalyzerConfig::default();
@@ -785,9 +800,10 @@ async fn test_walk_framework_file_with_typescript() {
     let temp = TempDir::new().unwrap();
     let root = create_test_project(
         &temp,
-        &[(
-            "src/Component.svelte",
-            r#"<script lang="ts">
+        &[
+            (
+                "src/Component.svelte",
+                r#"<script lang="ts">
 import type { User } from './types';
 import { getUser } from './api';
 
@@ -796,20 +812,21 @@ let user: User = getUser();
 
 <div>{user.name}</div>
 "#,
-        ),
-        (
-            "src/types.ts",
-            r#"
+            ),
+            (
+                "src/types.ts",
+                r#"
 export type User = { name: string };
 "#,
-        ),
-        (
-            "src/api.ts",
-            r#"
+            ),
+            (
+                "src/api.ts",
+                r#"
 import type { User } from './types';
 export const getUser = (): User => ({ name: 'Test' });
 "#,
-        )],
+            ),
+        ],
     );
 
     let mut config = AnalyzerConfig::default();
@@ -835,24 +852,26 @@ async fn test_walk_framework_file_imports_other_framework_file() {
     let temp = TempDir::new().unwrap();
     let root = create_test_project(
         &temp,
-        &[(
-            "src/App.astro",
-            r#"---
+        &[
+            (
+                "src/App.astro",
+                r#"---
 import { Button } from './Button.svelte';
 const app = 'app';
 ---
 <Button />
 "#,
-        ),
-        (
-            "src/Button.svelte",
-            r#"<script>
+            ),
+            (
+                "src/Button.svelte",
+                r#"<script>
 export let label = 'Click me';
 </script>
 
 <button>{label}</button>
 "#,
-        )],
+            ),
+        ],
     );
 
     let mut config = AnalyzerConfig::default();
@@ -897,7 +916,7 @@ const x = 'test';
 
     // Should handle extraction error gracefully
     let result = walker.walk(runtime).await;
-    
+
     // The walker should either:
     // 1. Return an error (if we want strict error handling)
     // 2. Continue with empty imports/exports (if we want lenient handling)

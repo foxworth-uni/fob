@@ -38,10 +38,7 @@ impl AnalysisResult {
     /// Get all dependency chains to a target module.
     ///
     /// Useful for understanding why a module is included or finding circular dependencies.
-    pub fn dependency_chains_to(
-        &self,
-        target: &ModuleId,
-    ) -> crate::Result<Vec<DependencyChain>> {
+    pub fn dependency_chains_to(&self, target: &ModuleId) -> crate::Result<Vec<DependencyChain>> {
         self.graph.dependency_chains_to(target)
     }
 

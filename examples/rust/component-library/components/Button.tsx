@@ -7,12 +7,7 @@ export interface ButtonProps {
   disabled?: boolean;
 }
 
-export function Button({ 
-  children, 
-  onClick, 
-  variant = 'primary',
-  disabled = false 
-}: ButtonProps) {
+export function Button({ children, onClick, variant = 'primary', disabled = false }: ButtonProps) {
   const colors = {
     primary: '#0066cc',
     secondary: '#6c757d',

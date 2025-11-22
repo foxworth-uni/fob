@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::cli::validation::parse_global;
     use crate::cli::{Cli, Command};
     use clap::Parser;
@@ -135,7 +134,7 @@ mod tests {
         let args = Cli::try_parse_from(&["joy", "build", "src/index.ts"]).unwrap();
 
         if let Command::Build(build) = args.command {
-            assert_eq!(build.entry, vec!["src/index.ts"]);
+            assert_eq!(build.entry, Some(vec!["src/index.ts".to_string()]));
             assert_eq!(build.format, Format::Esm);
             assert_eq!(build.out_dir, PathBuf::from("dist"));
             assert_eq!(build.platform, Platform::Browser);

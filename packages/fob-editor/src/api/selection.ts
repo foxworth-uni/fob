@@ -127,9 +127,7 @@ export class Selection implements SelectionAPI {
           break;
         case 'down':
           if (currentLine.number < doc.lines) {
-            const targetLine = doc.line(
-              Math.min(doc.lines, currentLine.number + amount)
-            );
+            const targetLine = doc.line(Math.min(doc.lines, currentLine.number + amount));
             const column = currentPos - currentLine.from;
             newPos = Math.min(targetLine.to, targetLine.from + column);
           }

@@ -1,8 +1,8 @@
 //! Serialization methods for ModuleGraph.
 
-use super::graph::ModuleGraph;
 use super::super::external_dep::ExternalDependency;
 use super::super::{Module, ModuleId};
+use super::graph::ModuleGraph;
 use crate::{Error, Result};
 
 /// Helper to escape labels for DOT format.
@@ -60,4 +60,3 @@ impl ModuleGraph {
             .map_err(|e| Error::InvalidConfig(format!("Failed to serialize graph: {e}")))
     }
 }
-

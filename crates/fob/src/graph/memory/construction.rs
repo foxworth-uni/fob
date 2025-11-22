@@ -2,9 +2,9 @@
 
 use rustc_hash::FxHashMap as HashMap;
 
-use super::graph::{GraphInner, ModuleGraph};
 use super::super::external_dep::ExternalDependency;
 use super::super::{Module, ModuleId};
+use super::graph::{GraphInner, ModuleGraph};
 use crate::{Error, Result};
 
 impl ModuleGraph {
@@ -141,4 +141,3 @@ impl ModuleGraph {
         Ok(graph)
     }
 }
-

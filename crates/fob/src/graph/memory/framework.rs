@@ -1,7 +1,7 @@
 //! Framework rule methods for ModuleGraph.
 
-use super::graph::ModuleGraph;
 use super::super::{Export, ModuleId};
+use super::graph::ModuleGraph;
 use crate::Result;
 
 impl ModuleGraph {
@@ -20,10 +20,11 @@ impl ModuleGraph {
     /// tokio runtime support.
     #[cfg(not(target_family = "wasm"))]
     pub fn apply_framework_rule(&self, rule: Box<dyn super::super::FrameworkRule>) -> Result<()> {
-        let handle = tokio::runtime::Handle::try_current()
-            .map_err(|_| crate::Error::InvalidConfig(
-                "FrameworkRule::apply requires a tokio runtime context".to_string()
-            ))?;
+        let handle = tokio::runtime::Handle::try_current().map_err(|_| {
+            crate::Error::InvalidConfig(
+                "FrameworkRule::apply requires a tokio runtime context".to_string(),
+            )
+        })?;
         handle.block_on(rule.apply(self))
     }
 
@@ -66,4 +67,3 @@ impl ModuleGraph {
         Ok(result)
     }
 }
-

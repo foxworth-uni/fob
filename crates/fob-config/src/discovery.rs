@@ -38,8 +38,8 @@ impl ConfigDiscovery {
     /// Find a config file in the root directory
     ///
     /// Searches in this order:
-/// 1. TOML config: fob.toml
-/// 2. package.json (fob field)
+    /// 1. TOML config: fob.toml
+    /// 2. package.json (fob field)
     pub fn find(&self) -> Option<PathBuf> {
         let toml_path = self.root.join("fob.toml");
         if toml_path.exists() {

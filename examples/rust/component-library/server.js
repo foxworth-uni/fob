@@ -24,13 +24,11 @@ app.get('/demo/dist/*', (c) => {
     const path = c.req.path.slice(11); // Remove '/demo/dist/'
     const filePath = join(__dirname, 'demo/dist', path);
     const file = readFileSync(filePath, 'utf-8');
-    
+
     const ext = path.split('.').pop();
-    const contentType = 
-      ext === 'js' ? 'application/javascript' :
-      ext === 'map' ? 'application/json' :
-      'text/plain';
-    
+    const contentType =
+      ext === 'js' ? 'application/javascript' : ext === 'map' ? 'application/json' : 'text/plain';
+
     return c.body(file, 200, { 'Content-Type': contentType });
   } catch (error) {
     console.error('Failed to read demo file:', error);
@@ -44,14 +42,17 @@ app.get('/dist/*', (c) => {
     const path = c.req.path.slice(6); // Remove '/dist/'
     const filePath = join(__dirname, 'dist', path);
     const file = readFileSync(filePath, 'utf-8');
-    
+
     const ext = path.split('.').pop();
-    const contentType = 
-      ext === 'js' ? 'application/javascript' :
-      ext === 'map' ? 'application/json' :
-      ext === 'ts' ? 'application/typescript' :
-      'text/plain';
-    
+    const contentType =
+      ext === 'js'
+        ? 'application/javascript'
+        : ext === 'map'
+          ? 'application/json'
+          : ext === 'ts'
+            ? 'application/typescript'
+            : 'text/plain';
+
     return c.body(file, 200, { 'Content-Type': contentType });
   } catch (error) {
     console.error('Failed to read library file:', error);
@@ -71,4 +72,3 @@ serve({
   fetch: app.fetch,
   port,
 });
-

@@ -20,15 +20,34 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "index.node"
+    "index.node",
+    "index.js",
+    "npm"
   ],
   "scripts": {
     "build": "pnpm run build:ts",
     "build:ts": "tsc --project tsconfig.json",
+    "artifacts": "napi artifacts",
+    "prepublishOnly": "napi prepublish -t npm",
+    "version": "napi version",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage"
+  },
+  "napi": {
+    "name": "fob-bundler",
+    "triples": {
+      "defaults": false,
+      "additional": [
+        "x86_64-apple-darwin",
+        "aarch64-apple-darwin",
+        "x86_64-unknown-linux-gnu",
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-gnu",
+        "x86_64-pc-windows-msvc"
+      ]
+    }
   },
   "optionalDependencies": {
     "@fob/bundler-darwin-x64": "0.1.0",
@@ -41,7 +60,8 @@
   "devDependencies": {
     "typescript": "^5.6.3",
     "@types/node": "^20.16.10",
-    "vitest": "^2.1.0"
+    "vitest": "^2.1.0",
+    "@napi-rs/cli": "3.3.0"
   },
   "engines": {
     "node": ">=18"

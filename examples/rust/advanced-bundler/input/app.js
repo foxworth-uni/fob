@@ -28,12 +28,15 @@ console.log('');
 // Export for use as a module
 export function calculate(x, y, operation) {
   switch (operation) {
-    case 'add': return add(x, y);
-    case 'multiply': return multiply(x, y);
-    case 'divide': return divide(x, y);
-    default: throw new Error(`Unknown operation: ${operation}`);
+    case 'add':
+      return add(x, y);
+    case 'multiply':
+      return multiply(x, y);
+    case 'divide':
+      return divide(x, y);
+    default:
+      throw new Error(`Unknown operation: ${operation}`);
   }
 }
 
 export { APP_CONFIG };
-

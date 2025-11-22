@@ -4,13 +4,7 @@
  */
 
 // Core types
-export type {
-  Position,
-  Range,
-  EditorConfig,
-  EditorInstance,
-  EditorState,
-} from './core.js';
+export type { Position, Range, EditorConfig, EditorInstance, EditorState } from './core.js';
 
 // Result types
 export type { ChangeDescription, OperationResult } from './result.js';
@@ -19,12 +13,7 @@ export type { ChangeDescription, OperationResult } from './result.js';
 export type { ContentAPI } from './content.js';
 
 // Selection API
-export type {
-  Selection,
-  Cursor,
-  CursorDirection,
-  SelectionAPI,
-} from './selection.js';
+export type { Selection, Cursor, CursorDirection, SelectionAPI } from './selection.js';
 
 // Event API
 export type {

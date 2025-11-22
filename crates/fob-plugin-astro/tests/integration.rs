@@ -393,9 +393,15 @@ const title = 'Blog'
     let output = result.unwrap();
 
     // Should contain imports
-    assert!(output.code.contains("import { getCollection } from 'astro:content'"));
-    assert!(output.code.contains("import Layout from '../layouts/Base.astro'"));
-    assert!(output.code.contains("const posts = await getCollection('blog')"));
+    assert!(output
+        .code
+        .contains("import { getCollection } from 'astro:content'"));
+    assert!(output
+        .code
+        .contains("import Layout from '../layouts/Base.astro'"));
+    assert!(output
+        .code
+        .contains("const posts = await getCollection('blog')"));
 }
 
 #[tokio::test]

@@ -34,8 +34,16 @@ let binding: NativeBinding | null = null;
 let loadError: unknown = null;
 
 try {
-  // eslint-disable-next-line import/no-dynamic-require
-  binding = require('../../index.node') as NativeBinding;
+  // Try to load via the platform-aware loader first
+  try {
+    // eslint-disable-next-line import/no-dynamic-require
+    const loader = require('../../index.js');
+    binding = (loader.default || loader) as NativeBinding;
+  } catch {
+    // Fallback to direct index.node for local development
+    // eslint-disable-next-line import/no-dynamic-require
+    binding = require('../../index.node') as NativeBinding;
+  }
 } catch (error) {
   loadError = error;
   binding = null;
@@ -107,6 +115,15 @@ export class NativeFob {
     } catch (error) {
       // Rust errors are thrown as exceptions
       if (error instanceof Error) {
+        try {
+          const details = JSON.parse(error.message);
+          if (details && typeof details === 'object' && 'type' in details) {
+            const msg = details.message || error.message;
+            throw new FobError(msg, details);
+          }
+        } catch {
+          // Not JSON, ignore
+        }
         throw new FobError(error.message);
       }
       throw new FobError(String(error));
@@ -127,6 +144,15 @@ export async function bundle(options: BundleOptions): Promise<BundleResult> {
   } catch (error) {
     // Rust errors are thrown as exceptions
     if (error instanceof Error) {
+      try {
+        const details = JSON.parse(error.message);
+        if (details && typeof details === 'object' && 'type' in details) {
+          const msg = details.message || error.message;
+          throw new FobError(msg, details);
+        }
+      } catch {
+        // Not JSON, ignore
+      }
       throw new FobError(error.message);
     }
     throw new FobError(String(error));
@@ -149,6 +175,15 @@ export async function bundleSingle(
     return result;
   } catch (error) {
     if (error instanceof Error) {
+      try {
+        const details = JSON.parse(error.message);
+        if (details && typeof details === 'object' && 'type' in details) {
+          const msg = details.message || error.message;
+          throw new FobError(msg, details);
+        }
+      } catch {
+        // Not JSON, ignore
+      }
       throw new FobError(error.message);
     }
     throw new FobError(String(error));

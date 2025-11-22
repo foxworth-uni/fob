@@ -217,9 +217,7 @@ class Editor implements EditorInstance {
 
   setEditable(editable: boolean): void {
     this.view.dispatch({
-      effects: this.editableCompartment.reconfigure(
-        EditorView.editable.of(editable)
-      ),
+      effects: this.editableCompartment.reconfigure(EditorView.editable.of(editable)),
     });
   }
 

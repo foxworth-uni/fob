@@ -22,7 +22,6 @@ async function main() {
     console.log(`  Modules: ${result.stats.totalModules}`);
     console.log(`  Total size: ${result.stats.totalSize} bytes`);
     console.log(`  Duration: ${result.stats.durationMs}ms`);
-
   } catch (error) {
     console.error('❌ Build failed:', error.message);
     process.exit(1);

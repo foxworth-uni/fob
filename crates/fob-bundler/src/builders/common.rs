@@ -10,6 +10,7 @@ use rustc_hash::FxHashMap;
 
 use crate::analysis::AnalyzedBundle;
 use crate::builders::{asset_plugin::AssetDetectionPlugin, asset_registry::AssetRegistry};
+use crate::diagnostics;
 use crate::module_collection_plugin::ModuleCollectionPlugin;
 use crate::{Error, Result};
 use fob::analysis::{stats::compute_stats, AnalysisResult, CacheAnalysis, TransformationTrace};
@@ -206,12 +207,12 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
         .with_options(options)
         .with_plugins(plugins)
         .build()
-        .map_err(|e| Error::Bundler(format!("{e:?}")))?;
+        .map_err(|e| Error::from_rolldown_batch(&e))?;
 
     let bundle = bundler
         .write()
         .await
-        .map_err(|e| Error::Bundler(format!("{e:?}")))?;
+        .map_err(|e| Error::from_rolldown_batch(&e))?;
 
     eprintln!(
         "[FOB_BUILD] Bundle complete. Asset registry has {} assets",
@@ -233,13 +234,17 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
         collection_data.modules.len()
     );
 
-    let graph = fob::graph::ModuleGraph::from_collected_data(collection_data)
-        .map_err(|e| {
-            Error::Bundler(format!(
-                "Failed to build module graph from collected data: {}",
-                e
-            ))
-        })?;
+    let graph = fob::graph::ModuleGraph::from_collected_data(collection_data).map_err(|e| {
+        Error::Bundler(vec![diagnostics::ExtractedDiagnostic {
+            kind: diagnostics::DiagnosticKind::Other("GraphBuildError".to_string()),
+            severity: diagnostics::DiagnosticSeverity::Error,
+            message: format!("Failed to build module graph from collected data: {}", e),
+            file: None,
+            line: None,
+            column: None,
+            help: None,
+        }])
+    })?;
 
     let stats = compute_stats(&graph)?;
     let entry_points = graph.entry_points()?;

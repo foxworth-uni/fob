@@ -16,17 +16,18 @@ export function Badge({ children, variant = 'info' }: BadgeProps) {
   const style = colors[variant];
 
   return (
-    <span style={{
-      display: 'inline-block',
-      padding: '0.25rem 0.75rem',
-      borderRadius: '9999px',
-      fontSize: '0.875rem',
-      fontWeight: 500,
-      backgroundColor: style.bg,
-      color: style.color,
-    }}>
+    <span
+      style={{
+        display: 'inline-block',
+        padding: '0.25rem 0.75rem',
+        borderRadius: '9999px',
+        fontSize: '0.875rem',
+        fontWeight: 500,
+        backgroundColor: style.bg,
+        color: style.color,
+      }}
+    >
       {children}
     </span>
   );
 }
-

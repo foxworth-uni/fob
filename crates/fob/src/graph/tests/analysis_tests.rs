@@ -74,7 +74,7 @@ async fn unused_exports_filters_consumed_symbols() {
     let mut ui = module_with_exports("virtual:ui.tsx", &["Button"]);
     ui.mark_entry();
 
-Arc::make_mut(&mut     ui.imports).push(import_named("virtual:utils.ts", "format"));
+    Arc::make_mut(&mut ui.imports).push(import_named("virtual:utils.ts", "format"));
 
     graph.add_module(utils.clone()).unwrap();
     graph.add_module(ui.clone()).unwrap();
@@ -115,7 +115,7 @@ async fn external_dependencies_aggregates_importers() {
     let graph = ModuleGraph::new().unwrap();
 
     let mut entry = module_with_exports("virtual:entry.tsx", &[]);
-Arc::make_mut(&mut     entry.imports).push(Import::new(
+    Arc::make_mut(&mut entry.imports).push(Import::new(
         "react",
         Vec::new(),
         ImportKind::Static,
@@ -124,7 +124,7 @@ Arc::make_mut(&mut     entry.imports).push(Import::new(
     ));
 
     let mut another = module_with_exports("virtual:another.tsx", &[]);
-Arc::make_mut(&mut     another.imports).push(Import::new(
+    Arc::make_mut(&mut another.imports).push(Import::new(
         "react",
         Vec::new(),
         ImportKind::Static,
@@ -149,8 +149,8 @@ async fn statistics_reflects_graph_state() {
     entry.mark_entry();
 
     let mut util = module_with_exports("virtual:util.ts", &["helper"]);
-Arc::make_mut(&mut     util.imports).push(import_named("virtual:entry.ts", "run"));
-Arc::make_mut(&mut     util.imports).push(Import::new(
+    Arc::make_mut(&mut util.imports).push(import_named("virtual:entry.ts", "run"));
+    Arc::make_mut(&mut util.imports).push(Import::new(
         "legacy-lib",
         Vec::new(),
         ImportKind::Static,
@@ -245,12 +245,11 @@ async fn star_reexport_doesnt_mark_all_exports_used() {
         ),
     ])
     .build();
-Arc::make_mut(&mut     helpers.imports).push(import_star_reexport("validators.ts"));
+    Arc::make_mut(&mut helpers.imports).push(import_star_reexport("validators.ts"));
 
     let mut demo = module_with_exports("demo.tsx", &[]);
     demo.mark_entry();
-    Arc::make_mut(&mut demo.imports)
-        .push(import_named("helpers.ts", "validateEmail"));
+    Arc::make_mut(&mut demo.imports).push(import_named("helpers.ts", "validateEmail"));
 
     graph.add_module(validators.clone()).unwrap();
     graph.add_module(helpers.clone()).unwrap();
@@ -320,7 +319,7 @@ async fn namespace_import_marks_all_exports_used() {
 
     let mut app = module_with_exports("app.ts", &[]);
     app.mark_entry();
-Arc::make_mut(&mut     app.imports).push(import_namespace("utils.ts"));
+    Arc::make_mut(&mut app.imports).push(import_namespace("utils.ts"));
 
     graph.add_module(utils.clone()).unwrap();
     graph.add_module(app.clone()).unwrap();

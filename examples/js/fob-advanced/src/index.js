@@ -22,4 +22,3 @@ const heavy = await import('./heavy-module.js');
 console.log(heavy.processData([1, 2, 3, 4, 5]));
 
 console.log('\n✅ Example complete!');
-

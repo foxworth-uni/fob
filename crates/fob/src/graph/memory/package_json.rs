@@ -2,11 +2,11 @@
 
 use rustc_hash::FxHashSet as HashSet;
 
-use super::graph::ModuleGraph;
 use super::super::package_json::{
     extract_package_name, DependencyCoverage, DependencyType, PackageJson, TypeCoverage,
     UnusedDependency,
 };
+use super::graph::ModuleGraph;
 use crate::Result;
 
 impl ModuleGraph {
@@ -125,4 +125,3 @@ impl ModuleGraph {
         })
     }
 }
-

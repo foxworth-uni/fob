@@ -41,11 +41,10 @@ pub async fn from_rolldown_parts(
     module_table: &ModuleTable,
     entry_points: &[EntryPoint],
 ) -> Result<ModuleGraph, RolldownGraphError> {
-    let graph = ModuleGraph::new()
-        .map_err(|_| RolldownGraphError::ModuleIdConversion {
-            path: "graph initialization".to_string(),
-            source: ModuleIdError::EmptyPath,
-        })?;
+    let graph = ModuleGraph::new().map_err(|_| RolldownGraphError::ModuleIdConversion {
+        path: "graph initialization".to_string(),
+        source: ModuleIdError::EmptyPath,
+    })?;
     let mut idx_to_id: HashMap<ModuleIdx, ModuleId> = HashMap::new();
     let mut external_idx_to_name: HashMap<ModuleIdx, String> = HashMap::new();
     let mut pending_modules: Vec<PendingModule> = Vec::new();
@@ -155,12 +154,12 @@ pub async fn from_rolldown_parts(
 
     for dep in external_aggregate.into_values() {
         let specifier = dep.specifier.clone();
-        graph.add_external_dependency(dep).map_err(|_| {
-            RolldownGraphError::ModuleIdConversion {
+        graph
+            .add_external_dependency(dep)
+            .map_err(|_| RolldownGraphError::ModuleIdConversion {
                 path: specifier,
                 source: ModuleIdError::EmptyPath,
-            }
-        })?;
+            })?;
     }
 
     Ok(graph)

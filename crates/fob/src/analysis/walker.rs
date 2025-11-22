@@ -12,7 +12,8 @@ use rustc_hash::FxHashSet;
 
 use crate::extractors::{extract_scripts, ExtractorError};
 use crate::graph::collection::{
-    parse_module_structure, CollectedExport, CollectedImport, CollectedImportKind, CollectedModule, CollectionState,
+    parse_module_structure, CollectedExport, CollectedImport, CollectedImportKind, CollectedModule,
+    CollectionState,
 };
 use crate::runtime::{Runtime, RuntimeError};
 
@@ -99,10 +100,10 @@ impl GraphWalker {
 
             // Read the file
             let code = self.read_file(&current_path, runtime.as_ref()).await?;
-            
+
             // Extract scripts from framework files if needed
             let code_to_parse = self.extract_if_framework(&current_path, &code)?;
-            
+
             // Parse the module
             let (mut imports, exports, has_side_effects) = self.parse_module(&code_to_parse);
 
@@ -125,7 +126,9 @@ impl GraphWalker {
             // Resolve imports and populate resolved_path
             for import in &mut imports {
                 // Skip dynamic imports if not following them
-                if import.kind == CollectedImportKind::Dynamic && !self.config.follow_dynamic_imports {
+                if import.kind == CollectedImportKind::Dynamic
+                    && !self.config.follow_dynamic_imports
+                {
                     continue;
                 }
 
@@ -197,8 +200,7 @@ impl GraphWalker {
                         .resolve(source, &current_path, runtime.as_ref())
                         .await
                     {
-                        let normalized =
-                            self.normalize_path(&resolved_path, runtime.as_ref())?;
+                        let normalized = self.normalize_path(&resolved_path, runtime.as_ref())?;
 
                         // Check for circular dependency
                         if visited.contains(&normalized) {
@@ -243,10 +245,11 @@ impl GraphWalker {
     /// For framework files (.astro, .svelte, .vue), extracts JavaScript/TypeScript
     /// from the component structure. For other files, returns the content as-is.
     fn extract_if_framework(&self, path: &Path, content: &str) -> Result<String, WalkerError> {
-        let scripts = extract_scripts(path, content).map_err(|e| WalkerError::ExtractionFailed {
-            path: path.to_path_buf(),
-            source: e,
-        })?;
+        let scripts =
+            extract_scripts(path, content).map_err(|e| WalkerError::ExtractionFailed {
+                path: path.to_path_buf(),
+                source: e,
+            })?;
 
         if scripts.is_empty() {
             // Not a framework file or no scripts found, return as-is
@@ -254,10 +257,7 @@ impl GraphWalker {
         }
 
         // Combine multiple scripts with blank lines (same as plugin behavior)
-        let combined: Vec<String> = scripts
-            .iter()
-            .map(|s| s.source_text.to_string())
-            .collect();
+        let combined: Vec<String> = scripts.iter().map(|s| s.source_text.to_string()).collect();
         Ok(combined.join("\n\n"))
     }
 

@@ -1646,6 +1646,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "fob-bundler",
+ "miette",
  "napi",
  "napi-build",
  "napi-derive",

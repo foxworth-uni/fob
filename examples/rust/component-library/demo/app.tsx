@@ -25,8 +25,15 @@ function Demo() {
         </p>
         <details style={{ marginTop: '1rem' }}>
           <summary style={{ cursor: 'pointer', fontWeight: 500 }}>Usage Example</summary>
-          <pre style={{ background: '#f5f5f5', padding: '1rem', borderRadius: '4px', overflow: 'auto' }}>
-{`import { Button } from 'my-component-lib';
+          <pre
+            style={{
+              background: '#f5f5f5',
+              padding: '1rem',
+              borderRadius: '4px',
+              overflow: 'auto',
+            }}
+          >
+            {`import { Button } from 'my-component-lib';
 
 <Button variant="primary" onClick={() => alert('Clicked!')}>
   Click Me
@@ -56,8 +63,15 @@ function Demo() {
         </div>
         <details style={{ marginTop: '1rem' }}>
           <summary style={{ cursor: 'pointer', fontWeight: 500 }}>Usage Example</summary>
-          <pre style={{ background: '#f5f5f5', padding: '1rem', borderRadius: '4px', overflow: 'auto' }}>
-{`import { Card } from 'my-component-lib';
+          <pre
+            style={{
+              background: '#f5f5f5',
+              padding: '1rem',
+              borderRadius: '4px',
+              overflow: 'auto',
+            }}
+          >
+            {`import { Card } from 'my-component-lib';
 
 <Card title="My Card">
   <p>Card content goes here</p>
@@ -76,8 +90,15 @@ function Demo() {
         </div>
         <details style={{ marginTop: '1rem' }}>
           <summary style={{ cursor: 'pointer', fontWeight: 500 }}>Usage Example</summary>
-          <pre style={{ background: '#f5f5f5', padding: '1rem', borderRadius: '4px', overflow: 'auto' }}>
-{`import { Badge } from 'my-component-lib';
+          <pre
+            style={{
+              background: '#f5f5f5',
+              padding: '1rem',
+              borderRadius: '4px',
+              overflow: 'auto',
+            }}
+          >
+            {`import { Badge } from 'my-component-lib';
 
 <Badge variant="success">New</Badge>
 <Badge variant="warning">Beta</Badge>`}
@@ -89,17 +110,29 @@ function Demo() {
         <h2>📦 Build Information</h2>
         <p>This demo shows the component library built with fob.</p>
         <ul>
-          <li><strong>Library mode:</strong> Externalizes React as peer dependency</li>
-          <li><strong>Tree-shakeable:</strong> Import only what you need</li>
-          <li><strong>TypeScript:</strong> Full type definitions included</li>
-          <li><strong>Source maps:</strong> Easy debugging in development</li>
-          <li><strong>ESM format:</strong> Modern ES modules for optimal bundling</li>
+          <li>
+            <strong>Library mode:</strong> Externalizes React as peer dependency
+          </li>
+          <li>
+            <strong>Tree-shakeable:</strong> Import only what you need
+          </li>
+          <li>
+            <strong>TypeScript:</strong> Full type definitions included
+          </li>
+          <li>
+            <strong>Source maps:</strong> Easy debugging in development
+          </li>
+          <li>
+            <strong>ESM format:</strong> Modern ES modules for optimal bundling
+          </li>
         </ul>
-        
+
         <h3 style={{ marginTop: '1.5rem', color: '#555' }}>Tree-Shaking Example</h3>
         <p>Import only the components you need:</p>
-        <pre style={{ background: '#f5f5f5', padding: '1rem', borderRadius: '4px', overflow: 'auto' }}>
-{`// Import everything (not recommended for production)
+        <pre
+          style={{ background: '#f5f5f5', padding: '1rem', borderRadius: '4px', overflow: 'auto' }}
+        >
+          {`// Import everything (not recommended for production)
 import { Button, Card, Badge } from 'my-component-lib';
 
 // Import only what you need (tree-shakeable)
@@ -112,4 +145,3 @@ import { Button } from 'my-component-lib';`}
 
 const root = createRoot(document.getElementById('root')!);
 root.render(<Demo />);
-

@@ -174,8 +174,11 @@ const count = ref<number>(0)
     // Setup script should come first (after any leading whitespace)
     let code_str = output.code.to_string();
     let trimmed = code_str.trim_start();
-    assert!(trimmed.starts_with("import { ref } from 'vue'"),
-            "Setup script should come first. Got: {:?}", &trimmed[..trimmed.len().min(50)]);
+    assert!(
+        trimmed.starts_with("import { ref } from 'vue'"),
+        "Setup script should come first. Got: {:?}",
+        &trimmed[..trimmed.len().min(50)]
+    );
 
     // Regular script should come after
     assert!(code_str.contains("export default"));
@@ -262,13 +265,20 @@ export default {
     let result = plugin.load(&ctx, &args).await;
 
     // Should return an error for unclosed script tag
-    assert!(result.is_err(), "Expected error for unclosed script tag, got: {:?}", result);
+    assert!(
+        result.is_err(),
+        "Expected error for unclosed script tag, got: {:?}",
+        result
+    );
     let error = result.unwrap_err();
 
     // Check the full error chain (error is wrapped by anyhow::Context)
     let error_chain = format!("{:?}", error);
-    assert!(error_chain.contains("Unclosed script tag") || error_chain.contains("unclosed"),
-            "Expected unclosed tag error, got: {}", error_chain);
+    assert!(
+        error_chain.contains("Unclosed script tag") || error_chain.contains("unclosed"),
+        "Expected unclosed tag error, got: {}",
+        error_chain
+    );
 }
 
 #[tokio::test]

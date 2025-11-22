@@ -23,6 +23,7 @@ serde_json.workspace = true
 anyhow.workspace = true
 async-trait.workspace = true
 oxc_resolver.workspace = true
+miette.workspace = true
 
 # tokio with full features for native targets only
 # This prevents workspace feature unification from affecting WASM builds

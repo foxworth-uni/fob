@@ -2,8 +2,26 @@
  * Tests for bundle error handling with REAL native binary
  */
 
-import { test, expect } from 'vitest';
+import { test, expect, afterEach } from 'vitest';
 import { Fob } from '../dist/index.js';
+import { rmSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
+
+const TMP_DIR = join(process.cwd(), 'tests/temp-bundle-error');
+
+function setup() {
+  try {
+    rmSync(TMP_DIR, { recursive: true, force: true });
+  } catch {}
+  mkdirSync(TMP_DIR, { recursive: true });
+  return TMP_DIR;
+}
+
+afterEach(() => {
+  try {
+    rmSync(TMP_DIR, { recursive: true, force: true });
+  } catch {}
+});
 
 test('Fob.bundle() rejects when no options provided', async () => {
   const bundler = new Fob(); // No defaultOptions
@@ -14,10 +32,11 @@ test('Fob.bundle() rejects when no options provided', async () => {
 });
 
 test('Fob.bundle() works with defaultOptions', async () => {
+  setup();
   const bundler = new Fob({
     defaultOptions: {
       entries: ['./tests/fixtures/simple-entry/index.js'],
-      outputDir: 'dist',
+      outputDir: join(TMP_DIR, 'dist-default'),
     },
   });
 
@@ -28,17 +47,18 @@ test('Fob.bundle() works with defaultOptions', async () => {
 });
 
 test('Fob.bundle() accepts override options', async () => {
+  setup();
   const bundler = new Fob({
     defaultOptions: {
       entries: ['./tests/fixtures/simple-entry/index.js'],
-      outputDir: 'dist',
+      outputDir: join(TMP_DIR, 'dist-default'),
     },
   });
 
   // Override with different entry and output dir
   const result = await bundler.bundle({
     entries: ['./tests/fixtures/code-splitting/index.js'],
-    outputDir: 'out',
+    outputDir: join(TMP_DIR, 'dist-override'),
   });
 
   expect(result).toBeTruthy();
@@ -51,23 +71,25 @@ test.skip('top-level bundle() error handling (TODO: needs mock improvements)', a
 });
 
 test('Fob constructor succeeds with valid options', () => {
+  setup();
   // Test that constructor works with valid options
   expect(() => {
     new Fob({
       defaultOptions: {
         entries: ['./tests/fixtures/simple-entry/index.js'],
-        outputDir: 'dist',
+        outputDir: join(TMP_DIR, 'dist-constructor'),
       },
     });
   }).not.toThrow();
 });
 
 test('native errors are properly propagated', async () => {
+  setup();
   // Test with invalid entry to trigger real error
   const bundler = new Fob({
     defaultOptions: {
       entries: ['./nonexistent-file-that-does-not-exist.js'],
-      outputDir: 'dist',
+      outputDir: join(TMP_DIR, 'dist-error'),
     },
   });
 

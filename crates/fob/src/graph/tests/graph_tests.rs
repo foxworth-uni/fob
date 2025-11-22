@@ -37,9 +37,7 @@ async fn add_dependency_creates_reverse_edges() {
     graph.add_module(a.clone()).unwrap();
     graph.add_module(b.clone()).unwrap();
 
-    graph
-        .add_dependency(a.id.clone(), b.id.clone())
-        .unwrap();
+    graph.add_dependency(a.id.clone(), b.id.clone()).unwrap();
 
     let deps = graph.dependencies(&a.id).unwrap();
     assert!(deps.contains(&b.id));
@@ -72,7 +70,7 @@ async fn imports_for_module_returns_runtime_imports() {
         None,
         SourceSpan::new("virtual:widget.ts", 0, 0),
     );
-Arc::make_mut(&mut     module.imports).push(import.clone());
+    Arc::make_mut(&mut module.imports).push(import.clone());
 
     let module_id = module.id.clone();
     graph.add_module(module).unwrap();

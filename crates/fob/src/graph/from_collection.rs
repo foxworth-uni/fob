@@ -18,7 +18,9 @@ use std::path::PathBuf;
 
 use thiserror::Error;
 
-use super::collection::{CollectedExport, CollectedModule, CollectedImportSpecifier, CollectedImportKind};
+use super::collection::{
+    CollectedExport, CollectedImportKind, CollectedImportSpecifier, CollectedModule,
+};
 use super::module::ExportsKind as FobExportsKind;
 use super::{
     Export, ExportKind, Import, ImportKind, ImportSpecifier as FobImportSpecifier, ModuleId,

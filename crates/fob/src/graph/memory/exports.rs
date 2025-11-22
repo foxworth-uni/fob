@@ -4,9 +4,9 @@ use std::sync::Arc;
 
 use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
 
-use super::graph::{GraphInner, ModuleGraph};
 use super::super::import::{ImportKind, ImportSpecifier};
 use super::super::{ExportKind, Module, ModuleId};
+use super::graph::{GraphInner, ModuleGraph};
 use crate::{Error, Result};
 
 impl ModuleGraph {
@@ -253,4 +253,3 @@ impl ModuleGraph {
         Ok(count)
     }
 }
-

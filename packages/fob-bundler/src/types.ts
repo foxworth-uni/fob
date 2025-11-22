@@ -302,6 +302,15 @@ export interface TailwindOptions {
 }
 
 /**
+ * Multiple diagnostics error - contains multiple error details.
+ */
+export interface MultipleDiagnostics {
+  type: 'multiple';
+  errors: FobErrorDetails[];
+  primary_message: string;
+}
+
+/**
  * Structured error details from Fob bundler.
  * This discriminated union preserves all diagnostic information from Rust.
  */
@@ -314,7 +323,8 @@ export type FobErrorDetails =
   | NoEntriesError
   | PluginError
   | RuntimeError
-  | ValidationError;
+  | ValidationError
+  | MultipleDiagnostics;
 
 /**
  * MDX syntax error with source location and suggestions.
@@ -502,6 +512,12 @@ export function formatFobError(error: FobErrorDetails): string {
 
     case 'validation':
       return `Validation error: ${error.message}`;
+
+    case 'multiple': {
+      let msg = `Multiple errors (${error.errors.length}):\n\n`;
+      msg += error.errors.map((e, i) => `${i + 1}. ${formatFobError(e)}`).join('\n\n');
+      return msg;
+    }
 
     default:
       // Ensure exhaustive check

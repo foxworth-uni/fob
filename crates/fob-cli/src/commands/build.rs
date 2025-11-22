@@ -219,7 +219,9 @@ fn validate_output_dir(out_dir: &Path, cwd: &Path) -> Result<()> {
         .unwrap_or(false);
 
     if !is_within_project && !is_sibling {
-        return Err(CliError::Build(BuildError::OutputNotWritable(resolved_out_dir)));
+        return Err(CliError::Build(BuildError::OutputNotWritable(
+            resolved_out_dir,
+        )));
     }
 
     const DANGEROUS_PATHS: &[&str] = &[

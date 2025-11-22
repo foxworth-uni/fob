@@ -72,10 +72,7 @@ pub fn extract_scripts<'a>(
     path: &Path,
     content: &'a str,
 ) -> Result<Vec<ExtractedScript<'a>>, ExtractorError> {
-    let extension = path
-        .extension()
-        .and_then(|ext| ext.to_str())
-        .unwrap_or("");
+    let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
 
     match extension {
         "astro" => AstroExtractor.extract(content),
@@ -124,4 +121,3 @@ const x = 1
         assert_eq!(scripts.len(), 0);
     }
 }
-

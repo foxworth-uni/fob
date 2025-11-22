@@ -4,8 +4,8 @@ use std::collections::VecDeque;
 
 use rustc_hash::FxHashSet as HashSet;
 
-use super::graph::ModuleGraph;
 use super::super::ModuleId;
+use super::graph::ModuleGraph;
 use crate::Result;
 
 impl ModuleGraph {
@@ -61,4 +61,3 @@ impl ModuleGraph {
         Ok(visited)
     }
 }
-

@@ -8,31 +8,31 @@ export default defineConfig({
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'MirrorEditor',
       formats: ['es'],
-      fileName: 'index'
+      fileName: 'index',
     },
     rollupOptions: {
       external: ['codemirror', /^@codemirror\//],
       output: {
         preserveModules: false,
         globals: {
-          codemirror: 'CodeMirror'
+          codemirror: 'CodeMirror',
         },
         assetFileNames: (assetInfo) => {
           if (assetInfo.name && assetInfo.name.endsWith('.css')) {
             return 'style.css';
           }
           return assetInfo.name || 'assets/[name]-[hash][extname]';
-        }
-      }
+        },
+      },
     },
     sourcemap: true,
     minify: false,
-    cssCodeSplit: false
+    cssCodeSplit: false,
   },
   plugins: [
     dts({
       insertTypesEntry: true,
-      rollupTypes: true
-    })
-  ]
+      rollupTypes: true,
+    }),
+  ],
 });

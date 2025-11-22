@@ -73,12 +73,21 @@ fi
 echo -e "${GREEN}✓ Core WASM module built ($(ls -lh "$CORE_WASM" | awk '{print $5}'))${NC}"
 
 # Step 2: Componentize the core module
-echo -e "${YELLOW}Step 2: Componentizing WASM module...${NC}"
+echo -e "${YELLOW}Step 2: Componentizing WASM module with WASI adapter...${NC}"
 mkdir -p "$OUTPUT_DIR"
 
-# Try to componentize with wasm-tools (should work now without threading)
-if wasm-tools component new "$CORE_WASM" -o "$COMPONENT_WASM" 2>&1 | tee /tmp/wasm-tools-output.log; then
-    echo -e "${GREEN}✓ Component created successfully${NC}"
+# Check for WASI adapter
+ADAPTER_PATH="$SCRIPT_DIR/wasi_snapshot_preview1.reactor.wasm"
+if [[ ! -f "$ADAPTER_PATH" ]]; then
+    echo -e "${YELLOW}Downloading WASI Preview 1→2 adapter...${NC}"
+    curl -L -o "$ADAPTER_PATH" https://github.com/bytecodealliance/wasmtime/releases/download/v15.0.0/wasi_snapshot_preview1.reactor.wasm
+fi
+
+# Try to componentize with wasm-tools using WASI adapter
+if wasm-tools component new "$CORE_WASM" \
+    --adapt wasi_snapshot_preview1="$ADAPTER_PATH" \
+    -o "$COMPONENT_WASM" 2>&1 | tee /tmp/wasm-tools-output.log; then
+    echo -e "${GREEN}✓ Component created successfully with WASI adapter${NC}"
     WASM_TO_USE="$COMPONENT_WASM"
     IS_COMPONENT=true
 else
@@ -94,8 +103,9 @@ mkdir -p "$JCO_OUTPUT_DIR"
 
 if [ "$IS_COMPONENT" = true ]; then
     # Try jco transpile for component
+    # Use --no-nodejs-compat and --tla-compat for Cloudflare Workers compatibility
     echo -e "${YELLOW}Step 3: Transpiling component with jco...${NC}"
-    if jco transpile "$COMPONENT_WASM" -o "$JCO_OUTPUT_DIR" --name fob-bundler 2>&1; then
+    if jco transpile "$COMPONENT_WASM" -o "$JCO_OUTPUT_DIR" --name fob-bundler --no-nodejs-compat --tla-compat 2>&1; then
         echo -e "${GREEN}✓ TypeScript bindings generated${NC}"
         cp "$COMPONENT_WASM" "$JCO_OUTPUT_DIR/fob_bundler.component.wasm"
     else
@@ -157,11 +167,6 @@ EOF
     fi
 fi
 
-# Copy to packages/fob-edge/wasm/bundler
-EDGE_BUNDLER_DIR="$REPO_ROOT/packages/fob-edge/wasm/bundler"
-mkdir -p "$EDGE_BUNDLER_DIR"
-cp -r "$JCO_OUTPUT_DIR"/* "$EDGE_BUNDLER_DIR/" 2>/dev/null || true
-
 echo -e "\n${GREEN}✓ Build complete${NC}"
 
 # Show output sizes
@@ -176,7 +181,6 @@ if [ "$IS_COMPONENT" = true ]; then
     echo "  - Component: $COMPONENT_WASM"
 fi
 echo "  - Bindings: $JCO_OUTPUT_DIR/"
-echo "  - Copied to: $EDGE_BUNDLER_DIR/"
 
 if [ "$IS_COMPONENT" = false ]; then
     echo -e "\n${YELLOW}Note: Component Model build failed.${NC}"

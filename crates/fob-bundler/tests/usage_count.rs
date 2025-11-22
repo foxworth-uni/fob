@@ -72,18 +72,13 @@ async fn test_simple_usage_once() -> Result<()> {
 
     graph.add_module(module_a)?;
     graph.add_module(module_b.clone())?;
-    graph
-        .add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())
-        ?;
+    graph.add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())?;
 
     // Compute usage counts
     graph.compute_export_usage_counts()?;
 
     // Verify
-    let module_a = graph
-        .module(&ModuleId::new("a.js").unwrap())
-        ?
-        .unwrap();
+    let module_a = graph.module(&ModuleId::new("a.js").unwrap())?.unwrap();
     assert_eq!(module_a.exports.len(), 1);
     assert_eq!(module_a.exports[0].name, "foo");
     assert_eq!(module_a.exports[0].usage_count(), Some(1));
@@ -123,19 +118,12 @@ async fn test_multiple_importers() -> Result<()> {
     graph.add_module(module_a)?;
     graph.add_module(module_b.clone())?;
     graph.add_module(module_c.clone())?;
-    graph
-        .add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())
-        ?;
-    graph
-        .add_dependency(module_c.id.clone(), ModuleId::new("a.js").unwrap())
-        ?;
+    graph.add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())?;
+    graph.add_dependency(module_c.id.clone(), ModuleId::new("a.js").unwrap())?;
 
     graph.compute_export_usage_counts()?;
 
-    let module_a = graph
-        .module(&ModuleId::new("a.js").unwrap())
-        ?
-        .unwrap();
+    let module_a = graph.module(&ModuleId::new("a.js").unwrap())?.unwrap();
     assert_eq!(module_a.exports[0].usage_count(), Some(2));
 
     Ok(())
@@ -166,16 +154,11 @@ async fn test_unused_export() -> Result<()> {
 
     graph.add_module(module_a)?;
     graph.add_module(module_b.clone())?;
-    graph
-        .add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())
-        ?;
+    graph.add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())?;
 
     graph.compute_export_usage_counts()?;
 
-    let module_a = graph
-        .module(&ModuleId::new("a.js").unwrap())
-        ?
-        .unwrap();
+    let module_a = graph.module(&ModuleId::new("a.js").unwrap())?.unwrap();
     let foo = module_a.exports.iter().find(|e| e.name == "foo").unwrap();
     let bar = module_a.exports.iter().find(|e| e.name == "bar").unwrap();
 
@@ -210,16 +193,11 @@ async fn test_namespace_import() -> Result<()> {
 
     graph.add_module(module_a)?;
     graph.add_module(module_b.clone())?;
-    graph
-        .add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())
-        ?;
+    graph.add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())?;
 
     graph.compute_export_usage_counts()?;
 
-    let module_a = graph
-        .module(&ModuleId::new("a.js").unwrap())
-        ?
-        .unwrap();
+    let module_a = graph.module(&ModuleId::new("a.js").unwrap())?.unwrap();
     let foo = module_a.exports.iter().find(|e| e.name == "foo").unwrap();
     let bar = module_a.exports.iter().find(|e| e.name == "bar").unwrap();
 
@@ -251,16 +229,11 @@ async fn test_default_export() -> Result<()> {
 
     graph.add_module(module_a)?;
     graph.add_module(module_b.clone())?;
-    graph
-        .add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())
-        ?;
+    graph.add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())?;
 
     graph.compute_export_usage_counts()?;
 
-    let module_a = graph
-        .module(&ModuleId::new("a.js").unwrap())
-        ?
-        .unwrap();
+    let module_a = graph.module(&ModuleId::new("a.js").unwrap())?.unwrap();
     let default_export = module_a
         .exports
         .iter()
@@ -300,16 +273,11 @@ async fn test_multiple_imports_same_module() -> Result<()> {
 
     graph.add_module(module_a)?;
     graph.add_module(module_b.clone())?;
-    graph
-        .add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())
-        ?;
+    graph.add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())?;
 
     graph.compute_export_usage_counts()?;
 
-    let module_a = graph
-        .module(&ModuleId::new("a.js").unwrap())
-        ?
-        .unwrap();
+    let module_a = graph.module(&ModuleId::new("a.js").unwrap())?.unwrap();
     let foo = module_a.exports.iter().find(|e| e.name == "foo").unwrap();
     let bar = module_a.exports.iter().find(|e| e.name == "bar").unwrap();
 
@@ -347,16 +315,11 @@ async fn test_same_export_multiple_imports() -> Result<()> {
 
     graph.add_module(module_a)?;
     graph.add_module(module_b.clone())?;
-    graph
-        .add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())
-        ?;
+    graph.add_dependency(module_b.id.clone(), ModuleId::new("a.js").unwrap())?;
 
     graph.compute_export_usage_counts()?;
 
-    let module_a = graph
-        .module(&ModuleId::new("a.js").unwrap())
-        ?
-        .unwrap();
+    let module_a = graph.module(&ModuleId::new("a.js").unwrap())?.unwrap();
     let foo = module_a.exports.iter().find(|e| e.name == "foo").unwrap();
 
     // Two separate import statements = count of 2
@@ -378,10 +341,7 @@ async fn test_no_imports() -> Result<()> {
 
     graph.compute_export_usage_counts()?;
 
-    let module_a = graph
-        .module(&ModuleId::new("a.js").unwrap())
-        ?
-        .unwrap();
+    let module_a = graph.module(&ModuleId::new("a.js").unwrap())?.unwrap();
     let foo = module_a.exports.iter().find(|e| e.name == "foo").unwrap();
 
     assert_eq!(foo.usage_count(), Some(0));

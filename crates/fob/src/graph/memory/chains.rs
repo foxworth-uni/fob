@@ -2,9 +2,9 @@
 
 use rustc_hash::FxHashMap as HashMap;
 
-use super::graph::ModuleGraph;
 use super::super::dependency_chain::{find_chains, ChainAnalysis, DependencyChain};
 use super::super::ModuleId;
+use super::graph::ModuleGraph;
 use crate::Result;
 
 impl ModuleGraph {
@@ -83,4 +83,3 @@ impl ModuleGraph {
         Ok(false)
     }
 }
-

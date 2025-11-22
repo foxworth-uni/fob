@@ -45,12 +45,13 @@ impl FobConfig {
         figment = figment.merge(env_provider);
 
         // Preserve existing entry when CLI explicitly omits entries so other CLI flags still apply.
-        let base_entry = if args.entry.is_empty() {
-            let base: Self = figment.clone().extract().map_err(convert_figment_error)?;
-            Some(base.entry)
-        } else {
-            None
-        };
+        let base_entry =
+            if args.entry.is_none() || args.entry.as_ref().map_or(false, |e| e.is_empty()) {
+                let base: Self = figment.clone().extract().map_err(convert_figment_error)?;
+                Some(base.entry)
+            } else {
+                None
+            };
 
         let cli_config = Self::from_build_args(args);
         figment = figment.merge(Serialized::defaults(cli_config));
@@ -61,7 +62,7 @@ impl FobConfig {
             config.entry = entry;
         }
 
-        if args.entry.is_empty()
+        if args.entry.is_none()
             && !has_config_file
             && config.entry == default_entry
             && !std::env::vars().any(|(key, _)| key == "FOB_ENTRY" || key.starts_with("FOB_ENTRY_"))
@@ -80,7 +81,7 @@ impl FobConfig {
     /// Convert CLI BuildArgs to FobConfig.
     fn from_build_args(args: &crate::cli::BuildArgs) -> Self {
         Self {
-            entry: args.entry.clone(),
+            entry: args.entry.clone().unwrap_or_default(),
             format: args.format.into(),
             out_dir: args.out_dir.clone(),
             dts: args.dts,

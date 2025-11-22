@@ -32,7 +32,7 @@ fn test_config_cli_overrides_file() {
 
     // CLI args should override file config
     let args = BuildArgs {
-        entry: vec!["src/cli.ts".to_string()],
+        entry: Some(vec!["src/cli.ts".to_string()]),
         format: cli::Format::Esm,
         out_dir: PathBuf::from("cli-dist"),
         dts: false,
@@ -89,7 +89,7 @@ fn test_config_file_fallback_when_cli_empty() {
 
     // Empty CLI entry should allow file config to be used
     let args = BuildArgs {
-        entry: vec![], // Empty - should use file config
+        entry: Some(vec![]), // Empty - should use file config
         format: cli::Format::Esm,
         out_dir: PathBuf::from("dist"),
         dts: false,
@@ -136,7 +136,7 @@ fn test_config_defaults_when_no_file() {
 
     // No config file - should use defaults
     let args = BuildArgs {
-        entry: vec!["src/index.ts".to_string()],
+        entry: Some(vec!["src/index.ts".to_string()]),
         format: cli::Format::Esm,
         out_dir: PathBuf::from("dist"),
         dts: false,
@@ -196,7 +196,7 @@ fn test_config_environment_variables() {
     .unwrap();
 
     let args = BuildArgs {
-        entry: vec!["src/index.ts".to_string()],
+        entry: Some(vec!["src/index.ts".to_string()]),
         format: cli::Format::Esm,
         out_dir: PathBuf::from("dist"),
         dts: false,

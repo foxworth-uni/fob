@@ -65,20 +65,27 @@ export class Search implements SearchAPI {
 
     if (!(query instanceof RegExp)) {
       if (wholeWord) {
-        searchQuery = new RegExp(`\\b${this.escapeRegex(query as string)}\\b`, caseSensitive ? 'g' : 'gi');
+        searchQuery = new RegExp(
+          `\\b${this.escapeRegex(query as string)}\\b`,
+          caseSensitive ? 'g' : 'gi'
+        );
         useRegex = true;
       }
     }
 
     if (useRegex) {
-      const pattern = searchQuery instanceof RegExp ? searchQuery.source : searchQuery as string;
-      const ignoreCase = searchQuery instanceof RegExp
-        ? searchQuery.flags.includes('i')
-        : !caseSensitive;
+      const pattern = searchQuery instanceof RegExp ? searchQuery.source : (searchQuery as string);
+      const ignoreCase =
+        searchQuery instanceof RegExp ? searchQuery.flags.includes('i') : !caseSensitive;
 
-      const cursor = new RegExpCursor(this.view.state.doc, pattern, {
-        ignoreCase,
-      }, currentPos);
+      const cursor = new RegExpCursor(
+        this.view.state.doc,
+        pattern,
+        {
+          ignoreCase,
+        },
+        currentPos
+      );
 
       if (!cursor.next().done) {
         const result: FindResult = {
@@ -93,7 +100,7 @@ export class Search implements SearchAPI {
         // Select the found text
         this.view.dispatch({
           selection: EditorSelection.create([
-            EditorSelection.range(result.range.from, result.range.to)
+            EditorSelection.range(result.range.from, result.range.to),
           ]),
           scrollIntoView: true,
         });
@@ -103,9 +110,14 @@ export class Search implements SearchAPI {
       }
 
       // Wrap around to beginning
-      const wrapCursor = new RegExpCursor(this.view.state.doc, pattern, {
-        ignoreCase,
-      }, 0);
+      const wrapCursor = new RegExpCursor(
+        this.view.state.doc,
+        pattern,
+        {
+          ignoreCase,
+        },
+        0
+      );
 
       if (!wrapCursor.next().done && wrapCursor.value.from < currentPos) {
         const result: FindResult = {
@@ -120,7 +132,7 @@ export class Search implements SearchAPI {
         // Select the found text
         this.view.dispatch({
           selection: EditorSelection.create([
-            EditorSelection.range(result.range.from, result.range.to)
+            EditorSelection.range(result.range.from, result.range.to),
           ]),
           scrollIntoView: true,
         });
@@ -150,7 +162,7 @@ export class Search implements SearchAPI {
         // Select the found text
         this.view.dispatch({
           selection: EditorSelection.create([
-            EditorSelection.range(result.range.from, result.range.to)
+            EditorSelection.range(result.range.from, result.range.to),
           ]),
           scrollIntoView: true,
         });
@@ -181,7 +193,7 @@ export class Search implements SearchAPI {
         // Select the found text
         this.view.dispatch({
           selection: EditorSelection.create([
-            EditorSelection.range(result.range.from, result.range.to)
+            EditorSelection.range(result.range.from, result.range.to),
           ]),
           scrollIntoView: true,
         });
@@ -204,21 +216,28 @@ export class Search implements SearchAPI {
 
     if (!(query instanceof RegExp)) {
       if (wholeWord) {
-        searchQuery = new RegExp(`\\b${this.escapeRegex(query as string)}\\b`, caseSensitive ? 'g' : 'gi');
+        searchQuery = new RegExp(
+          `\\b${this.escapeRegex(query as string)}\\b`,
+          caseSensitive ? 'g' : 'gi'
+        );
         useRegex = true;
       }
     }
 
     // Search backwards by finding all matches before cursor
     if (useRegex) {
-      const pattern = searchQuery instanceof RegExp ? searchQuery.source : searchQuery as string;
-      const ignoreCase = searchQuery instanceof RegExp
-        ? searchQuery.flags.includes('i')
-        : !caseSensitive;
+      const pattern = searchQuery instanceof RegExp ? searchQuery.source : (searchQuery as string);
+      const ignoreCase =
+        searchQuery instanceof RegExp ? searchQuery.flags.includes('i') : !caseSensitive;
 
-      const cursor = new RegExpCursor(this.view.state.doc, pattern, {
-        ignoreCase,
-      }, 0);
+      const cursor = new RegExpCursor(
+        this.view.state.doc,
+        pattern,
+        {
+          ignoreCase,
+        },
+        0
+      );
 
       let lastMatch: FindResult | null = null;
 
@@ -237,7 +256,7 @@ export class Search implements SearchAPI {
         // Select the found text
         this.view.dispatch({
           selection: EditorSelection.create([
-            EditorSelection.range(lastMatch.range.from, lastMatch.range.to)
+            EditorSelection.range(lastMatch.range.from, lastMatch.range.to),
           ]),
           scrollIntoView: true,
         });
@@ -246,12 +265,7 @@ export class Search implements SearchAPI {
       }
 
       // Wrap around to end
-      const wrapCursor = new RegExpCursor(
-        this.view.state.doc,
-        pattern,
-        { ignoreCase },
-        0
-      );
+      const wrapCursor = new RegExpCursor(this.view.state.doc, pattern, { ignoreCase }, 0);
 
       let lastWrapMatch: FindResult | null = null;
       while (!wrapCursor.next().done) {
@@ -269,7 +283,7 @@ export class Search implements SearchAPI {
         // Select the found text
         this.view.dispatch({
           selection: EditorSelection.create([
-            EditorSelection.range(lastWrapMatch.range.from, lastWrapMatch.range.to)
+            EditorSelection.range(lastWrapMatch.range.from, lastWrapMatch.range.to),
           ]),
           scrollIntoView: true,
         });
@@ -303,7 +317,7 @@ export class Search implements SearchAPI {
         // Select the found text
         this.view.dispatch({
           selection: EditorSelection.create([
-            EditorSelection.range(lastMatch.range.from, lastMatch.range.to)
+            EditorSelection.range(lastMatch.range.from, lastMatch.range.to),
           ]),
           scrollIntoView: true,
         });
@@ -336,7 +350,7 @@ export class Search implements SearchAPI {
         // Select the found text
         this.view.dispatch({
           selection: EditorSelection.create([
-            EditorSelection.range(lastWrapMatch.range.from, lastWrapMatch.range.to)
+            EditorSelection.range(lastWrapMatch.range.from, lastWrapMatch.range.to),
           ]),
           scrollIntoView: true,
         });
@@ -406,7 +420,10 @@ export class Search implements SearchAPI {
 
   // Helper methods
 
-  private findRegex(query: string | RegExp, options: { caseSensitive?: boolean; wholeWord?: boolean }): FindResult[] {
+  private findRegex(
+    query: string | RegExp,
+    options: { caseSensitive?: boolean; wholeWord?: boolean }
+  ): FindResult[] {
     const { caseSensitive = false } = options;
 
     const pattern = query instanceof RegExp ? query.source : query;

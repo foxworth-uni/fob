@@ -213,7 +213,7 @@ impl Plugin for FobSveltePlugin {
 /// ```
 fn combine_scripts(scripts: &[ExtractedScript]) -> (String, ModuleType) {
     use fob::extractors::ScriptContext;
-    
+
     // Single script case
     if scripts.len() == 1 {
         let script = &scripts[0];
@@ -340,8 +340,18 @@ mod tests {
     fn test_combine_multiple_scripts() {
         use fob::extractors::ScriptContext;
         let scripts = vec![
-            ExtractedScript::new("export const shared = 'data'", 50, ScriptContext::SvelteModule, "js"),
-            ExtractedScript::new("let count: number = 0", 150, ScriptContext::SvelteComponent, "ts"),
+            ExtractedScript::new(
+                "export const shared = 'data'",
+                50,
+                ScriptContext::SvelteModule,
+                "js",
+            ),
+            ExtractedScript::new(
+                "let count: number = 0",
+                150,
+                ScriptContext::SvelteComponent,
+                "ts",
+            ),
         ];
         let (code, module_type) = combine_scripts(&scripts);
         // Module context script should come first

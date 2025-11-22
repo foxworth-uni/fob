@@ -126,14 +126,8 @@ mod tests {
             SourceMapMode::from(crate::cli::SourceMapMode::Inline),
             SourceMapMode::Inline
         );
-        assert_eq!(
-            crate::cli::EsTarget::Es2020,
-            EsTarget::Es2020
-        );
-        assert_eq!(
-            crate::cli::EsTarget::Esnext,
-            EsTarget::Esnext
-        );
+        assert_eq!(crate::cli::EsTarget::Es2020, EsTarget::Es2020);
+        assert_eq!(crate::cli::EsTarget::Esnext, EsTarget::Esnext);
     }
 
     #[test]

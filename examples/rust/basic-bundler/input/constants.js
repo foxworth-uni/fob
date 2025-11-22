@@ -11,6 +11,5 @@ export const FEATURES = [
   'Source maps',
   'Minification',
   'Tree shaking',
-  'ESM output'
+  'ESM output',
 ];
-

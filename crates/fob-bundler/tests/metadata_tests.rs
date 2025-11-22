@@ -271,7 +271,9 @@ async fn test_metadata_identifies_type_only_imports() {
 async fn test_metadata_calculates_total_size() {
     let graph = create_test_graph();
     let total_size = 2048;
-    let metadata = BundleMetadata::from_graph(&graph, total_size, 1).await.unwrap();
+    let metadata = BundleMetadata::from_graph(&graph, total_size, 1)
+        .await
+        .unwrap();
 
     assert_eq!(metadata.total_size(), total_size);
 }
@@ -280,7 +282,9 @@ async fn test_metadata_calculates_total_size() {
 async fn test_metadata_counts_assets() {
     let graph = create_test_graph();
     let asset_count = 3;
-    let metadata = BundleMetadata::from_graph(&graph, 1024, asset_count).await.unwrap();
+    let metadata = BundleMetadata::from_graph(&graph, 1024, asset_count)
+        .await
+        .unwrap();
 
     assert_eq!(metadata.asset_count(), asset_count);
 }

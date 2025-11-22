@@ -1,6 +1,6 @@
 /**
  * Example of building with minification
- * 
+ *
  * This demonstrates:
  * - Production build with minification
  * - Using the Fob class for reusable bundler instances
@@ -24,19 +24,19 @@ try {
       outputDir: join(__dirname, 'dist-prod'),
       platform: 'node',
       format: 'esm',
-    }
+    },
   });
 
   // Build without minification
   console.log('📦 Building without minification...');
   const unminified = await bundler.bundle();
-  
+
   const unminifiedSize = unminified.stats.totalSize;
-  console.log(`   Size: ${(unminifiedSize / 1024).toFixed(2)} KB\n`);
+  console.log(`Size: ${(unminifiedSize / 1024).toFixed(2)} KB\n`);
 
   // Build with minification
   console.log('📦 Building with minification...');
-  
+
   // Create new bundler with minification enabled
   const prodBundler = new Fob({
     defaultOptions: {
@@ -46,22 +46,20 @@ try {
       format: 'esm',
       minify: true,
       sourceMaps: 'external',
-    }
+    },
   });
-  
+
   const minified = await prodBundler.bundle();
-  
+
   const minifiedSize = minified.stats.totalSize;
   const savings = ((1 - minifiedSize / unminifiedSize) * 100).toFixed(1);
-  
+
   console.log(`   Size: ${(minifiedSize / 1024).toFixed(2)} KB`);
   console.log(`   Savings: ${savings}%\n`);
-  
+
   console.log('✅ Production build complete!');
   console.log('✨ Output written to dist-prod/');
-  
 } catch (error) {
   console.error('❌ Build failed:', error.message);
   process.exit(1);
 }
-

@@ -253,10 +253,6 @@ wasm-size:
     @echo "Component Model:"
     @ls -lh crates/fob-wasm/pkg/release/fob_bundler.component.wasm 2>/dev/null | awk '{print "  " $$5 "\t" $$9}' || \
         echo "  (Component not built)"
-    @echo ""
-    @echo "Edge Package:"
-    @ls -lh packages/fob-edge/wasm/bundler/*.wasm 2>/dev/null | awk '{print "  " $$5 "\t" $$9}' || \
-        echo "  (Not copied to edge package yet)"
 
 # Check WASM size against edge runtime limits
 wasm-size-check:
@@ -417,7 +413,6 @@ clean:
 clean-wasm:
     @rm -rf crates/fob-wasm/pkg
     @rm -rf target/{{wasm_wasi_target}}
-    @rm -rf packages/fob-edge/wasm/bundler
     @echo "✓ WASM artifacts cleaned"
 
 # =============================================================================

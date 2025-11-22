@@ -111,9 +111,7 @@ impl<'a> JsxBuilder<'a> {
     /// Create a JSX text child
     pub fn text(&self, value: impl Into<Atom<'a>>) -> JSXChild<'a> {
         let value_atom = value.into();
-        let text = self
-            .ast
-            .jsx_text(SPAN, value_atom, Some(value_atom));
+        let text = self.ast.jsx_text(SPAN, value_atom, Some(value_atom));
         JSXChild::Text(self.ast.alloc(text))
     }
 

@@ -47,6 +47,7 @@ pnpm build
 ```
 
 Bundles `src/index.js` and outputs to `dist/` with:
+
 - ESM format
 - External source maps
 - Code splitting enabled
@@ -93,7 +94,7 @@ const bundler = new Fob({
   defaultOptions: {
     entries: ['src/index.js'],
     outputDir: 'dist',
-  }
+  },
 });
 
 // Build with different options
@@ -115,10 +116,10 @@ console.log('Cache hit rate:', result.stats.cacheHitRate);
 
 ```javascript
 for (const chunk of result.chunks) {
-  console.log(chunk.fileName);     // e.g., "index-abc123.js"
-  console.log(chunk.kind);         // "entry" | "async" | "shared"
-  console.log(chunk.size);         // Size in bytes
-  console.log(chunk.modules);      // Modules in this chunk
+  console.log(chunk.fileName); // e.g., "index-abc123.js"
+  console.log(chunk.kind); // "entry" | "async" | "shared"
+  console.log(chunk.size); // Size in bytes
+  console.log(chunk.modules); // Modules in this chunk
 }
 ```
 
@@ -129,7 +130,7 @@ try {
   await bundle(options);
 } catch (error) {
   console.error(error.message);
-  
+
   // Structured error details
   if (error.details) {
     switch (error.details.type) {
@@ -161,5 +162,3 @@ See the examples for common options:
 
 - [Fob Documentation](../../../docs/)
 - [@fob/bundler Package](../../../packages/fob-bundler/)
-- [@fob/edge Package](../../../packages/fob-edge/) - For edge runtime bundling
-

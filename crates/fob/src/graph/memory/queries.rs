@@ -2,9 +2,9 @@
 
 use std::path::Path;
 
-use super::graph::ModuleGraph;
 use super::super::external_dep::ExternalDependency;
 use super::super::{Import, Module, ModuleId};
+use super::graph::ModuleGraph;
 use crate::Result;
 
 impl ModuleGraph {
@@ -132,4 +132,3 @@ impl ModuleGraph {
         Ok(unreachable)
     }
 }
-

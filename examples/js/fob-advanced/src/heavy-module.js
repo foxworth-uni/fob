@@ -5,12 +5,12 @@
 
 export function processData(data) {
   console.log('⚡ Heavy module loaded!');
-  
+
   const sum = data.reduce((acc, val) => acc + val, 0);
   const avg = sum / data.length;
   const max = Math.max(...data);
   const min = Math.min(...data);
-  
+
   return {
     sum,
     average: avg,
@@ -27,4 +27,3 @@ export function complexCalculation(iterations = 1000) {
   }
   return result;
 }
-

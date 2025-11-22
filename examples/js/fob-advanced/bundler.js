@@ -1,6 +1,6 @@
 /**
  * Basic example of using @fob/bundler programmatically
- * 
+ *
  * This demonstrates:
  * - Simple bundling with the bundle() function
  * - Basic configuration options
@@ -23,25 +23,25 @@ try {
   const result = await bundle({
     // Entry points to bundle
     entries: [join(__dirname, 'src/index.js')],
-    
+
     // Output directory
     outputDir: join(__dirname, 'dist'),
-    
+
     // Output format (esm or preserve-modules)
     format: 'esm',
-    
+
     // Target platform
     platform: 'node',
-    
+
     // Generate external source maps
     sourceMaps: 'external',
-    
+
     // Enable code splitting for dynamic imports
     codeSplitting: true,
   });
 
   console.log('✅ Build complete!\n');
-  
+
   // Display build statistics
   console.log('📊 Build Statistics:');
   console.log(`   Modules: ${result.stats.totalModules}`);
@@ -49,7 +49,7 @@ try {
   console.log(`   Total size: ${(result.stats.totalSize / 1024).toFixed(2)} KB`);
   console.log(`   Duration: ${result.stats.durationMs}ms`);
   console.log(`   Cache hit rate: ${(result.stats.cacheHitRate * 100).toFixed(1)}%\n`);
-  
+
   // Display generated chunks
   console.log('📦 Generated Chunks:');
   for (const chunk of result.chunks) {
@@ -57,17 +57,15 @@ try {
     const kindEmoji = chunk.kind === 'entry' ? '🚪' : chunk.kind === 'async' ? '⚡' : '🔗';
     console.log(`   ${kindEmoji} ${chunk.fileName} (${sizeKB} KB) - ${chunk.kind}`);
   }
-  
+
   console.log('\n✨ Output written to dist/');
-  
 } catch (error) {
   console.error('❌ Build failed:', error.message);
-  
+
   // Handle structured errors from Fob
   if (error.details) {
     console.error('\n📋 Error details:', error.details);
   }
-  
+
   process.exit(1);
 }
-

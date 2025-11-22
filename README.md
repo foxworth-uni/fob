@@ -37,12 +37,14 @@ println!("Built {} modules", result.stats().module_count);
 ## Why Use Fob as a Library?
 
 **Traditional bundlers** are CLI tools you invoke:
+
 ```bash
 webpack --config webpack.config.js
 rollup -c
 ```
 
 **Fob is a library** you call from your code:
+
 ```javascript
 const result = await bundle({ entries: ['src/index.js'] });
 // Inspect results, make decisions, bundle again
@@ -123,11 +125,13 @@ BuildOptions::app(routes)
 ## Installation
 
 ### JavaScript/Node.js
+
 ```bash
 npm install @fob/bundler
 ```
 
 ### Rust
+
 ```toml
 [dependencies]
 fob-core = "0.1"
@@ -142,4 +146,3 @@ fob-core = "0.1"
 ## License
 
 MIT
-

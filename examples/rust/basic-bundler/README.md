@@ -35,6 +35,7 @@ cargo run
 ```
 
 This will:
+
 1. Read `input/index.js` and follow all imports
 2. Bundle all modules into a single file
 3. Minify the output
@@ -48,6 +49,7 @@ node output/index.js
 ```
 
 You should see:
+
 ```
 🚀 Basic Bundler Example v1.0.0
 
@@ -64,6 +66,7 @@ Sum of 1, 2, 3, 4, 5 = 15
 ### Entry Point
 
 The **entry point** (`input/index.js`) is where bundling starts. The bundler:
+
 1. Reads the entry file
 2. Finds all `import` statements
 3. Recursively processes imported files
@@ -73,6 +76,7 @@ The **entry point** (`input/index.js`) is where bundling starts. The bundler:
 ### Output Format: ESM
 
 **ESM (ES Modules)** is the standard JavaScript module format:
+
 - Supported natively in modern browsers
 - Supported in Node.js (with `"type": "module"` in package.json)
 - Uses `import` and `export` statements
@@ -81,6 +85,7 @@ The **entry point** (`input/index.js`) is where bundling starts. The bundler:
 ### Source Maps
 
 **Source maps** let you debug bundled code:
+
 - Map minified code back to original source
 - Show original file names and line numbers in browser DevTools
 - Essential for production debugging
@@ -88,6 +93,7 @@ The **entry point** (`input/index.js`) is where bundling starts. The bundler:
 ### Minification
 
 **Minification** reduces file size by:
+
 - Removing whitespace and comments
 - Shortening variable names
 - Optimizing code structure
@@ -154,4 +160,3 @@ Ensure the source map file (`index.js.map`) is in the same directory as the bund
 - [fob-core documentation](../../../crates/fob-core/)
 - [Advanced bundler example](../advanced-bundler/)
 - [Component library example](../component-library/)
-

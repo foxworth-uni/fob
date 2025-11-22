@@ -19,7 +19,7 @@ const routeInfo = {
 // In a real framework, you'd do SSR here, but this example shows the build process
 function htmlTemplate(path) {
   const info = routeInfo[path] || { title: '404', description: 'Page not found' };
-  
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -89,7 +89,9 @@ function htmlTemplate(path) {
     <h1>${info.title}</h1>
     <p>${info.description}</p>
     
-    ${path === '/' ? `
+    ${
+      path === '/'
+        ? `
       <h2>What This Example Shows</h2>
       <ul>
         <li><strong>File-based routing</strong> - Routes discovered from app/routes/</li>
@@ -104,9 +106,13 @@ function htmlTemplate(path) {
         <li><code>about.js</code> - About route</li>
         <li><code>jsx-runtime-*.js</code> - Shared React runtime</li>
       </ul>
-    ` : ''}
+    `
+        : ''
+    }
     
-    ${path === '/about' ? `
+    ${
+      path === '/about'
+        ? `
       <h2>Meta-Framework Concepts</h2>
       <p>This example demonstrates the core bundling pattern used by frameworks like Next.js and Remix:</p>
       <ol>
@@ -117,7 +123,9 @@ function htmlTemplate(path) {
       </ol>
       
       <p>The Rust code in <code>src/main.rs</code> shows how to use fob's API to implement this pattern.</p>
-    ` : ''}
+    `
+        : ''
+    }
   </div>
   
   <div class="footer">
@@ -142,7 +150,7 @@ app.get('*', (c) => {
 const port = 3000;
 console.log(`🚀 Server running at http://localhost:${port}`);
 console.log(`📁 Routes available:`);
-Object.keys(routeInfo).forEach(route => {
+Object.keys(routeInfo).forEach((route) => {
   console.log(`   • http://localhost:${port}${route}`);
 });
 
@@ -150,4 +158,3 @@ serve({
   fetch: app.fetch,
   port,
 });
-

@@ -56,6 +56,7 @@ just copy-native
 ```
 
 This command:
+
 - Detects your platform (macOS/Linux/Windows)
 - Finds the latest build (release or debug)
 - Copies `libfob_native.{dylib,so,dll}` → `packages/fob-bundler/index.node`
@@ -69,6 +70,7 @@ just build-ts-bundler
 ```
 
 This command:
+
 1. Runs `copy-native`
 2. Installs TypeScript dependencies
 3. Compiles TypeScript sources
@@ -76,20 +78,24 @@ This command:
 ### Full Build Workflow
 
 **Development:**
+
 ```bash
 just build-bundler
 ```
 
 This runs:
+
 1. `just build-napi` - Build Rust in debug mode
 2. `just build-ts-bundler` - Copy binary + build TypeScript
 
 **Release:**
+
 ```bash
 just build-bundler-release
 ```
 
 This runs:
+
 1. `just build-napi-release` - Build Rust with optimizations
 2. `just build-ts-bundler` - Copy binary + build TypeScript
 
@@ -146,6 +152,7 @@ just build-napi-platform <target-triple>
 ```
 
 Example:
+
 ```bash
 just build-napi-platform x86_64-unknown-linux-gnu
 ```
