@@ -44,7 +44,7 @@
   "devDependencies": {
     "typescript": "^5.6.3",
     "miniflare": "^4.20251109.1",
-    "vitest": "^4.0.9"
+    "vitest": "^4.0.13"
   },
   "engines": {
     "node": ">=18"
