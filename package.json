@@ -42,7 +42,7 @@
     "node": ">=18.0.0",
     "pnpm": ">=10.0.0"
   },
-  "packageManager": "pnpm@10.0.0",
+  "packageManager": "pnpm@10.23.0",
   "dependencies": {
     "@codemirror/commands": "^6.7.0",
     "@codemirror/lang-javascript": "^6.2.2",
