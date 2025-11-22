@@ -1,5 +1,10 @@
 packages:
-  - 'apps/*'
-  - 'packages/*'
-  - 'examples/*'
-  - 'examples/js/*'
+  - apps/*
+  - packages/*
+  - examples/*
+  - examples/js/*
+
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd
