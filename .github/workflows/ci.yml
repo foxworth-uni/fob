@@ -77,15 +77,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        if: ${{ !matrix.settings.docker }}
+      
       - name: Setup node
         uses: actions/setup-node@v4
         if: ${{ !matrix.settings.docker }}
         with:
           node-version: 20
           cache: pnpm
-      
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
       
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -107,6 +108,7 @@ jobs:
       
       - name: Install dependencies
         run: pnpm install
+        if: ${{ !matrix.settings.docker }}
       
       - name: Build in docker
         uses: addnab/docker-run-action@v3
@@ -147,14 +149,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      
       - name: Setup node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
           cache: pnpm
-      
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
       
       - name: Install dependencies
         run: pnpm install
@@ -165,12 +167,15 @@ jobs:
           name: bindings-${{ matrix.settings.target }}
           path: crates/fob-native
       
+      - name: Sync binary to node_modules
+        run: cd crates/fob-native && node scripts/sync-binary.js
+      
       - name: List packages
         run: ls -R crates/fob-native
         shell: bash
       
       - name: Test bindings
-        run: cd crates/fob-native && pnpm test
+        run: cd fixtures/napi-local-test && pnpm test
 
   test-linux-x64-gnu-binding:
     name: Test bindings on Linux-x64-gnu - node@${{ matrix.node }}
@@ -186,14 +191,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      
       - name: Setup node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
           cache: pnpm
-      
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
       
       - name: Install dependencies
         run: pnpm install
@@ -204,12 +209,15 @@ jobs:
           name: bindings-x86_64-unknown-linux-gnu
           path: crates/fob-native
       
+      - name: Sync binary to node_modules
+        run: cd crates/fob-native && node scripts/sync-binary.js
+      
       - name: List packages
         run: ls -R crates/fob-native
         shell: bash
       
       - name: Test bindings
-        run: cd crates/fob-native && pnpm test
+        run: cd fixtures/napi-local-test && pnpm test
 
   publish:
     name: Publish
@@ -220,14 +228,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      
       - name: Setup node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
-      
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
       
       - name: Install dependencies
         run: pnpm install

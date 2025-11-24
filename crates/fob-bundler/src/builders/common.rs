@@ -210,7 +210,7 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
         .map_err(|e| Error::from_rolldown_batch(&e))?;
 
     let bundle = bundler
-        .write()
+        .generate()
         .await
         .map_err(|e| Error::from_rolldown_batch(&e))?;
 

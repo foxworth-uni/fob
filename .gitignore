@@ -57,6 +57,9 @@ Thumbs.db
 *.dylib
 *.dll
 
+# NAPI compiled binaries
+*.node
+
 # Test outputs
 *.profraw
 *.profdata
@@ -66,8 +69,6 @@ flamegraph.svg
 # Additional build outputs
 **/dist/
 **/pkg/
-packages/fob-bundler/index.node
-packages/*/index.node
 
 # Example build outputs
 examples/**/dist/

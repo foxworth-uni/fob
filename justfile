@@ -91,11 +91,12 @@ lint-wasm:
 # Testing
 # =============================================================================
 
-# Run all tests (Rust + TypeScript/JavaScript)
+# Run all tests (Rust + TypeScript/JavaScript + N-API)
 test:
     @echo "Running tests..."
     @cargo test --workspace
     @pnpm test
+    @just test-napi
 
 # Run tests with verbose output
 test-verbose:
@@ -150,7 +151,7 @@ setup-wasm:
 # Build N-API bindings
 build-napi:
     @echo "Building N-API bindings..."
-    @cd crates/fob-native && cargo build
+    @cd crates/fob-native && pnpm build
 
 # Build N-API bindings (release)
 build-napi-release:
@@ -161,6 +162,44 @@ build-napi-release:
 build-napi-platform platform:
     @echo "Building N-API for {{platform}}..."
     @cd crates/fob-native && cargo build --target {{platform}} --release
+
+# Build N-API bindings (debug) using napi CLI
+build-napi-debug:
+    @echo "Building N-API bindings (debug)..."
+    @cd crates/fob-native && pnpm build:debug
+
+# Build N-API and sync to node_modules (for local development)
+build-napi-sync:
+    @echo "Building N-API and syncing to node_modules..."
+    @cd crates/fob-native && pnpm build:debug
+    @echo "✓ N-API binary built and synced!"
+
+# Run JavaScript integration tests for N-API bindings
+test-napi:
+    @echo "Running N-API JavaScript tests..."
+    @cd fixtures/napi-local-test && pnpm test
+
+# Run simple N-API tests only
+test-napi-simple:
+    @cd fixtures/napi-local-test && pnpm test:simple
+
+# Run advanced N-API tests only
+test-napi-advanced:
+    @cd fixtures/napi-local-test && pnpm test:advanced
+
+# Run error handling N-API tests only
+test-napi-errors:
+    @cd fixtures/napi-local-test && pnpm test:errors
+
+# Full N-API development workflow (build + sync + test)
+dev-napi: build-napi-sync test-napi
+    @echo "✓ N-API development workflow complete!"
+
+# Verify N-API bindings work correctly (build release + test)
+verify-napi: build-napi-release
+    @echo "Verifying N-API bindings..."
+    @cd fixtures/napi-local-test && pnpm test
+    @echo "✓ N-API verification passed!"
 
 # Build TypeScript bundler package
 build-bundler-ts: _copy-native
