@@ -1490,29 +1490,38 @@ checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 name = "fob"
 version = "0.1.1"
 dependencies = [
- "anyhow",
  "async-trait",
  "bunny-mdx",
- "fob-gen",
+ "fob-graph",
  "fob-plugin-mdx",
- "memchr",
  "oxc_allocator 0.98.0",
  "oxc_ast 0.98.0",
  "oxc_ast_visit 0.98.0",
  "oxc_parser 0.98.0",
  "oxc_semantic 0.98.0",
  "oxc_span 0.98.0",
- "parking_lot",
+ "tempfile",
+ "thiserror 2.0.17",
+ "tokio",
+]
+
+[[package]]
+name = "fob-analysis"
+version = "0.1.1"
+dependencies = [
+ "async-trait",
+ "fob",
+ "fob-graph",
+ "memchr",
  "path-clean",
+ "proptest",
  "regex",
  "rustc-hash",
  "serde",
  "serde_json",
- "sha2",
  "tempfile",
  "thiserror 2.0.17",
  "tokio",
- "uuid",
 ]
 
 [[package]]
@@ -1539,7 +1548,9 @@ dependencies = [
  "anyhow",
  "async-trait",
  "fob",
+ "fob-analysis",
  "fob-gen",
+ "fob-graph",
  "miette",
  "oxc_allocator 0.98.0",
  "oxc_ast 0.98.0",
@@ -1641,6 +1652,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "fob-graph"
+version = "0.1.1"
+dependencies = [
+ "async-trait",
+ "fob",
+ "fob-gen",
+ "oxc_allocator 0.98.0",
+ "oxc_ast 0.98.0",
+ "oxc_ast_visit 0.98.0",
+ "oxc_parser 0.98.0",
+ "oxc_semantic 0.98.0",
+ "oxc_span 0.98.0",
+ "parking_lot",
+ "path-clean",
+ "proptest",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.17",
+ "tokio",
+]
+
+[[package]]
 name = "fob-native"
 version = "0.1.1"
 dependencies = [
@@ -1665,6 +1700,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "fob",
+ "fob-analysis",
  "rolldown",
  "rolldown_common",
  "rolldown_plugin",
@@ -1707,6 +1743,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "fob",
+ "fob-analysis",
  "rolldown",
  "rolldown_common",
  "rolldown_plugin",
@@ -1740,6 +1777,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "fob",
+ "fob-analysis",
  "rolldown",
  "rolldown_common",
  "rolldown_plugin",
@@ -2350,9 +2388,9 @@ dependencies = [
 
 [[package]]
 name = "insta"
-version = "1.43.2"
+version = "1.44.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "46fdb647ebde000f43b5b53f773c30cf9b0cb4300453208713fa38b2c70935a0"
+checksum = "e8732d3774162a0851e3f2b150eb98f31a9885dd75985099421d393385a01dfd"
 dependencies = [
  "console 0.15.11",
  "once_cell",

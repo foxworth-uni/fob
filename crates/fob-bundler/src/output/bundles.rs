@@ -1,6 +1,6 @@
 use rustc_hash::FxHashMap;
 
-use fob::graph::ModuleGraph;
+use fob_graph::ModuleGraph;
 
 use super::{bundle::Bundle, import_map::ImportMap};
 

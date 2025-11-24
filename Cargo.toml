@@ -3,6 +3,8 @@ resolver = "2"
 members = [
     "crates/fob-config",
     "crates/fob",
+    "crates/fob-graph",
+    "crates/fob-analysis",
     "crates/fob-bundler",
     "crates/fob-native",
     "crates/fob-cli",
@@ -20,6 +22,8 @@ members = [
 default-members = [
     "crates/fob-config",
     "crates/fob",
+    "crates/fob-graph",
+    "crates/fob-analysis",
     "crates/fob-bundler",
     "crates/fob-native",
     "crates/fob-cli",
@@ -90,7 +94,7 @@ phf = "0.11"  # Perfect hash function for embedded data
 
 # Path and file handling
 path-clean = "1.0.1"
-ignore = "0.4.23"
+ignore = "0.4.25"
 walkdir = "2.5"
 memchr = "2.7"  # Efficient byte searching for parsing
 
@@ -144,7 +148,7 @@ tracing-subscriber = { version = "0.3.20", default-features = false, features = 
 matchit = "0.9.0"
 
 # Templating
-minijinja = { version = "2.6.0", features = ["loader"] }
+minijinja = { version = "2.12.0", features = ["loader"] }
 
 # Markdown and MDX parsing
 markdown = "1.0.0-alpha.21"
@@ -155,7 +159,7 @@ lightningcss = "1.0.0-alpha.68"
 # WASM support - getrandom 0.3 provides random number generation for WASM targets
 # Note: For wasm32-unknown-unknown (browser), use "wasm_js" feature to enable browser's Crypto.getRandomValues()
 # Note: For wasm32-wasip1-threads (WASI), built-in randomness via WASI is available (no special features needed)
-getrandom = { version = "0.3", features = ["wasm_js"] }
+getrandom = { version = "0.3.4", features = ["wasm_js"] }
 
 # Note: uuid with js feature is handled via workspace.dependencies
 # fob crates declare uuid as a direct dependency (inheriting workspace features)
@@ -171,17 +175,17 @@ napi-derive = "3"
 napi-build = "2.3"
 
 # WASM Bindings
-wit-bindgen = "0.48.0"
+wit-bindgen = "0.48.1"
 
 # Schema & Validation
 jsonschema = "0.37.1"
 schemars = "1.1"
 
 # Testing
-assert_cmd = "2.0"
+assert_cmd = "2.1.1"
 predicates = "3.1"
-insta = "1.40"
-serial_test = "3"
+insta = "1.44.1"
+serial_test = "3.2.0"
 
 
 [profile.release]

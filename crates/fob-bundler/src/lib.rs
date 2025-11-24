@@ -36,7 +36,7 @@
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let analysis = fob::analyze(["./src/index.js"]).await?;
+//! let analysis = fob_analysis::analyze(["./src/index.js"]).await?;
 //! for unused in analysis.graph.unused_exports()? {
 //!     println!("unused: {} from {}", unused.export.name, unused.module_id);
 //! }

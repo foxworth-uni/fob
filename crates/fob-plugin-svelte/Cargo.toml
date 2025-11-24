@@ -10,6 +10,7 @@ description = "Rolldown bundler plugin for Svelte - extract and process script b
 [dependencies]
 # Fob core extractors
 fob = { path = "../fob" }
+fob-analysis = { path = "../fob-analysis" }
 
 # Rolldown bundler integration
 rolldown = { workspace = true }

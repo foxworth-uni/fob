@@ -10,6 +10,7 @@ description = "Rolldown bundler plugin for Vue - extract and process script bloc
 [dependencies]
 # Fob core extractors
 fob = { path = "../fob" }
+fob-analysis = { path = "../fob-analysis" }
 
 # Rolldown bundler integration
 rolldown = { workspace = true }

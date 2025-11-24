@@ -24,7 +24,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::Result;
-use fob::graph::{ExportKind, ModuleGraph};
+use fob_graph::{ExportKind, ModuleGraph};
 
 /// Comprehensive metadata about a bundle's contents.
 ///
@@ -289,7 +289,7 @@ async fn extract_imports(graph: &ModuleGraph) -> Result<Vec<ImportInfo>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fob::graph::{
+    use fob_graph::{
         Export, ExportKind, Import, ImportKind, ImportSpecifier, Module, ModuleGraph, ModuleId,
         SourceSpan, SourceType,
     };

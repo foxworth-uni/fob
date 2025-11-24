@@ -1,6 +1,5 @@
-#![cfg(feature = "bundler")]
-
-use fob_bundler::BuildOptions;
+use fob_bundler::{BuildOptions, NativeRuntime};
+use std::sync::Arc;
 use tempfile::TempDir;
 
 use std::fs;
@@ -58,6 +57,7 @@ async fn components_builder_creates_multiple_bundles() {
     .bundle(true)
     .splitting(false)
     .cwd(project.path())
+    .runtime(Arc::new(NativeRuntime::new()))
     .build()
     .await
     .expect("components bundle");
@@ -81,6 +81,7 @@ async fn components_builder_accumulates_shared_graph() {
     .bundle(true)
     .splitting(false)
     .cwd(project.path())
+    .runtime(Arc::new(NativeRuntime::new()))
     .build()
     .await
     .expect("components bundle");

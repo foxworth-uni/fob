@@ -10,6 +10,7 @@ description = "Rolldown bundler plugin for Astro - extract and process frontmatt
 [dependencies]
 # Fob core extractors
 fob = { path = "../fob" }
+fob-analysis = { path = "../fob-analysis" }
 
 # Rolldown bundler integration
 rolldown = { workspace = true }

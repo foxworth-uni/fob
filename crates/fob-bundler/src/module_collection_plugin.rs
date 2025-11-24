@@ -1,10 +1,10 @@
 use rolldown_plugin::{
-    HookResolveIdArgs, HookResolveIdReturn, HookTransformArgs, HookTransformReturn, HookUsage,
-    Plugin, PluginContext, TransformPluginContext,
+    HookLoadArgs, HookLoadReturn, HookResolveIdArgs, HookResolveIdReturn, HookTransformArgs,
+    HookTransformReturn, HookUsage, Plugin, PluginContext, TransformPluginContext,
 };
 use std::sync::{Arc, Mutex};
 
-use fob::graph::collection::{parse_module_structure, CollectedModule, CollectionState};
+use fob_graph::collection::{parse_module_structure, CollectedModule, CollectionState};
 
 /// Plugin that collects module information during the bundling process
 #[derive(Debug)]
@@ -35,7 +35,7 @@ impl Plugin for ModuleCollectionPlugin {
     }
 
     fn register_hook_usage(&self) -> HookUsage {
-        HookUsage::ResolveId | HookUsage::Transform
+        HookUsage::ResolveId | HookUsage::Load | HookUsage::Transform
     }
 
     fn resolve_id(
@@ -48,13 +48,41 @@ impl Plugin for ModuleCollectionPlugin {
         let is_entry = args.importer.is_none();
 
         async move {
-            // Track module resolution - we'll collect full info in load/transform
+            // Track entry specifiers - we'll match resolved IDs in load hook
             if is_entry {
                 let mut state = state.lock().unwrap();
                 state.mark_entry(specifier);
             }
 
             // Let Rolldown handle the actual resolution
+            Ok(None)
+        }
+    }
+
+    fn load(
+        &self,
+        _ctx: &PluginContext,
+        args: &HookLoadArgs<'_>,
+    ) -> impl std::future::Future<Output = HookLoadReturn> + Send {
+        let state = Arc::clone(&self.state);
+        let id = args.id.to_string();
+
+        async move {
+            // Check if this resolved ID corresponds to an entry point
+            let is_entry = {
+                let state = state.lock().unwrap();
+                // Match against stored entry specifiers
+                state.entry_points.iter().any(|spec| {
+                    id.ends_with(spec) || id.contains(spec) || spec == &id
+                })
+            };
+
+            if is_entry {
+                let mut state = state.lock().unwrap();
+                state.resolved_entry_ids.insert(id);
+            }
+
+            // Don't modify load behavior
             Ok(None)
         }
     }
@@ -76,7 +104,7 @@ impl Plugin for ModuleCollectionPlugin {
 
             let is_entry = {
                 let state = state.lock().unwrap();
-                state.entry_points.contains(&id)
+                state.resolved_entry_ids.contains(&id)
             };
 
             let module = CollectedModule {

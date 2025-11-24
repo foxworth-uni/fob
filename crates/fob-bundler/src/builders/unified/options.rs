@@ -374,7 +374,8 @@ impl BuildOptions {
     /// Set the runtime for filesystem operations.
     ///
     /// This is required for WASM builds to bridge to JavaScript filesystem APIs.
-    /// On native platforms, NativeRuntime is used by default if not specified.
+    /// On native platforms, NativeRuntime is automatically created if not specified.
+    /// You can provide a custom runtime for advanced use cases or testing.
     pub fn runtime(mut self, runtime: Arc<dyn Runtime>) -> Self {
         self.runtime = Some(runtime);
         self

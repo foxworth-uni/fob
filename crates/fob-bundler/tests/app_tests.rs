@@ -1,6 +1,5 @@
-#![cfg(feature = "bundler")]
-
-use fob_bundler::BuildOptions;
+use fob_bundler::{BuildOptions, NativeRuntime};
+use std::sync::Arc;
 use tempfile::TempDir;
 
 use std::fs;
@@ -58,6 +57,7 @@ async fn app_builder_produces_analysis_bundle() {
     .bundle(true)
     .splitting(true)
     .cwd(project.path())
+    .runtime(Arc::new(NativeRuntime::new()))
     .build()
     .await
     .expect("app bundle");

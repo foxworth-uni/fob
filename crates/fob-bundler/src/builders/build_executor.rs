@@ -100,7 +100,7 @@ async fn execute_components_build(options: BuildOptions) -> Result<BuildResult> 
     };
 
     let mut bundles = FxHashMap::default();
-    let merged_graph = fob::graph::ModuleGraph::new()?;
+    let merged_graph = fob_graph::ModuleGraph::new()?;
     let mut all_entry_points = Vec::new();
     let mut all_warnings = Vec::new();
     let mut all_errors = Vec::new();
@@ -152,9 +152,9 @@ async fn execute_components_build(options: BuildOptions) -> Result<BuildResult> 
         bundles.insert(name, analyzed.bundle);
     }
 
-    let stats = fob::analysis::stats::compute_stats(&merged_graph)?;
+    let stats = fob_analysis::stats::compute_stats(&merged_graph)?;
     let symbol_stats = merged_graph.symbol_statistics()?;
-    let analysis = fob::analysis::AnalysisResult {
+    let analysis = fob_analysis::AnalysisResult {
         graph: merged_graph,
         entry_points: all_entry_points,
         warnings: all_warnings,

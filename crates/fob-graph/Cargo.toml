@@ -1,0 +1,51 @@
+[package]
+name = "fob-graph"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Fob graph - Pure graph data structures for module dependency graphs"
+
+[dependencies]
+# Runtime abstraction (for Runtime trait usage in graph)
+fob = { path = "../fob" }
+
+# Code generation and AST utilities
+fob-gen = { path = "../fob-gen", features = ["parser", "query-api", "fob_internal"] }
+
+# Core dependencies (all WASM-compatible)
+thiserror.workspace = true
+serde = { workspace = true, features = ["derive"] }
+async-trait.workspace = true
+path-clean.workspace = true
+rustc-hash.workspace = true
+serde_json.workspace = true
+
+# Asset handling dependencies
+oxc_parser.workspace = true
+oxc_ast.workspace = true
+oxc_ast_visit.workspace = true
+oxc_allocator.workspace = true
+oxc_span.workspace = true
+oxc_semantic.workspace = true
+parking_lot.workspace = true
+
+# Platform-specific dependencies for native runtime
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+tokio = { workspace = true, features = ["rt"] }
+
+[features]
+default = []
+proptest = []
+bundler = []
+
+[dev-dependencies]
+tempfile.workspace = true
+proptest = "1.5"
+
+# Lints - inherit workspace configuration
+[lints]
+workspace = true
+

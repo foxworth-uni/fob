@@ -2,62 +2,12 @@
 
 //! # fob
 //!
-//! Fob foundation crate - Graph analysis and runtime abstraction.
+//! Fob foundation crate - Runtime abstraction and core types.
 //!
-//! This crate provides the core graph analysis capabilities, runtime abstraction,
-//! and module graph primitives. It's designed to be lightweight and WASM-compatible,
-//! making it suitable for IDE integrations, analysis tools, and other applications
-//! that don't need full bundling capabilities.
-//!
-//! ## Features
-//!
-//! - **Graph Analysis**: Module dependency graph with import/export tracking
-//! - **Standalone Analyzer**: Fast analysis without bundling overhead
-//! - **Runtime Abstraction**: Platform-agnostic filesystem operations
-//! - **WASM Compatible**: Works in browser and WASI environments
-//!
-//! ## Quick Start
-//!
-//! ### Analyze without bundling
-//!
-//! ```no_run
-//! use fob::analyze;
-//!
-//! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let analysis = analyze(["./src/index.js"]).await?;
-//! for unused in analysis.graph.unused_exports()? {
-//!     println!("unused: {} from {}", unused.export.name, unused.module_id);
-//! }
-//! # Ok(()) }
-//! ```
-//!
-//! ### Use the Analyzer API
-//!
-//! ```no_run
-//! use fob::Analyzer;
-//!
-//! # #[tokio::main]
-//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let analysis = Analyzer::new()
-//!     .entry("./src/index.ts")
-//!     .external(vec!["react", "lodash"])
-//!     .path_alias("@", "./src")
-//!     .analyze()
-//!     .await?;
-//!
-//! println!("Unused exports: {}", analysis.unused_exports()?.len());
-//! # Ok(()) }
-//! ```
+//! This crate provides the runtime abstraction layer. For graph and analysis
+//! functionality, use the `fob-graph` and `fob-analysis` crates respectively.
 
-pub mod analysis;
-pub mod extractors;
-pub mod graph;
 pub mod runtime;
-
-// Re-export primary APIs
-pub use analysis::analyzer::Analyzer;
-pub use analysis::{analyze, analyze_with_options};
 
 // Test utilities (available in test builds and when test-utils feature is enabled)
 // Note: test_utils requires tokio, so it's only available on native platforms
@@ -80,18 +30,6 @@ pub use wasm_runtime::WasmRuntime;
 
 // Re-export runtime types
 pub use runtime::{FileMetadata, Runtime, RuntimeError, RuntimeResult};
-
-// Re-export graph types
-pub use graph::{
-    Export, ExportKind, Import, ImportKind, ImportSpecifier, Module, ModuleGraph, ModuleId,
-    ModuleIdError, SourceSpan, SourceType,
-};
-
-// Re-export analysis types
-pub use analysis::{
-    AnalysisResult, AnalyzeError, CacheAnalysis, CacheEffectiveness, ImportOutcome,
-    ImportResolution, RenameEvent, RenamePhase, TransformationTrace,
-};
 
 // Re-export MDX plugin (WASM-compatible)
 pub use fob_plugin_mdx::BunnyMdxPlugin;
@@ -125,6 +63,8 @@ pub mod oxc {
 }
 
 // Note: AnalyzedBundle is available in fob-bundler, not here
+// Note: Graph types are available in fob-graph
+// Note: Analysis types (Analyzer, AnalysisResult, etc.) are available in fob-analysis
 
 /// Error types for fob operations.
 #[derive(Debug, thiserror::Error)]

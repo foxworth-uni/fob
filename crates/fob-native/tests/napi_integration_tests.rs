@@ -60,8 +60,10 @@ async fn test_fob_constructor_rejects_empty_entries() {
     // Verify error is JSON serializable
     let error_str = result.err().unwrap().to_string();
     assert!(
-        error_str.contains("\"type\"") || error_str.contains("NoEntries"),
-        "Error should be JSON or contain 'NoEntries': {}",
+        error_str.contains("\"kind\":\"NoEntries\"") || 
+        error_str.contains("\"type\":\"NoEntries\"") ||
+        error_str.contains("NoEntries"),
+        "Error should be JSON with NoEntries kind: {}",
         error_str
     );
 }
@@ -242,15 +244,20 @@ async fn test_fob_bundle_error_serialization() {
     // Should be valid JSON or at least contain error structure
     // Try to parse as JSON
     if let Ok(json) = serde_json::from_str::<serde_json::Value>(&error_str) {
-        // If it's JSON, verify it has a type field
-        assert!(json.get("type").is_some(), "Error JSON should have 'type' field");
+        // If it's JSON, verify it has a kind or type field
+        assert!(
+            json.get("kind").is_some() || json.get("type").is_some(), 
+            "Error JSON should have 'kind' or 'type' field"
+        );
     } else {
         // If not JSON, should at least contain error indicators
         assert!(
+            error_str.contains("\"kind\"") ||  // JSON format has "kind" field
             error_str.contains("error") || 
             error_str.contains("Error") ||
             error_str.contains("failed") ||
-            error_str.contains("Failed"),
+            error_str.contains("Failed") ||
+            error_str.contains("InvalidEntry"),  // Specific error type
             "Error message should indicate failure: {}",
             error_str
         );

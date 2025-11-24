@@ -32,7 +32,6 @@ impl NativeRuntime {
     }
 
     /// Get the current working directory for this runtime.
-    #[cfg_attr(not(test), allow(dead_code))]
     pub fn cwd(&self) -> &Path {
         &self.cwd
     }
@@ -161,6 +160,6 @@ impl Runtime for NativeRuntime {
     }
 
     fn get_cwd(&self) -> RuntimeResult<PathBuf> {
-        Ok(self.cwd.clone())
+        Ok(self.cwd().to_path_buf())
     }
 }

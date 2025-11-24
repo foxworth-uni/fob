@@ -8,9 +8,9 @@ use rolldown_common::{
 use rustc_hash::FxHashMap;
 use thiserror::Error;
 
-use fob::graph::module::{ExportsKind as FobExportsKind, ModuleFormat as FobModuleFormat};
-use fob::graph::semantic::analyze_symbols;
-use fob::graph::{
+use fob_graph::module::{ExportsKind as FobExportsKind, ModuleFormat as FobModuleFormat};
+use fob_graph::semantic::analyze_symbols;
+use fob_graph::{
     Export, ExportKind, ExternalDependency, Import, ImportKind, ImportSpecifier, Module,
     ModuleGraph, ModuleId, ModuleIdError, SourceSpan, SourceType,
 };

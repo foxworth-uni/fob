@@ -1,0 +1,45 @@
+[package]
+name = "fob-analysis"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Graph analysis with I/O and traversal capabilities for JavaScript/TypeScript module graphs"
+keywords = ["analysis", "graph", "dependencies", "modules", "javascript", "typescript", "bundler"]
+categories = ["development-tools", "parser-implementations"]
+
+[dependencies]
+# Runtime abstraction
+fob = { path = "../fob", features = ["test-utils"] }
+
+# Graph data structures
+fob-graph = { path = "../fob-graph" }
+
+# Core dependencies (all WASM-compatible)
+thiserror.workspace = true
+serde = { workspace = true, features = ["derive"] }
+path-clean.workspace = true
+rustc-hash.workspace = true
+serde_json.workspace = true
+async-trait.workspace = true
+regex.workspace = true
+memchr.workspace = true
+
+[features]
+default = []
+proptest = []
+
+[dev-dependencies]
+tempfile.workspace = true
+proptest = "1.5"
+
+# Platform-specific dev dependencies for native tests
+[target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+
+# Lints - inherit workspace configuration
+[lints]
+workspace = true
+

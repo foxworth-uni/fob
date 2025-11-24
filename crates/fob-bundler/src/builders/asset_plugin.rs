@@ -229,9 +229,9 @@ impl<F: std::future::Future> std::future::Future for SendWrapper<F> {
 unsafe impl<F> Send for SendWrapper<F> {}
 
 // On native, no wrapper needed - futures are already Send
+// This type alias exists for API consistency but is never used in native builds
 #[cfg(not(target_family = "wasm"))]
-#[allow(dead_code)] // Used conditionally based on target
-type SendWrapper<F> = F;
+type _SendWrapper<F> = F;
 use rolldown_common::{EmittedAsset, ModuleType};
 use rolldown_plugin::{
     HookTransformArgs, HookTransformOutput, HookTransformReturn, HookUsage, Plugin,

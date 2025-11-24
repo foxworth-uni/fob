@@ -41,7 +41,7 @@
 //! ```
 
 use anyhow::Context;
-use fob::extractors::{AstroExtractor, ExtractedScript, Extractor};
+use fob_analysis::extractors::{AstroExtractor, ExtractedScript, Extractor};
 use rolldown_common::ModuleType;
 use rolldown_plugin::{HookLoadArgs, HookLoadOutput, HookLoadReturn, Plugin, PluginContext};
 use std::borrow::Cow;
@@ -295,7 +295,7 @@ mod tests {
 
     #[test]
     fn test_combine_single_script() {
-        use fob::extractors::ScriptContext;
+        use fob_analysis::extractors::ScriptContext;
         let scripts = vec![ExtractedScript::new(
             "const x = 1;",
             4,
@@ -309,7 +309,7 @@ mod tests {
 
     #[test]
     fn test_combine_multiple_scripts() {
-        use fob::extractors::ScriptContext;
+        use fob_analysis::extractors::ScriptContext;
         let scripts = vec![
             ExtractedScript::new(
                 "const title = 'Page'",
@@ -331,7 +331,7 @@ mod tests {
 
     #[test]
     fn test_combine_only_scripts() {
-        use fob::extractors::ScriptContext;
+        use fob_analysis::extractors::ScriptContext;
         let scripts = vec![
             ExtractedScript::new("console.log('a')", 50, ScriptContext::AstroScript, "js"),
             ExtractedScript::new("console.log('b')", 100, ScriptContext::AstroScript, "js"),

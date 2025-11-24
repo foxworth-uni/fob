@@ -2,7 +2,7 @@
 //!
 //! Tests the compute_export_usage_counts() functionality across various scenarios.
 
-use fob_bundler::graph::{
+use fob_graph::{
     Export, ExportKind, Import, ImportKind, ImportSpecifier, Module, ModuleGraph, ModuleId,
     SourceSpan, SourceType,
 };

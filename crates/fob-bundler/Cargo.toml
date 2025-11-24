@@ -9,8 +9,10 @@ repository.workspace = true
 description = "Fob bundler - Rolldown-based bundling on top of fob foundation"
 
 [dependencies]
-    # Foundation crate
+    # Foundation crates
     fob = { path = "../fob", features = ["test-utils"] }
+    fob-graph = { path = "../fob-graph" }
+    fob-analysis = { path = "../fob-analysis" }
 
 # Code generation and AST utilities
 fob-gen = { path = "../fob-gen", features = ["parser", "query-api", "fob_internal"] }

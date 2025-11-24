@@ -41,7 +41,7 @@
 //! ```
 
 use anyhow::Context;
-use fob::extractors::{ExtractedScript, Extractor, SvelteExtractor};
+use fob_analysis::extractors::{ExtractedScript, Extractor, SvelteExtractor};
 use rolldown_common::ModuleType;
 use rolldown_plugin::{HookLoadArgs, HookLoadOutput, HookLoadReturn, Plugin, PluginContext};
 use std::borrow::Cow;
@@ -212,7 +212,7 @@ impl Plugin for FobSveltePlugin {
 /// → ("export const x = 1\n\nlet count = 0", ModuleType::Js)
 /// ```
 fn combine_scripts(scripts: &[ExtractedScript]) -> (String, ModuleType) {
-    use fob::extractors::ScriptContext;
+    use fob_analysis::extractors::ScriptContext;
 
     // Single script case
     if scripts.len() == 1 {
@@ -324,7 +324,7 @@ mod tests {
 
     #[test]
     fn test_combine_single_script() {
-        use fob::extractors::ScriptContext;
+        use fob_analysis::extractors::ScriptContext;
         let scripts = vec![ExtractedScript::new(
             "const x = 1;",
             100,
@@ -338,7 +338,7 @@ mod tests {
 
     #[test]
     fn test_combine_multiple_scripts() {
-        use fob::extractors::ScriptContext;
+        use fob_analysis::extractors::ScriptContext;
         let scripts = vec![
             ExtractedScript::new(
                 "export const shared = 'data'",

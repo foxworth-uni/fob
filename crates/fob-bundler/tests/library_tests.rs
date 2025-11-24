@@ -1,5 +1,3 @@
-#![cfg(feature = "bundler")]
-
 use fob_bundler::{BuildOptions, Platform};
 use tempfile::TempDir;
 
@@ -55,7 +53,9 @@ async fn library_builder_produces_assets() {
     );
     assert!(
         !result.entry_points().is_empty(),
-        "analysis should record entry points"
+        "Expected entry points to be recorded. Entry points: {:?}, Module count: {}",
+        result.entry_points(),
+        result.stats().module_count
     );
 }
 

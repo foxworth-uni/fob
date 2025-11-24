@@ -3,7 +3,7 @@
 //! These tests verify that metadata is correctly extracted from module graphs,
 //! including exports, imports, and aggregate statistics.
 
-use fob_bundler::graph::{
+use fob_graph::{
     Export, ExportKind, Import, ImportKind, ImportSpecifier, Module, ModuleGraph, ModuleId,
     SourceSpan, SourceType,
 };

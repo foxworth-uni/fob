@@ -39,7 +39,6 @@ pub struct FileWatcher {
     /// Root directory being watched
     root: PathBuf,
     /// Patterns to ignore (e.g., "node_modules", "*.log")
-    #[cfg_attr(not(test), allow(dead_code))]
     ignore_patterns: Vec<String>,
 }
 
@@ -177,6 +176,11 @@ impl FileWatcher {
     /// Get the root directory being watched.
     pub fn root(&self) -> &Path {
         &self.root
+    }
+
+    /// Get the ignore patterns configured for this watcher.
+    pub fn ignore_patterns(&self) -> &[String] {
+        &self.ignore_patterns
     }
 }
 

@@ -13,7 +13,7 @@ use crate::builders::{asset_plugin::AssetDetectionPlugin, asset_registry::AssetR
 use crate::diagnostics;
 use crate::module_collection_plugin::ModuleCollectionPlugin;
 use crate::{Error, Result};
-use fob::analysis::{stats::compute_stats, AnalysisResult, CacheAnalysis, TransformationTrace};
+use fob_analysis::{stats::compute_stats, AnalysisResult, CacheAnalysis, TransformationTrace};
 
 /// Normalize an entry path by cleaning redundant `.` / `..` segments.
 pub(crate) fn normalize_entry_path(entry: impl AsRef<Path>) -> String {
@@ -185,10 +185,27 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
         ".woff".to_string(),
         ".woff2".to_string(),
     ];
-    // Runtime is required for asset detection (WASM compatibility)
-    let runtime = runtime.ok_or_else(|| {
-        Error::InvalidConfig("Runtime is required for asset detection plugin".to_string())
-    })?;
+    // Auto-inject NativeRuntime on native platforms for convenience.
+    // This allows tests and simple use cases to work without explicit runtime setup.
+    // WASM platforms still require explicit runtime since there's no standard filesystem.
+    let runtime = match runtime {
+        Some(rt) => rt,
+        None => {
+            #[cfg(not(target_family = "wasm"))]
+            {
+                eprintln!("[FOB_BUILD] No runtime provided, using NativeRuntime");
+                Arc::new(crate::NativeRuntime::new())
+            }
+            #[cfg(target_family = "wasm")]
+            {
+                return Err(Error::InvalidConfig(
+                    "Runtime is required for asset detection plugin. \
+                    On WASM, you must provide a Runtime implementation via BuildOptions::runtime()."
+                        .to_string(),
+                ));
+            }
+        }
+    };
 
     let asset_plugin = AssetDetectionPlugin::new(
         Arc::clone(&asset_registry),
@@ -234,7 +251,7 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
         collection_data.modules.len()
     );
 
-    let graph = fob::graph::ModuleGraph::from_collected_data(collection_data).map_err(|e| {
+    let graph = fob_graph::ModuleGraph::from_collected_data(collection_data).map_err(|e| {
         Error::Bundler(vec![diagnostics::ExtractedDiagnostic {
             kind: diagnostics::DiagnosticKind::Other("GraphBuildError".to_string()),
             severity: diagnostics::DiagnosticSeverity::Error,

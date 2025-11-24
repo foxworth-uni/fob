@@ -6,9 +6,16 @@ use fob_bundler::Error as BundlerError;
 pub fn map_bundler_error(error: &BundlerError) -> FobErrorDetails {
     match error {
         // Direct mappings for fob-bundler error variants
-        BundlerError::InvalidConfig(msg) => FobErrorDetails::Validation(ValidationError {
-            message: msg.clone(),
-        }),
+        BundlerError::InvalidConfig(msg) => {
+            // Special case: empty entries should map to NoEntries
+            if msg.contains("No entries provided") || msg.contains("No entry") {
+                FobErrorDetails::NoEntries(NoEntriesError {})
+            } else {
+                FobErrorDetails::Validation(ValidationError {
+                    message: msg.clone(),
+                })
+            }
+        },
 
         BundlerError::InvalidOutputPath(path) => FobErrorDetails::InvalidEntry(InvalidEntryError {
             path: path.clone(),
