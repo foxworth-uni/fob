@@ -118,11 +118,11 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
       vite:
-        specifier: ^6.0.5
-        version: 6.4.1(@types/node@20.19.25)
+        specifier: ^7.2.4
+        version: 7.2.4(@types/node@20.19.25)
       vite-plugin-dts:
         specifier: ^4.3.0
-        version: 4.5.4(@types/node@20.19.25)(rollup@4.53.3)(typescript@5.9.3)(vite@6.4.1(@types/node@20.19.25))
+        version: 4.5.4(@types/node@20.19.25)(rollup@4.53.3)(typescript@5.9.3)(vite@7.2.4(@types/node@20.19.25))
 
   packages/fob-plot:
     dependencies:
@@ -1994,19 +1994,19 @@ packages:
       vite:
         optional: true
 
-  vite@6.4.1:
-    resolution: {integrity: sha512-+Oxm7q9hDoLMyJOYfUYBuHQo+dkAloi33apOPP56pzj+vsdJDzr+j1NISE5pyaAuKL4A3UD34qd0lx5+kfKp2g==}
-    engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
+  vite@7.2.4:
+    resolution: {integrity: sha512-NL8jTlbo0Tn4dUEXEsUg8KeyG/Lkmc4Fnzb8JXN/Ykm9G4HNImjtABMJgkQoVjOBN/j2WAwDTRytdqJbZsah7w==}
+    engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
-      '@types/node': ^18.0.0 || ^20.0.0 || >=22.0.0
+      '@types/node': ^20.19.0 || >=22.12.0
       jiti: '>=1.21.0'
-      less: '*'
+      less: ^4.0.0
       lightningcss: ^1.21.0
-      sass: '*'
-      sass-embedded: '*'
-      stylus: '*'
-      sugarss: '*'
+      sass: ^1.70.0
+      sass-embedded: ^1.70.0
+      stylus: '>=0.54.8'
+      sugarss: ^5.0.0
       terser: ^5.16.0
       tsx: ^4.8.1
       yaml: ^2.4.2
@@ -3726,7 +3726,7 @@ snapshots:
     dependencies:
       react: 19.2.0
 
-  vite-plugin-dts@4.5.4(@types/node@20.19.25)(rollup@4.53.3)(typescript@5.9.3)(vite@6.4.1(@types/node@20.19.25)):
+  vite-plugin-dts@4.5.4(@types/node@20.19.25)(rollup@4.53.3)(typescript@5.9.3)(vite@7.2.4(@types/node@20.19.25)):
     dependencies:
       '@microsoft/api-extractor': 7.55.1(@types/node@20.19.25)
       '@rollup/pluginutils': 5.3.0(rollup@4.53.3)
@@ -3739,13 +3739,13 @@ snapshots:
       magic-string: 0.30.21
       typescript: 5.9.3
     optionalDependencies:
-      vite: 6.4.1(@types/node@20.19.25)
+      vite: 7.2.4(@types/node@20.19.25)
     transitivePeerDependencies:
       - '@types/node'
       - rollup
       - supports-color
 
-  vite@6.4.1(@types/node@20.19.25):
+  vite@7.2.4(@types/node@20.19.25):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.3)
