@@ -46,32 +46,28 @@ jobs:
             target: x86_64-pc-windows-msvc
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
             build: |-
-              set -e &&
               cd crates/fob-native &&
-              npx --yes @napi-rs/cli build --platform --release --target x86_64-unknown-linux-gnu &&
+              pnpm exec napi build --platform --release --target x86_64-unknown-linux-gnu --use-napi-cross &&
               strip *.node
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
-            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
-            build: set -e && cd crates/fob-native && npx --yes @napi-rs/cli build --platform --release --target x86_64-unknown-linux-musl && strip *.node
+            build: |-
+              cd crates/fob-native &&
+              pnpm exec napi build --platform --release --target x86_64-unknown-linux-musl -x &&
+              strip *.node
           - host: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
             build: |-
-              set -e &&
               cd crates/fob-native &&
-              npx --yes @napi-rs/cli build --platform --release --target aarch64-unknown-linux-gnu &&
-              aarch64-unknown-linux-gnu-strip *.node
+              pnpm exec napi build --platform --release --target aarch64-unknown-linux-gnu --use-napi-cross &&
+              aarch64-linux-gnu-strip *.node
           - host: ubuntu-latest
             target: aarch64-unknown-linux-musl
-            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine-aarch64
             build: |-
-              set -e &&
               cd crates/fob-native &&
-              npx --yes @napi-rs/cli build --platform --release --target aarch64-unknown-linux-musl &&
-              /aarch64-linux-musl-cross/bin/aarch64-linux-musl-strip *.node
+              pnpm exec napi build --platform --release --target aarch64-unknown-linux-musl -x &&
+              aarch64-linux-musl-strip *.node
     name: stable - ${{ matrix.settings.target }} - node@20
     runs-on: ${{ matrix.settings.host }}
     steps:
@@ -79,18 +75,15 @@ jobs:
       
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        if: ${{ !matrix.settings.docker }}
       
       - name: Setup node
         uses: actions/setup-node@v4
-        if: ${{ !matrix.settings.docker }}
         with:
           node-version: 20
           cache: pnpm
-      
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-        if: ${{ !matrix.settings.docker }}
         with:
           toolchain: stable
           targets: ${{ matrix.settings.target }}
@@ -108,19 +101,13 @@ jobs:
       
       - name: Install dependencies
         run: pnpm install
-        if: ${{ !matrix.settings.docker }}
-      
-      - name: Build in docker
-        uses: addnab/docker-run-action@v3
-        if: ${{ matrix.settings.docker }}
-        with:
-          image: ${{ matrix.settings.docker }}
-          options: '--user 0:0 -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index -v ${{ github.workspace }}:/build -w /build'
-          run: ${{ matrix.settings.build }}
-      
+
+      - name: Install cargo-zigbuild
+        run: cargo install cargo-zigbuild
+        if: ${{ contains(matrix.settings.target, 'musl') }}
+
       - name: Build
         run: ${{ matrix.settings.build }}
-        if: ${{ !matrix.settings.docker }}
         shell: bash
       
       - name: Upload artifact
