@@ -121,8 +121,8 @@ jobs:
           name: bindings-${{ matrix.settings.target }}
           path: crates/fob-native
       
-      - name: Sync binary to node_modules
-        run: cd crates/fob-native && node scripts/sync-binary.js
+      - name: Sync binary to node_modules (CI)
+        run: cd crates/fob-native && node scripts/sync-binary-ci.js
       
       - name: List packages
         run: ls -R crates/fob-native
