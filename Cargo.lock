@@ -1488,7 +1488,7 @@ checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
 name = "fob"
-version = "0.1.3"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "bunny-mdx",
@@ -1507,7 +1507,7 @@ dependencies = [
 
 [[package]]
 name = "fob-analysis"
-version = "0.1.3"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "fob",
@@ -1543,7 +1543,7 @@ dependencies = [
 
 [[package]]
 name = "fob-bundler"
-version = "0.1.3"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1579,7 +1579,7 @@ dependencies = [
 
 [[package]]
 name = "fob-cli"
-version = "0.1.3"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -1624,7 +1624,7 @@ dependencies = [
 
 [[package]]
 name = "fob-config"
-version = "0.1.3"
+version = "0.2.0"
 dependencies = [
  "figment",
  "indexmap",
@@ -1638,7 +1638,7 @@ dependencies = [
 
 [[package]]
 name = "fob-gen"
-version = "0.1.3"
+version = "0.2.0"
 dependencies = [
  "oxc_allocator",
  "oxc_ast",
@@ -1653,7 +1653,7 @@ dependencies = [
 
 [[package]]
 name = "fob-graph"
-version = "0.1.3"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "fob",
@@ -1677,7 +1677,7 @@ dependencies = [
 
 [[package]]
 name = "fob-native"
-version = "0.1.3"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
