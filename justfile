@@ -550,18 +550,25 @@ tag:
     # Update workspace Cargo.toml
     sed -i '' "s/^version = \"${CURRENT_VERSION}\"/version = \"${NEW_VERSION}\"/" Cargo.toml
 
-    # Keep fob-cli crate version in sync if it has an explicit version
-    if grep -q '^version = "' crates/fob-cli/Cargo.toml; then
-        sed -i '' "s/^version = \"${CURRENT_VERSION}\"/version = \"${NEW_VERSION}\"/" crates/fob-cli/Cargo.toml
-    fi
+    # Find and update all crates with explicit versions matching current version
+    UPDATED_FILES=("Cargo.toml")
+    echo "🔍 Finding crates with explicit versions..."
+    while IFS= read -r file; do
+        if [ -f "$file" ]; then
+            sed -i '' "s/^version = \"${CURRENT_VERSION}\"/version = \"${NEW_VERSION}\"/" "$file"
+            UPDATED_FILES+=("$file")
+            echo "  ✓ Updated $(basename $(dirname "$file"))/Cargo.toml"
+        fi
+    done < <(find crates -name "Cargo.toml" -exec grep -l "^version = \"${CURRENT_VERSION}\"" {} \; 2>/dev/null || true)
 
     echo "🔄 Updating lockfile..."
     cargo check --workspace > /dev/null
 
-    git diff Cargo.toml crates/fob-cli/Cargo.toml Cargo.lock || true
+    # Show diff of all changed files
+    git diff "${UPDATED_FILES[@]}" Cargo.lock || true
 
     if gum confirm "Commit and tag v${NEW_VERSION}?"; then
-        git add Cargo.toml crates/fob-cli/Cargo.toml Cargo.lock
+        git add "${UPDATED_FILES[@]}" Cargo.lock
         git commit -m "chore: bump version to v${NEW_VERSION}"
         git tag -a "v${NEW_VERSION}" -m "Release v${NEW_VERSION}"
         echo "✨ Tagged v${NEW_VERSION}"
