@@ -124,7 +124,7 @@ jobs:
         shell: bash
       
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: bindings-${{ matrix.settings.target }}
           path: crates/fob-native/${{ env.APP_NAME }}.*.node
