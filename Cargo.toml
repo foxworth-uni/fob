@@ -51,33 +51,33 @@ keywords = ["bundler", "esm", "javascript", "typescript", "rust"]
 
 [workspace.dependencies]
 # OXC ecosystem - High-performance JavaScript tooling
-oxc_parser = "0.99.0"
-oxc_ast = "0.99.0"
-oxc_ast_visit = "0.99.0"
-oxc_semantic = "0.99.0"
-oxc_resolver = "11.13.1"
-oxc_transformer = "0.99.0"
-oxc_transformer_plugins = "0.99.0"
-oxc_codegen = "0.99.0"
-oxc_minifier = "0.99.0"
-oxc_allocator = "0.99.0"
-oxc_span = "0.99.0"
+oxc_parser = "0.97.0"
+oxc_ast = "0.97.0"
+oxc_ast_visit = "0.97.0"
+oxc_semantic = "0.97.0"
+oxc_resolver = "11.13.2"
+oxc_transformer = "0.97.0"
+oxc_transformer_plugins = "0.97.0"
+oxc_codegen = "0.97.0"
+oxc_minifier = "0.97.0"
+oxc_allocator = "0.97.0"
+oxc_span = "0.97.0"
 oxc_sourcemap = "6.0.1"
-oxc_traverse = "0.99.0"
-oxc_isolated_declarations = "0.99.0"
+oxc_traverse = "0.97.0"
+oxc_isolated_declarations = "0.97.0"
 
 # Rolldown bundler
-rolldown = { git = "https://github.com/rolldown/rolldown", tag = "v1.0.0-beta.51" }
-rolldown_plugin = { git = "https://github.com/rolldown/rolldown", tag = "v1.0.0-beta.51" }
-rolldown_common = { git = "https://github.com/rolldown/rolldown", tag = "v1.0.0-beta.51" }
-rolldown_error = { git = "https://github.com/rolldown/rolldown", tag = "v1.0.0-beta.51" }
+rolldown = { git = "https://github.com/rolldown/rolldown", tag = "v1.0.0-beta.50" }
+rolldown_plugin = { git = "https://github.com/rolldown/rolldown", tag = "v1.0.0-beta.50" }
+rolldown_common = { git = "https://github.com/rolldown/rolldown", tag = "v1.0.0-beta.50" }
+rolldown_error = { git = "https://github.com/rolldown/rolldown", tag = "v1.0.0-beta.50" }
 
 # Core dependencies
 rustc-hash = "2.1.1"
 dashmap = "6.1.0"
 rayon = "1.11.0"
 petgraph = "0.8.3"
-indexmap = "2.12.1"
+indexmap = "2.12.1" 
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 toml = "0.9.8"
@@ -210,4 +210,5 @@ disallowed_methods = "deny"
 async_fn_in_trait = "allow"
 # Missing docs warnings are tracked separately per crate
 missing_docs = "allow"
+
 
