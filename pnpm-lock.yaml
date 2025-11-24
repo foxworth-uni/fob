@@ -28,8 +28,8 @@ importers:
         version: 1.139.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
     devDependencies:
       '@napi-rs/cli':
-        specifier: 3.3.0
-        version: 3.3.0(@emnapi/runtime@1.7.1)(@types/node@20.19.25)
+        specifier: 3.4.1
+        version: 3.4.1(@emnapi/runtime@1.7.1)(@types/node@20.19.25)
       '@prettier/plugin-oxc':
         specifier: ^0.0.4
         version: 0.0.4
@@ -519,8 +519,8 @@ packages:
   '@microsoft/tsdoc@0.16.0':
     resolution: {integrity: sha512-xgAyonlVVS+q7Vc7qLW0UrJU7rSFcETRWsqdXZtjzRU8dF+6CkozTK4V4y1LwOX7j8r/vHphjDeMeGI4tNGeGA==}
 
-  '@napi-rs/cli@3.3.0':
-    resolution: {integrity: sha512-ff2fG6Y4ro4M4YOeDTonUrGPGG+96BfLLGvKGa6WNuXBtWGO0/20rG11mpwsFMwwO8xM7q0QZl3e2BvdedUABw==}
+  '@napi-rs/cli@3.4.1':
+    resolution: {integrity: sha512-ayhm+NfrP5Hmh7vy5pfyYm/ktYtLh2PrgdLuqHTAubO7RoO2JkUE4F991AtgYxNewwXI8+guZLxU8itV7QnDrQ==}
     engines: {node: '>= 16'}
     hasBin: true
     peerDependencies:
@@ -2425,7 +2425,7 @@ snapshots:
 
   '@microsoft/tsdoc@0.16.0': {}
 
-  '@napi-rs/cli@3.3.0(@emnapi/runtime@1.7.1)(@types/node@20.19.25)':
+  '@napi-rs/cli@3.4.1(@emnapi/runtime@1.7.1)(@types/node@20.19.25)':
     dependencies:
       '@inquirer/prompts': 7.10.1(@types/node@20.19.25)
       '@napi-rs/cross-toolchain': 1.0.3

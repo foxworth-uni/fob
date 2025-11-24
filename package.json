@@ -33,7 +33,7 @@
     "check:all": "pnpm rust:check && pnpm rust:clippy && pnpm lint && pnpm format:check && pnpm test"
   },
   "devDependencies": {
-    "@napi-rs/cli": "3.3.0",
+    "@napi-rs/cli": "3.4.1",
     "@prettier/plugin-oxc": "^0.0.4",
     "glob": "^11.0.0",
     "oxlint": "^1.26.0",
