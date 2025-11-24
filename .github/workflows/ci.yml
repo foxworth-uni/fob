@@ -123,6 +123,8 @@ jobs:
       
       - name: Sync binary to node_modules (CI)
         run: cd crates/fob-native && node scripts/sync-binary-ci.js
+        env:
+          NAPI_TARGET: ${{ matrix.settings.target }}
       
       - name: List packages
         run: ls -R crates/fob-native

@@ -9,29 +9,57 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-// Detect platform and architecture
-const platform = os.platform();
-const arch = os.arch();
-
-// Map to napi binary naming convention
+// Get target from environment variable (for CI) or detect from host
+const targetFromEnv = process.env.NAPI_TARGET;
 let binaryName;
-if (platform === 'darwin') {
-  const darwinArch = arch === 'arm64' ? 'arm64' : 'x64';
-  binaryName = `fob-native.darwin-${darwinArch}.node`;
-} else if (platform === 'linux') {
-  const linuxArch = arch === 'arm64' ? 'arm64' : 'x64';
-  binaryName = `fob-native.linux-${linuxArch}-gnu.node`;
-} else if (platform === 'win32') {
-  binaryName = `fob-native.win32-x64-msvc.node`;
+
+if (targetFromEnv) {
+  // Parse Rust target triple (e.g., "x86_64-apple-darwin" -> "darwin-x64")
+  if (targetFromEnv.includes('x86_64-apple-darwin')) {
+    binaryName = 'fob-native.darwin-x64.node';
+  } else if (targetFromEnv.includes('aarch64-apple-darwin')) {
+    binaryName = 'fob-native.darwin-arm64.node';
+  } else if (targetFromEnv.includes('x86_64-pc-windows-msvc')) {
+    binaryName = 'fob-native.win32-x64-msvc.node';
+  } else if (targetFromEnv.includes('x86_64-unknown-linux-gnu')) {
+    binaryName = 'fob-native.linux-x64-gnu.node';
+  } else if (targetFromEnv.includes('x86_64-unknown-linux-musl')) {
+    binaryName = 'fob-native.linux-x64-musl.node';
+  } else if (targetFromEnv.includes('aarch64-unknown-linux-gnu')) {
+    binaryName = 'fob-native.linux-arm64-gnu.node';
+  } else if (targetFromEnv.includes('aarch64-unknown-linux-musl')) {
+    binaryName = 'fob-native.linux-arm64-musl.node';
+  } else {
+    console.error(`Unsupported target: ${targetFromEnv}`);
+    process.exit(1);
+  }
 } else {
-  console.error(`Unsupported platform: ${platform}`);
-  process.exit(1);
+  // Fallback to host detection (for local development)
+  const platform = os.platform();
+  const arch = os.arch();
+  
+  if (platform === 'darwin') {
+    const darwinArch = arch === 'arm64' ? 'arm64' : 'x64';
+    binaryName = `fob-native.darwin-${darwinArch}.node`;
+  } else if (platform === 'linux') {
+    const linuxArch = arch === 'arm64' ? 'arm64' : 'x64';
+    binaryName = `fob-native.linux-${linuxArch}-gnu.node`;
+  } else if (platform === 'win32') {
+    binaryName = `fob-native.win32-x64-msvc.node`;
+  } else {
+    console.error(`Unsupported platform: ${platform}`);
+    process.exit(1);
+  }
 }
 
 const sourcePath = path.join(__dirname, '..', binaryName);
 
 console.log('=== CI Binary Sync Diagnostics ===');
-console.log(`Platform: ${platform}, Arch: ${arch}`);
+if (targetFromEnv) {
+  console.log(`Target (from env): ${targetFromEnv}`);
+} else {
+  console.log(`Platform: ${os.platform()}, Arch: ${os.arch()}`);
+}
 console.log(`Expected binary: ${binaryName}`);
 console.log(`Looking for: ${sourcePath}`);
 console.log('');
