@@ -38,7 +38,7 @@ const sourcePath = path.join(__dirname, '..', binaryName);
 if (!fs.existsSync(sourcePath)) {
   console.error(`Error: Binary not found at ${sourcePath}`);
   console.error(`Expected binary name: ${binaryName}`);
-  console.error(`Platform: ${platform}, Arch: ${arch}, Target: ${rustTarget}`);
+  console.error(`Platform: ${platform}, Arch: ${arch}`);
   process.exit(1);
 }
 
