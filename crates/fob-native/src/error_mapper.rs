@@ -1,5 +1,5 @@
 use crate::error::{MdxSyntaxError, PluginError, *};
-use fob_bundler::diagnostics::{DiagnosticKind, ExtractedDiagnostic};
+use fob_bundler::diagnostics::{DiagnosticContext, DiagnosticKind, ExtractedDiagnostic};
 use fob_bundler::Error as BundlerError;
 
 /// Map fob-bundler errors to structured FobErrorDetails
@@ -7,22 +7,18 @@ pub fn map_bundler_error(error: &BundlerError) -> FobErrorDetails {
     match error {
         // Direct mappings for fob-bundler error variants
         BundlerError::InvalidConfig(msg) => FobErrorDetails::Validation(ValidationError {
-            r#type: "validation".to_string(),
             message: msg.clone(),
         }),
 
         BundlerError::InvalidOutputPath(path) => FobErrorDetails::InvalidEntry(InvalidEntryError {
-            r#type: "invalid_entry".to_string(),
             path: path.clone(),
         }),
 
         BundlerError::WriteFailure(msg) => FobErrorDetails::Runtime(RuntimeError {
-            r#type: "runtime".to_string(),
             message: format!("Write failure: {}", msg),
         }),
 
         BundlerError::OutputExists(msg) => FobErrorDetails::Runtime(RuntimeError {
-            r#type: "runtime".to_string(),
             message: format!("Output exists: {}", msg),
         }),
 
@@ -30,7 +26,6 @@ pub fn map_bundler_error(error: &BundlerError) -> FobErrorDetails {
         BundlerError::Bundler(diagnostics) => {
             if diagnostics.is_empty() {
                 FobErrorDetails::Runtime(RuntimeError {
-                    r#type: "runtime".to_string(),
                     message: "Unknown bundler error".to_string(),
                 })
             } else if diagnostics.len() == 1 {
@@ -42,12 +37,10 @@ pub fn map_bundler_error(error: &BundlerError) -> FobErrorDetails {
 
         // I/O and other errors
         BundlerError::Io(e) => FobErrorDetails::Runtime(RuntimeError {
-            r#type: "runtime".to_string(),
             message: format!("I/O error: {}", e),
         }),
 
         BundlerError::IoError { message, .. } => FobErrorDetails::Runtime(RuntimeError {
-            r#type: "runtime".to_string(),
             message: message.clone(),
         }),
 
@@ -55,7 +48,6 @@ pub fn map_bundler_error(error: &BundlerError) -> FobErrorDetails {
             specifier,
             searched_from,
         } => FobErrorDetails::Runtime(RuntimeError {
-            r#type: "runtime".to_string(),
             message: format!(
                 "Asset not found: {} (searched from: {})",
                 specifier, searched_from
@@ -64,7 +56,6 @@ pub fn map_bundler_error(error: &BundlerError) -> FobErrorDetails {
 
         BundlerError::AssetSecurityViolation { path, reason } => {
             FobErrorDetails::Runtime(RuntimeError {
-                r#type: "runtime".to_string(),
                 message: format!("Asset security violation: {} - {}", path, reason),
             })
         }
@@ -74,7 +65,6 @@ pub fn map_bundler_error(error: &BundlerError) -> FobErrorDetails {
             size,
             max_size,
         } => FobErrorDetails::Runtime(RuntimeError {
-            r#type: "runtime".to_string(),
             message: format!(
                 "Asset too large: {} ({} bytes exceeds limit of {} bytes)",
                 path, size, max_size
@@ -82,7 +72,6 @@ pub fn map_bundler_error(error: &BundlerError) -> FobErrorDetails {
         }),
 
         BundlerError::Foundation(e) => FobErrorDetails::Runtime(RuntimeError {
-            r#type: "runtime".to_string(),
             message: format!("Foundation error: {}", e),
         }),
     }
@@ -92,12 +81,14 @@ pub fn map_bundler_error(error: &BundlerError) -> FobErrorDetails {
 fn map_single_diagnostic(diag: &ExtractedDiagnostic) -> FobErrorDetails {
     match &diag.kind {
         DiagnosticKind::MissingExport => {
-            // Extract export_name, module_id, available_exports from message/help
-            let (export_name, module_id, available_exports) =
-                extract_missing_export_info(&diag.message, &diag.help);
+            // Use structured context if available, otherwise fall back to parsing
+            let (export_name, module_id, available_exports) = if let Some(DiagnosticContext::MissingExport { export_name, module_id, available_exports }) = &diag.context {
+                (export_name.clone(), module_id.clone(), available_exports.clone())
+            } else {
+                extract_missing_export_info(&diag.message, &diag.help)
+            };
 
             FobErrorDetails::MissingExport(MissingExportError {
-                r#type: "missing_export".to_string(),
                 export_name,
                 module_id,
                 available_exports,
@@ -115,7 +106,6 @@ fn map_single_diagnostic(diag: &ExtractedDiagnostic) -> FobErrorDetails {
 
             if is_mdx {
                 FobErrorDetails::MdxSyntax(MdxSyntaxError {
-                    r#type: "mdx_syntax".to_string(),
                     message: diag.message.clone(),
                     file: diag.file.clone(),
                     line: diag.line,
@@ -141,7 +131,6 @@ fn map_single_diagnostic(diag: &ExtractedDiagnostic) -> FobErrorDetails {
                 };
 
                 FobErrorDetails::Transform(TransformError {
-                    r#type: "transform".to_string(),
                     path,
                     diagnostics: vec![diagnostic],
                 })
@@ -149,34 +138,43 @@ fn map_single_diagnostic(diag: &ExtractedDiagnostic) -> FobErrorDetails {
         }
 
         DiagnosticKind::Plugin => {
-            // Extract plugin name and message from diagnostic
-            let (name, message) = extract_plugin_info(&diag.message);
+            // Use structured context if available, otherwise fall back to parsing
+            let (name, message) = if let Some(DiagnosticContext::Plugin { plugin_name }) = &diag.context {
+                (plugin_name.clone(), diag.message.clone())
+            } else {
+                extract_plugin_info(&diag.message)
+            };
 
             FobErrorDetails::Plugin(PluginError {
-                r#type: "plugin".to_string(),
                 name,
                 message,
             })
         }
 
         DiagnosticKind::CircularDependency => {
-            // Extract cycle_path from message
-            let cycle_path = extract_cycle_path(&diag.message);
+            // Use structured context if available, otherwise fall back to parsing
+            let cycle_path = if let Some(DiagnosticContext::CircularDependency { cycle_path }) = &diag.context {
+                cycle_path.clone()
+            } else {
+                extract_cycle_path(&diag.message)
+            };
 
             FobErrorDetails::CircularDependency(CircularDependencyError {
-                r#type: "circular_dependency".to_string(),
                 cycle_path,
             })
         }
 
         DiagnosticKind::UnresolvedEntry => {
-            let path = diag.file.clone().unwrap_or_else(|| {
-                // Try to extract from message
-                extract_path_from_message(&diag.message).unwrap_or_else(|| "unknown".to_string())
-            });
+            let path = if let Some(DiagnosticContext::UnresolvedEntry { entry_path }) = &diag.context {
+                entry_path.clone()
+            } else {
+                diag.file.clone().unwrap_or_else(|| {
+                    // Try to extract from message
+                    extract_path_from_message(&diag.message).unwrap_or_else(|| "unknown".to_string())
+                })
+            };
 
             FobErrorDetails::InvalidEntry(InvalidEntryError {
-                r#type: "invalid_entry".to_string(),
                 path,
             })
         }
@@ -186,7 +184,6 @@ fn map_single_diagnostic(diag: &ExtractedDiagnostic) -> FobErrorDetails {
         | DiagnosticKind::Other(_) => {
             // Map to RuntimeError with context
             FobErrorDetails::Runtime(RuntimeError {
-                r#type: "runtime".to_string(),
                 message: format!("{}: {}", diag.kind, diag.message),
             })
         }
@@ -205,7 +202,6 @@ fn map_multiple_diagnostics(diagnostics: &[ExtractedDiagnostic]) -> FobErrorDeta
     };
 
     FobErrorDetails::Multiple(MultipleDiagnostics {
-        r#type: "multiple".to_string(),
         errors,
         primary_message,
     })
@@ -225,10 +221,9 @@ fn extract_missing_export_info(
             // Look for patterns like "export 'Foo'" or "export `Foo`"
             if let Some(start) = message.find("export") {
                 let after = &message[start + 6..];
-                if let Some(quote_start) = after.find(|c| c == '\'' || c == '`' || c == '"') {
+                if let Some(quote_start) = after.find(['\'', '`', '"']) {
                     let after_quote = &after[quote_start + 1..];
-                    if let Some(quote_end) = after_quote.find(|c| c == '\'' || c == '`' || c == '"')
-                    {
+                    if let Some(quote_end) = after_quote.find(['\'', '`', '"']) {
                         return Some(after_quote[..quote_end].to_string());
                     }
                 }
@@ -284,9 +279,7 @@ fn extract_path_from_message(text: &str) -> Option<String> {
                     let path_start = start + indicator.len();
                     let path_str = &before[path_start..];
                     // Find end of path (space, newline, quote, comma)
-                    if let Some(end) = path_str
-                        .find(|c: char| c == ' ' || c == '\n' || c == '"' || c == '\'' || c == ',')
-                    {
+                    if let Some(end) = path_str.find([' ', '\n', '"', '\'', ',']) {
                         return Some(path_str[..end].trim().to_string());
                     }
                     return Some(path_str.trim().to_string());
@@ -359,7 +352,7 @@ fn extract_plugin_info(message: &str) -> (String, String) {
     for pattern in &["Plugin '", "Plugin `", "Plugin \""] {
         if let Some(start) = message.find(pattern) {
             let after_quote = &message[start + pattern.len()..];
-            if let Some(end) = after_quote.find(|c| c == '\'' || c == '`' || c == '"') {
+            if let Some(end) = after_quote.find(['\'', '`', '"']) {
                 let name = after_quote[..end].to_string();
                 // Find the message part (usually after ": " or " failed: ")
                 let after_name = &after_quote[end + 1..];

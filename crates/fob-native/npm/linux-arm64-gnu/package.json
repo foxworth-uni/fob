@@ -1,0 +1,21 @@
+{
+  "name": "@fox-uni/fob-linux-arm64-gnu",
+  "version": "0.1.0",
+  "cpu": [
+    "arm64"
+  ],
+  "main": "fob-native.linux-arm64-gnu.node",
+  "files": [
+    "fob-native.linux-arm64-gnu.node"
+  ],
+  "os": [
+    "linux"
+  ],
+  "libc": [
+    "glibc"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 18"
+  }
+}

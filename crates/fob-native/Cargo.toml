@@ -12,7 +12,7 @@ description = "Native Node.js bindings for Fob bundler core"
 name = "fob-native"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 fob-bundler = { path = "../fob-bundler" }
@@ -24,6 +24,7 @@ anyhow.workspace = true
 async-trait.workspace = true
 oxc_resolver.workspace = true
 miette.workspace = true
+path-clean.workspace = true
 
 # tokio with full features for native targets only
 # This prevents workspace feature unification from affecting WASM builds

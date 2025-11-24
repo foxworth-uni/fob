@@ -8,7 +8,5 @@
     "build": "node bundler.js",
     "start": "node bundler.js"
   },
-  "dependencies": {
-    "@fob/bundler": "workspace:*"
-  }
+  "dependencies": {}
 }

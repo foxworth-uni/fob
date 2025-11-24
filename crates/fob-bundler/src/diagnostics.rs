@@ -4,6 +4,13 @@
 //! Rolldown's error types, creating an abstraction layer that insulates us
 //! from upstream API changes.
 
+mod miette;
+
+pub use miette::{
+    calculate_enhanced_span, calculate_span_length, load_source, line_col_to_offset,
+    to_diagnostic_error, DiagnosticError,
+};
+
 use serde::{Deserialize, Serialize};
 
 /// Extracted diagnostic information from Rolldown.
@@ -19,6 +26,53 @@ pub struct ExtractedDiagnostic {
     pub line: Option<u32>,
     pub column: Option<u32>,
     pub help: Option<String>,
+    /// Structured context for the diagnostic (if available)
+    pub context: Option<DiagnosticContext>,
+}
+
+/// Structured context for different diagnostic kinds.
+///
+/// Provides type-safe access to diagnostic-specific information without
+/// requiring string parsing.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum DiagnosticContext {
+    /// Context for missing export errors
+    MissingExport {
+        /// Name of the missing export
+        export_name: String,
+        /// Module ID that requested the export
+        module_id: String,
+        /// Available exports from the target module
+        available_exports: Vec<String>,
+    },
+    /// Context for circular dependency errors
+    CircularDependency {
+        /// Path of modules in the cycle
+        cycle_path: Vec<String>,
+    },
+    /// Context for plugin errors
+    Plugin {
+        /// Name of the plugin that failed
+        plugin_name: String,
+    },
+    /// Context for transform errors
+    Transform {
+        /// File path that failed to transform
+        file_path: String,
+    },
+    /// Context for unresolved entry errors
+    UnresolvedEntry {
+        /// Entry path that couldn't be resolved
+        entry_path: String,
+    },
+    /// Context for unresolved import errors
+    UnresolvedImport {
+        /// Import specifier that couldn't be resolved
+        specifier: String,
+        /// File that tried to import
+        from_file: String,
+    },
 }
 
 /// Diagnostic kind (mirrors Rolldown's EventKind).
@@ -110,6 +164,21 @@ fn extract_single_from_string(error_str: &str) -> ExtractedDiagnostic {
     // Extract help text if available
     let help = extract_help_text(error_str);
 
+    // Try to extract structured context based on diagnostic kind
+    let context = match &kind {
+        DiagnosticKind::MissingExport => extract_missing_export_context(error_str, &help),
+        DiagnosticKind::CircularDependency => extract_circular_dependency_context(error_str),
+        DiagnosticKind::Plugin => extract_plugin_context(error_str),
+        DiagnosticKind::Transform => file.as_ref().map(|f| DiagnosticContext::Transform {
+            file_path: f.clone(),
+        }),
+        DiagnosticKind::UnresolvedEntry => file.as_ref().map(|f| DiagnosticContext::UnresolvedEntry {
+            entry_path: f.clone(),
+        }),
+        DiagnosticKind::UnresolvedImport => extract_unresolved_import_context(error_str, file.as_ref()),
+        _ => None,
+    };
+
     ExtractedDiagnostic {
         kind,
         severity,
@@ -118,6 +187,7 @@ fn extract_single_from_string(error_str: &str) -> ExtractedDiagnostic {
         line,
         column,
         help,
+        context,
     }
 }
 
@@ -233,6 +303,139 @@ fn extract_help_text(text: &str) -> Option<String> {
             let help_str: String = after.lines().next().unwrap_or("").trim().to_string();
             if !help_str.is_empty() {
                 return Some(help_str);
+            }
+        }
+    }
+    None
+}
+
+/// Extract context for missing export errors
+fn extract_missing_export_context(error_str: &str, help: &Option<String>) -> Option<DiagnosticContext> {
+    // Try to extract export name
+    let export_name = extract_quoted_string_after(error_str, "export")
+        .or_else(|| extract_quoted_string_after(error_str, "MissingExport"))
+        .unwrap_or_else(|| "unknown".to_string());
+
+    // Try to extract module ID
+    let module_id = extract_file_path(error_str)
+        .or_else(|| extract_quoted_string_after(error_str, "module"))
+        .unwrap_or_else(|| "unknown".to_string());
+
+    // Try to extract available exports from help text
+    let available_exports = help.as_ref()
+        .and_then(|h| extract_available_exports_list(h))
+        .unwrap_or_default();
+
+    Some(DiagnosticContext::MissingExport {
+        export_name,
+        module_id,
+        available_exports,
+    })
+}
+
+/// Extract context for circular dependency errors
+fn extract_circular_dependency_context(error_str: &str) -> Option<DiagnosticContext> {
+    // Try to extract cycle path (look for "->" or "→" patterns)
+    let cycle_path = if let Some(start) = error_str.find("->") {
+        error_str[start..]
+            .split("->")
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect()
+    } else if let Some(start) = error_str.find("→") {
+        error_str[start..]
+            .split("→")
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect()
+    } else {
+        // Fallback: try to extract file paths
+        let mut paths = Vec::new();
+        if let Some(file) = extract_file_path(error_str) {
+            paths.push(file);
+        }
+        paths
+    };
+
+    if !cycle_path.is_empty() {
+        Some(DiagnosticContext::CircularDependency { cycle_path })
+    } else {
+        None
+    }
+}
+
+/// Extract context for plugin errors
+fn extract_plugin_context(error_str: &str) -> Option<DiagnosticContext> {
+    // Try to extract plugin name
+    let plugin_name = extract_quoted_string_after(error_str, "Plugin")
+        .or_else(|| {
+            // Look for patterns like "Plugin 'name'"
+            if let Some(start) = error_str.find("Plugin") {
+                let after = &error_str[start + 6..];
+                extract_quoted_string(after)
+            } else {
+                None
+            }
+        })
+        .unwrap_or_else(|| "unknown".to_string());
+
+    Some(DiagnosticContext::Plugin { plugin_name })
+}
+
+/// Extract context for unresolved import errors
+fn extract_unresolved_import_context(error_str: &str, file: Option<&String>) -> Option<DiagnosticContext> {
+    // Try to extract specifier
+    let specifier = extract_quoted_string_after(error_str, "Cannot resolve")
+        .or_else(|| extract_quoted_string_after(error_str, "import"))
+        .unwrap_or_else(|| "unknown".to_string());
+
+    let from_file = file.cloned().unwrap_or_else(|| "unknown".to_string());
+
+    Some(DiagnosticContext::UnresolvedImport {
+        specifier,
+        from_file,
+    })
+}
+
+/// Extract a quoted string after a keyword
+fn extract_quoted_string_after(text: &str, keyword: &str) -> Option<String> {
+    if let Some(pos) = text.find(keyword) {
+        let after = &text[pos + keyword.len()..];
+        extract_quoted_string(after)
+    } else {
+        None
+    }
+}
+
+/// Extract a quoted string (single, double, or backtick)
+fn extract_quoted_string(text: &str) -> Option<String> {
+    for quote in &['"', '\'', '`'] {
+        if let Some(start) = text.find(*quote) {
+            let after = &text[start + 1..];
+            if let Some(end) = after.find(*quote) {
+                return Some(after[..end].to_string());
+            }
+        }
+    }
+    None
+}
+
+/// Extract available exports from help text
+fn extract_available_exports_list(help: &str) -> Option<Vec<String>> {
+    // Look for patterns like "Available: Foo, Bar, Baz" or "Available exports: ..."
+    for pattern in &["Available: ", "Available exports: ", "Exports: "] {
+        if let Some(pos) = help.find(pattern) {
+            let after = &help[pos + pattern.len()..];
+            let exports_str = after.lines().next().unwrap_or("").trim();
+            if !exports_str.is_empty() {
+                let exports: Vec<String> = exports_str
+                    .split(',')
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| !s.is_empty())
+                    .collect();
+                if !exports.is_empty() {
+                    return Some(exports);
+                }
             }
         }
     }

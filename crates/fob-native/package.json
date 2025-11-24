@@ -3,16 +3,36 @@
   "version": "0.1.0",
   "private": true,
   "napi": {
-    "name": "fob-native",
-    "package": {
-      "name": "@fob/bundler"
-    },
-    "triples": {
-      "defaults": true,
-      "additional": [
-        "x86_64-unknown-linux-musl",
-        "aarch64-unknown-linux-gnu"
-      ]
-    }
+    "binaryName": "fob-native",
+    "packageName": "@fox-uni/fob",
+    "targets": [
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin",
+      "x86_64-pc-windows-msvc",
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-linux-musl",
+      "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-linux-musl"
+    ]
+  },
+  "scripts": {
+    "build": "napi build --platform --release",
+    "build:debug": "napi build --platform",
+    "postbuild": "node scripts/sync-binary.js",
+    "postbuild:debug": "node scripts/sync-binary.js",
+    "prepublishOnly": "napi prepublish -t npm",
+    "artifacts": "napi artifacts",
+    "universal": "napi universalize",
+    "version": "napi version",
+    "sync-binary": "node scripts/sync-binary.js"
+  },
+  "optionalDependencies": {
+    "@fox-uni/fob-darwin-x64": "0.1.0",
+    "@fox-uni/fob-darwin-arm64": "0.1.0",
+    "@fox-uni/fob-win32-x64-msvc": "0.1.0",
+    "@fox-uni/fob-linux-x64-gnu": "0.1.0",
+    "@fox-uni/fob-linux-x64-musl": "0.1.0",
+    "@fox-uni/fob-linux-arm64-gnu": "0.1.0",
+    "@fox-uni/fob-linux-arm64-musl": "0.1.0"
   }
 }

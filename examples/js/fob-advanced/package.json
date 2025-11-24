@@ -9,7 +9,5 @@
     "build:minified": "node bundler-minified.js",
     "build:watch": "node bundler-watch.js"
   },
-  "dependencies": {
-    "@fob/bundler": "workspace:*"
-  }
+  "dependencies": {}
 }

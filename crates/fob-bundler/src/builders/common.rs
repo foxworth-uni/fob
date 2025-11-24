@@ -243,6 +243,7 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
             line: None,
             column: None,
             help: None,
+            context: None,
         }])
     })?;
 

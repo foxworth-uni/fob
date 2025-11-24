@@ -33,6 +33,7 @@ path-clean.workspace = true
 rustc-hash.workspace = true
 serde_json.workspace = true
 anyhow.workspace = true
+miette.workspace = true
 
 # Asset handling dependencies
 oxc_parser.workspace = true

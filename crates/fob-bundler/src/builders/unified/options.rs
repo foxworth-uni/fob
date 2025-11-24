@@ -89,6 +89,12 @@ pub struct BuildOptions {
     /// - On WASM targets, BrowserRuntime bridges to JavaScript
     pub runtime: Option<Arc<dyn Runtime>>,
 
+    /// Decorator transformation options (modern/Stage 3 decorators).
+    ///
+    /// Enables transformation of JavaScript/TypeScript decorators.
+    /// Only supports modern decorators (TC39 Stage 3 proposal), not legacy experimentalDecorators.
+    pub decorator: Option<crate::DecoratorOptions>,
+
     /// TypeScript declaration file generation options.
     #[cfg(feature = "dts-generation")]
     pub dts: Option<DtsOptions>,
@@ -122,6 +128,7 @@ impl BuildOptions {
             path_aliases: FxHashMap::default(),
             cwd: None,
             runtime: None,
+            decorator: None,
             #[cfg(feature = "dts-generation")]
             dts: None,
         }
@@ -370,6 +377,36 @@ impl BuildOptions {
     /// On native platforms, NativeRuntime is used by default if not specified.
     pub fn runtime(mut self, runtime: Arc<dyn Runtime>) -> Self {
         self.runtime = Some(runtime);
+        self
+    }
+
+    /// Enable modern decorator transformation.
+    ///
+    /// Enables transformation of JavaScript/TypeScript decorators using the TC39 Stage 3 proposal.
+    /// This is the modern, standardized decorator syntax, not TypeScript's legacy experimentalDecorators.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use fob_bundler::BuildOptions;
+    ///
+    /// # async fn example() -> fob_bundler::Result<()> {
+    /// let result = BuildOptions::library("./src/index.ts")
+    ///     .decorators(true)
+    ///     .build()
+    ///     .await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn decorators(mut self, enabled: bool) -> Self {
+        if enabled {
+            self.decorator = Some(crate::DecoratorOptions {
+                legacy: Some(false), // Modern decorators only
+                emit_decorator_metadata: None,
+            });
+        } else {
+            self.decorator = None;
+        }
         self
     }
 

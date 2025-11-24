@@ -15,6 +15,9 @@ pub struct BundleResult {
 
     /// Static assets
     pub assets: Vec<AssetInfo>,
+
+    /// Total module count (convenience field)
+    pub module_count: u32,
 }
 
 /// Detailed chunk information
@@ -54,11 +57,11 @@ pub struct ModuleInfo {
     /// Module path
     pub path: String,
 
-    /// Module size
-    pub size: u32,
+    /// Module size in bytes (None if unavailable)
+    pub size: Option<u32>,
 
-    /// Has side effects
-    pub has_side_effects: bool,
+    /// Has side effects (None if unavailable)
+    pub has_side_effects: Option<bool>,
 }
 
 /// Bundle manifest
@@ -129,8 +132,8 @@ impl From<fob_bundler::BuildResult> for BundleResult {
                     .iter()
                     .map(|path| ModuleInfo {
                         path: path.to_string(),
-                        size: 0,                 // RenderedModule doesn't expose size
-                        has_side_effects: false, // RenderedModule doesn't expose side effects
+                        size: None,              // RenderedModule doesn't expose size
+                        has_side_effects: None, // RenderedModule doesn't expose side effects
                     })
                     .collect(),
                 imports: chunk.imports.iter().map(|s| s.to_string()).collect(),
@@ -182,6 +185,7 @@ impl From<fob_bundler::BuildResult> for BundleResult {
                 cache_hit_rate: stats.cache_hit_rate,
             },
             assets,
+            module_count: stats.total_modules as u32,
         }
     }
 }

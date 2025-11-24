@@ -1,210 +1,152 @@
-# fob-native
+# @fox-uni/fob
 
-Native Node.js bindings for the Fob bundler using N-API (napi-rs).
+High-performance JavaScript bundler powered by Rust using NAPI-RS.
 
-This crate provides high-performance JavaScript bundling capabilities to Node.js applications by exposing the Rust-based `fob-core` library through N-API bindings.
-
-## Features
-
-- **Zero-copy Data Transfer**: Uses N-API object serialization instead of JSON for 10x performance improvement
-- **Rich Bundle Information**: Returns detailed chunk, module, manifest, and statistics data
-- **Type-safe**: Auto-generates TypeScript types from Rust structs
-- **Cross-platform**: Supports macOS, Linux, and Windows
-
-## Building
-
-### Development Build
-
-Build the N-API bindings in debug mode:
+## Installation
 
 ```bash
-just build-napi
+npm install @fox-uni/fob
+# or
+pnpm add @fox-uni/fob
+# or
+yarn add @fox-uni/fob
 ```
 
-Or using cargo directly:
+The package will automatically install the correct native binary for your platform.
 
-```bash
-cd crates/fob-native
-cargo build
+## Supported Platforms
+
+- **macOS**: x64, ARM64 (Apple Silicon)
+- **Linux**: x64 (glibc & musl), ARM64 (glibc & musl)
+- **Windows**: x64
+
+## Usage
+
+### Basic Bundle
+
+```typescript
+import { Fob, OutputFormat, SourceMapMode } from '@fox-uni/fob';
+
+const bundler = new Fob({
+  entries: ['./src/index.js'],
+  outputDir: './dist',
+  format: OutputFormat.Esm,
+  sourcemap: SourceMapMode.External,
+  cwd: process.cwd()
+});
+
+const result = await bundler.bundle();
+console.log(`Built ${result.chunks.length} chunks in ${result.stats.durationMs}ms`);
 ```
 
-### Release Build
+### Quick Single-File Bundle
 
-Build optimized N-API bindings:
+```typescript
+import { bundleSingle, OutputFormat } from '@fox-uni/fob';
 
-```bash
-just build-napi-release
+const result = await bundleSingle(
+  './src/index.js',
+  './dist',
+  OutputFormat.Esm
+);
 ```
-
-Or using cargo:
-
-```bash
-cd crates/fob-native
-cargo build --release
-```
-
-## Integration with TypeScript Package
-
-The fob-native library is consumed by the `@fob/bundler` TypeScript package. To build the full stack:
-
-### Copy Native Binary
-
-Copy the built library to the TypeScript package (automatically detects platform):
-
-```bash
-just copy-native
-```
-
-This command:
-
-- Detects your platform (macOS/Linux/Windows)
-- Finds the latest build (release or debug)
-- Copies `libfob_native.{dylib,so,dll}` → `packages/fob-bundler/index.node`
-
-### Build TypeScript Package
-
-Build the TypeScript wrapper and copy the native binary:
-
-```bash
-just build-ts-bundler
-```
-
-This command:
-
-1. Runs `copy-native`
-2. Installs TypeScript dependencies
-3. Compiles TypeScript sources
-
-### Full Build Workflow
-
-**Development:**
-
-```bash
-just build-bundler
-```
-
-This runs:
-
-1. `just build-napi` - Build Rust in debug mode
-2. `just build-ts-bundler` - Copy binary + build TypeScript
-
-**Release:**
-
-```bash
-just build-bundler-release
-```
-
-This runs:
-
-1. `just build-napi-release` - Build Rust with optimizations
-2. `just build-ts-bundler` - Copy binary + build TypeScript
 
 ## API
 
-The native module exports:
-
 ### `Fob` Class
 
+#### Constructor
+
 ```typescript
-class Fob {
-  constructor(config: BundleConfig);
-  bundle(): Promise<BundleResult>;
+new Fob(config: BundleConfig)
+```
+
+**BundleConfig:**
+- `entries: string[]` - Entry points to bundle
+- `outputDir?: string` - Output directory (default: `"dist"`)
+- `format?: OutputFormat` - Output format: `Esm`, `Cjs`, or `Iife` (default: `Esm`)
+- `sourcemap?: SourceMapMode` - Source map mode: `External`, `Inline`, `Hidden`, or `Disabled`
+- `cwd?: string` - Working directory for resolution (default: `process.cwd()`)
+
+#### Methods
+
+##### `bundle(): Promise<BundleResult>`
+
+Bundles the configured entries and returns detailed bundle information.
+
+**Returns:** `BundleResult`
+- `chunks: ChunkInfo[]` - Generated chunks
+- `manifest: ManifestInfo` - Bundle manifest
+- `stats: BuildStatsInfo` - Build statistics
+- `assets: AssetInfo[]` - Static assets
+
+### `bundleSingle` Function
+
+Quick helper to bundle a single entry:
+
+```typescript
+bundleSingle(
+  entry: string,
+  outputDir: string,
+  format?: OutputFormat
+): Promise<BundleResult>
+```
+
+### `version` Function
+
+Returns the bundler version:
+
+```typescript
+version(): string
+```
+
+## Output Formats
+
+- **`OutputFormat.Esm`** - ECMAScript Module format (default)
+- **`OutputFormat.Cjs`** - CommonJS format
+- **`OutputFormat.Iife`** - Immediately Invoked Function Expression format
+
+## Source Map Modes
+
+- **`SourceMapMode.External`** - Generate external `.map` file (default)
+- **`SourceMapMode.Inline`** - Embed source map in output
+- **`SourceMapMode.Hidden`** - Generate source map but don't link from output
+- **`SourceMapMode.Disabled`** - No source map generation
+
+## Features
+
+- **Zero-copy Data Transfer**: Native performance with minimal overhead
+- **Rich Bundle Information**: Detailed chunk, module, and statistics data
+- **Type-safe**: Full TypeScript definitions included
+- **Cross-platform**: Pre-built binaries for all major platforms
+- **Production-ready**: Battle-tested error handling and security
+
+## Error Handling
+
+Errors are returned as structured JSON for easy debugging:
+
+```typescript
+try {
+  await bundler.bundle();
+} catch (error) {
+  console.error(JSON.parse(error.message));
+  // {
+  //   type: "MissingExport",
+  //   exportName: "Component",
+  //   moduleId: "./src/component.js",
+  //   ...
+  // }
 }
 ```
 
-### `bundleSingle()` Function
+## Requirements
 
-Quick helper for single-entry bundles:
-
-```typescript
-function bundleSingle(
-  entry: string,
-  outputDir: string,
-  format?: 'esm' | 'cjs' | 'iife'
-): Promise<BundleResult>;
-```
-
-### `version()` Function
-
-Get the bundler version:
-
-```typescript
-function version(): string;
-```
-
-## Return Types
-
-The `BundleResult` includes:
-
-- **chunks**: Array of `ChunkInfo` with code, modules, imports, source maps
-- **manifest**: Entry mappings and chunk metadata
-- **stats**: Build statistics (module count, total size, duration, cache hit rate)
-- **assets**: Static assets emitted during bundling
-
-See [`src/bundle_result.rs`](./src/bundle_result.rs) for detailed type definitions.
-
-## Platform-Specific Builds
-
-Build for a specific target:
-
-```bash
-just build-napi-platform <target-triple>
-```
-
-Example:
-
-```bash
-just build-napi-platform x86_64-unknown-linux-gnu
-```
-
-## Testing
-
-Run the test suite:
-
-```bash
-just test-napi
-```
-
-Or using cargo:
-
-```bash
-cargo test --package fob-native
-```
-
-## Architecture
-
-```
-┌─────────────────────────────────┐
-│  @fob/bundler (TypeScript)      │
-│  packages/fob-bundler/          │
-└────────────┬────────────────────┘
-             │ N-API
-             ↓
-┌─────────────────────────────────┐
-│  fob-native (Rust N-API)        │
-│  crates/fob-native/             │
-│  - BundleResult structs         │
-│  - Fob class binding            │
-└────────────┬────────────────────┘
-             │
-             ↓
-┌─────────────────────────────────┐
-│  fob-core (Rust)                │
-│  crates/fob-core/               │
-│  - BuildOptions                 │
-│  - BuildResult                  │
-│  - Rolldown integration         │
-└─────────────────────────────────┘
-```
-
-## Performance
-
-Using N-API `#[napi(object)]` structs instead of JSON serialization provides:
-
-- **10x faster** data transfer for large bundle results
-- **Type safety** with auto-generated TypeScript definitions
-- **Zero-copy** for strings and buffers where possible
+- Node.js >= 18.0.0
 
 ## License
 
-See the repository root for license information.
+MIT
+
+## Contributing
+
+See [GitHub repository](https://github.com/fox-uni/fob) for contribution guidelines.

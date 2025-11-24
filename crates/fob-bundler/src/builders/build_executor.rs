@@ -303,6 +303,15 @@ fn configure_rolldown_options(options: &BuildOptions) -> BundlerOptions {
     // Platform
     rolldown_options.platform = Some(options.platform);
 
+    // Decorator transformation
+    if let Some(decorator) = &options.decorator {
+        let transform = rolldown_common::BundlerTransformOptions {
+            decorator: Some(decorator.clone()),
+            ..Default::default()
+        };
+        rolldown_options.transform = Some(transform);
+    }
+
     // Module resolution with absolute paths for pnpm/monorepo support
     rolldown_options.resolve = Some(configure_resolution(
         options.cwd.as_ref(),
@@ -322,11 +331,24 @@ fn configure_resolution(
     path_aliases: &FxHashMap<String, String>,
 ) -> ResolveOptions {
     // Use multiple paths for modules to handle different package manager layouts
+    // Walk up parent directories to find node_modules (matches Node.js resolution)
+    // This supports pnpm/yarn/npm workspaces and monorepos
     let modules = if let Some(cwd_path) = cwd {
-        vec![
-            cwd_path.join("node_modules").to_string_lossy().to_string(),
-            "node_modules".to_string(), // Relative fallback
-        ]
+        let mut paths = vec![];
+        let mut current = cwd_path.as_path();
+
+        // Search current and all parent directories for node_modules
+        loop {
+            paths.push(current.join("node_modules").to_string_lossy().to_string());
+
+            match current.parent() {
+                Some(parent) => current = parent,
+                None => break,
+            }
+        }
+
+        paths.push("node_modules".to_string()); // Relative fallback
+        paths
     } else {
         vec!["node_modules".to_string()]
     };

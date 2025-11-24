@@ -37,6 +37,10 @@
 //! }
 //! ```
 
+mod miette;
+
+pub use miette::{bundler_error_to_miette, cli_error_to_miette};
+
 use std::path::PathBuf;
 use thiserror::Error;
 

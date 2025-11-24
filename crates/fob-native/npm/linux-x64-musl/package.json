@@ -1,0 +1,21 @@
+{
+  "name": "@fox-uni/fob-linux-x64-musl",
+  "version": "0.1.0",
+  "cpu": [
+    "x64"
+  ],
+  "main": "fob-native.linux-x64-musl.node",
+  "files": [
+    "fob-native.linux-x64-musl.node"
+  ],
+  "os": [
+    "linux"
+  ],
+  "libc": [
+    "musl"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 18"
+  }
+}

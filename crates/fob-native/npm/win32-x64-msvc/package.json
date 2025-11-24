@@ -1,0 +1,18 @@
+{
+  "name": "@fox-uni/fob-win32-x64-msvc",
+  "version": "0.1.0",
+  "cpu": [
+    "x64"
+  ],
+  "main": "fob-native.win32-x64-msvc.node",
+  "files": [
+    "fob-native.win32-x64-msvc.node"
+  ],
+  "os": [
+    "win32"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 18"
+  }
+}

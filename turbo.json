@@ -3,7 +3,7 @@
   "ui": "stream",
   "tasks": {
     "build": {
-      "dependsOn": ["^build", "wasm:build", "napi:build"],
+      "dependsOn": ["^build", "napi:build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "src/**",
@@ -73,11 +73,6 @@
       "dependsOn": ["rust:build"],
       "inputs": ["crates/**/*.rs", "Cargo.toml"],
       "outputs": [],
-      "cache": true
-    },
-    "wasm:build": {
-      "inputs": ["crates/fob-wasm/**/*.rs", "crates/fob-wasm/Cargo.toml"],
-      "outputs": ["crates/fob-wasm/pkg/**"],
       "cache": true
     },
     "napi:build": {

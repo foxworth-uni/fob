@@ -37,7 +37,7 @@ dev: format check
     @echo "✓ Development checks complete!"
 
 # Full CI pipeline (format check + lint + test + build + wasm checks)
-ci: format-check lint test build check-std-fs lint-wasm compile-wasm wasm-size
+ci: format-check lint test build check-std-fs lint-wasm compile-wasm
     @echo "✓ All CI checks passed!"
 
 # =============================================================================
@@ -86,7 +86,6 @@ lint-fix:
 lint-wasm:
     @echo "Linting WASM code..."
     @cargo clippy --package fob --target {{wasm_wasi_target}} --all-features -- -D warnings
-    @cargo clippy --package fob-wasm --target {{wasm_wasi_target}} -- -D warnings
 
 # =============================================================================
 # Testing
@@ -122,35 +121,23 @@ test-rust:
 # =============================================================================
 
 # Build everything needed for development
-build: build-native build-wasm
+build: build-native
     @echo "✓ Build complete!"
 
 # Build everything in release mode
-build-release: build-native-release build-wasm-release build-napi-release
+build-release: build-native-release build-napi-release
     @echo "✓ Release build complete!"
 
 # Build native crates
 build-native:
     @echo "Building native crates..."
-    @cargo build --workspace --exclude fob-wasm
+    @cargo build --workspace
 
 # Build native crates in release mode
 build-native-release:
     @echo "Building native crates (release)..."
-    @cargo build --workspace --exclude fob-wasm --release
+    @cargo build --workspace --release
 
-# Build WASM (defaults to release)
-build-wasm: build-wasm-release
-
-# Build WASM in release mode
-build-wasm-release:
-    @echo "Building WASM (release)..."
-    @cd crates/fob-wasm && ./build.sh release
-
-# Build WASM in dev mode (faster, unoptimized)
-build-wasm-dev:
-    @echo "Building WASM (dev)..."
-    @cd crates/fob-wasm && ./build.sh dev
 
 # Setup WASM tooling (wasm-tools, jco, target)
 setup-wasm:
@@ -213,7 +200,7 @@ build-gumbo-release:
 # Check WASM crate compiles
 compile-wasm:
     @echo "Checking WASM compilation..."
-    @cargo check --package fob-wasm --target {{wasm_wasi_target}}
+    @cargo check --package fob --target {{wasm_wasi_target}} --all-features
 
 # Check for accidental std::fs usage (WASM compatibility)
 check-std-fs:
@@ -239,49 +226,22 @@ compile-package package:
 # Run WASM-specific tests (native host, WASM target tests)
 test-wasm:
     @echo "Running WASM tests..."
-    @cargo test --package fob-wasm
+    @cargo test --package fob --target {{wasm_wasi_target}}
 
 # Show WASM bundle sizes
 wasm-size:
     @echo "📦 WASM Bundle Sizes:"
-    @echo ""
-    @echo "Core WASM:"
-    @ls -lh crates/fob-wasm/pkg/release/fob_bundler_wasm.wasm 2>/dev/null | awk '{print "  " $$5 "\t" $$9}' || \
-        ls -lh crates/fob-wasm/pkg/debug/fob_bundler_wasm.wasm 2>/dev/null | awk '{print "  " $$5 "\t" $$9}' || \
-        echo "  (No build found - run 'just build-wasm' first)"
-    @echo ""
-    @echo "Component Model:"
-    @ls -lh crates/fob-wasm/pkg/release/fob_bundler.component.wasm 2>/dev/null | awk '{print "  " $$5 "\t" $$9}' || \
-        echo "  (Component not built)"
+    @echo "  (WASM build removed)"
 
 # Check WASM size against edge runtime limits
 wasm-size-check:
     @echo "📦 Checking WASM size against edge runtime limits..."
-    @echo ""
-    @if [ -f "crates/fob-wasm/pkg/release/fob_bundler_wasm.wasm" ]; then \
-        SIZE=$$(stat -f%z "crates/fob-wasm/pkg/release/fob_bundler_wasm.wasm" 2>/dev/null || stat -c%s "crates/fob-wasm/pkg/release/fob_bundler_wasm.wasm" 2>/dev/null); \
-        SIZE_MB=$$(echo "scale=2; $$SIZE / 1024 / 1024" | bc); \
-        echo "  Size: $${SIZE_MB} MB"; \
-        if [ $$(echo "$$SIZE_MB < 3" | bc) -eq 1 ]; then \
-            echo "  ✓ Under 3MB (Cloudflare Workers Free Tier)"; \
-        elif [ $$(echo "$$SIZE_MB < 10" | bc) -eq 1 ]; then \
-            echo "  ⚠ Under 10MB (Cloudflare Workers Paid Tier)"; \
-        else \
-            echo "  ✗ Over 10MB (too large for most edge runtimes)"; \
-            exit 1; \
-        fi; \
-    else \
-        echo "  ⚠ WASM file not found"; \
-        echo "  Run: just build-wasm"; \
-        exit 1; \
-    fi
+    @echo "  (WASM build removed)"
 
 # Test WASM binary with wasmtime runtime
 wasm-run:
     @echo "Testing WASM with wasmtime..."
-    @wasmtime --version || (echo "Install wasmtime: curl https://wasmtime.dev/install.sh -sSf | bash" && exit 1)
-    @test -f crates/fob-wasm/pkg/release/fob_bundler_wasm.wasm || (echo "Build first: just build-wasm" && exit 1)
-    @wasmtime crates/fob-wasm/pkg/release/fob_bundler_wasm.wasm
+    @echo "  (WASM build removed)"
 
 # Verify WASM builds work
 wasm-verify: compile-wasm
@@ -291,8 +251,8 @@ wasm-verify: compile-wasm
 wasm-verify-compat: check-std-fs lint-wasm compile-wasm
     @echo "✓ WASM compatibility verification passed!"
 
-# Full WASM development workflow (setup + build + test + size check)
-wasm-dev: setup-wasm build-wasm-dev test-wasm wasm-size
+# Full WASM development workflow (setup + test)
+wasm-dev: setup-wasm test-wasm
     @echo "✓ WASM development workflow complete!"
 
 # =============================================================================
@@ -405,13 +365,11 @@ setup-tools:
 clean:
     @echo "Cleaning build artifacts..."
     @cargo clean
-    @rm -rf crates/fob-wasm/pkg
     @pnpm clean || true
     @echo "✓ Clean complete"
 
 # Clean WASM artifacts
 clean-wasm:
-    @rm -rf crates/fob-wasm/pkg
     @rm -rf target/{{wasm_wasi_target}}
     @echo "✓ WASM artifacts cleaned"
 
@@ -458,8 +416,8 @@ verify: verify-native wasm-verify verify-tests
 # Verify native builds
 verify-native:
     @echo "Verifying native builds..."
-    @cargo build --workspace --exclude fob-wasm
-    @cargo test --workspace --exclude fob-wasm
+    @cargo build --workspace
+    @cargo test --workspace
     @echo "✓ Native verification passed!"
 
 # Verify all tests pass
@@ -579,7 +537,7 @@ tag:
     fi
 
 # Build release artifacts for all targets
-release: build-native-release build-wasm-release build-napi-release
+release: build-native-release build-napi-release
     @echo "✓ Release build complete!"
 
 # Prepare for release (clean + ci + release)

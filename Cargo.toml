@@ -1,7 +1,6 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/fob-wasm",
     "crates/fob-config",
     "crates/fob",
     "crates/fob-bundler",

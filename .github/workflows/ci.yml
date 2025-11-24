@@ -1,199 +1,272 @@
 name: CI
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-# Cancel outdated PR runs when new commits are pushed
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+env:
+  DEBUG: napi:*
+  APP_NAME: fob-native
+  MACOSX_DEPLOYMENT_TARGET: '10.13'
 
 permissions:
-  contents: read
+  contents: write
+  id-token: write
+
+on:
+  push:
+    branches:
+      - main
+    tags-ignore:
+      - '**'
+    paths-ignore:
+      - '**/*.md'
+      - LICENSE
+      - '**/*.gitignore'
+      - '.editorconfig'
+      - 'docs/**'
+  pull_request: null
 
 jobs:
   build:
-    name: Build Native Bindings (${{ matrix.target }})
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
-    
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # macOS x86_64
-          - os: macos-13
+        settings:
+          - host: macos-latest
             target: x86_64-apple-darwin
-            ext: dylib
-            napi_platform: darwin-x64
-          # macOS ARM64
-          - os: macos-latest
+            build: |
+              cd crates/fob-native &&
+              pnpm build --target x86_64-apple-darwin --release &&
+              strip -x *.node
+          - host: macos-latest
             target: aarch64-apple-darwin
-            ext: dylib
-            napi_platform: darwin-arm64
-          # Linux x86_64 GNU
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            ext: so
-            napi_platform: linux-x64-gnu
-          # Linux x86_64 musl
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-musl
-            ext: so
-            napi_platform: linux-x64-musl
-          # Linux ARM64 GNU
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            ext: so
-            napi_platform: linux-arm64-gnu
-          # Windows x86_64
-          - os: windows-latest
+            build: |
+              cd crates/fob-native &&
+              pnpm build --target aarch64-apple-darwin --release &&
+              strip -x *.node
+          - host: windows-latest
+            build: cd crates/fob-native && pnpm build --target x86_64-pc-windows-msvc --release
             target: x86_64-pc-windows-msvc
-            ext: dll
-            napi_platform: win32-x64-msvc
-    
+          - host: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
+            build: |-
+              set -e &&
+              cd crates/fob-native &&
+              pnpm build --target x86_64-unknown-linux-gnu --release &&
+              strip *.node
+          - host: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
+            build: set -e && cd crates/fob-native && pnpm build --target x86_64-unknown-linux-musl --release && strip *.node
+          - host: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
+            build: |-
+              set -e &&
+              cd crates/fob-native &&
+              pnpm build --target aarch64-unknown-linux-gnu --release &&
+              aarch64-unknown-linux-gnu-strip *.node
+          - host: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine-aarch64
+            build: |-
+              set -e &&
+              cd crates/fob-native &&
+              pnpm build --target aarch64-unknown-linux-musl --release &&
+              /aarch64-linux-musl-cross/bin/aarch64-linux-musl-strip *.node
+    name: stable - ${{ matrix.settings.target }} - node@20
+    runs-on: ${{ matrix.settings.host }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@v4
       
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8 # stable
+      - name: Setup node
+        uses: actions/setup-node@v4
+        if: ${{ !matrix.settings.docker }}
         with:
-          toolchain: stable
-          target: ${{ matrix.target }}
-          components: rustfmt, clippy
-      
-      - name: Setup Rust cache
-        uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
-        with:
-          key: ${{ matrix.target }}-ci
-
-      - name: Install Node.js
-        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
-        with:
-          node-version: '20'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v3.0.0
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install musl tools (Linux musl only)
-        if: matrix.target == 'x86_64-unknown-linux-musl'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y musl-tools
-
-      - name: Install cross-compilation tools (ARM64 Linux only)
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-
-      - name: Build native bindings
-        run: |
-          cd crates/fob-native
-          cargo build --release --target ${{ matrix.target }}
-      
-      - name: Copy binary to expected locations
-        shell: bash
-        run: |
-          mkdir -p packages/fob-bundler
-          mkdir -p packages/fob-bundler/npm/${{ matrix.napi_platform }}
-
-          # Determine source binary path
-          if [ "${{ matrix.ext }}" = "dll" ]; then
-            SOURCE_BINARY="target/${{ matrix.target }}/release/fob_native.dll"
-          else
-            SOURCE_BINARY="target/${{ matrix.target }}/release/libfob_native.${{ matrix.ext }}"
-          fi
-
-          # Copy for CI testing (Rust target triple naming)
-          cp "$SOURCE_BINARY" "packages/fob-bundler/fob-bundler.${{ matrix.target }}.node"
-
-          # Copy to platform package directory (NAPI-RS naming)
-          cp "$SOURCE_BINARY" "packages/fob-bundler/npm/${{ matrix.napi_platform }}/fob-bundler.${{ matrix.napi_platform }}.node"
-      
-      - name: Upload artifact
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
-        with:
-          name: bindings-${{ matrix.target }}
-          path: |
-            packages/fob-bundler/fob-bundler.${{ matrix.target }}.node
-            packages/fob-bundler/npm/${{ matrix.napi_platform }}/fob-bundler.${{ matrix.napi_platform }}.node
-          retention-days: 7
-  
-  test:
-    name: Test
-    needs: [build]
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8 # stable
-        with:
-          toolchain: stable
-          components: rustfmt, clippy
-      
-      - name: Setup Rust cache
-        uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
-        with:
-          key: ubuntu-latest-test
-      
-      - name: Install Node.js
-        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
-        with:
-          node-version: '20'
+          node-version: 20
+          cache: pnpm
       
       - name: Install pnpm
-        uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v3.0.0
+        uses: pnpm/action-setup@v4
         with:
           version: 10
       
-      - name: Install just
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
-      
-      - name: Download all bindings artifacts
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        if: ${{ !matrix.settings.docker }}
         with:
-          path: packages/fob-bundler
-          pattern: bindings-*
-          merge-multiple: true
-
-      - name: Verify downloaded bindings
-        run: |
-          echo "Downloaded bindings:"
-          ls -lh packages/fob-bundler/*.node || echo "No .node files in main directory"
-          ls -lh packages/fob-bundler/npm/*/*.node || echo "No .node files in platform directories"
-          echo ""
-          echo "Checking binary types:"
-          file packages/fob-bundler/*.node || true
-          file packages/fob-bundler/npm/*/*.node || true
-
-      - name: Install pnpm dependencies
-        run: pnpm install --frozen-lockfile
+          toolchain: stable
+          targets: ${{ matrix.settings.target }}
       
-      - name: Run tests
-        run: |
-          cd packages/fob-bundler
-          pnpm test
-      
-      - name: Run CI checks
-        run: just ci
-      
-      - name: Upload test artifacts
-        if: failure()
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+      - name: Cache cargo
+        uses: actions/cache@v4
         with:
-          name: test-results
-          path: target/debug
-          retention-days: 30
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            .cargo-cache
+            target/
+          key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Build in docker
+        uses: addnab/docker-run-action@v3
+        if: ${{ matrix.settings.docker }}
+        with:
+          image: ${{ matrix.settings.docker }}
+          options: '--user 0:0 -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index -v ${{ github.workspace }}:/build -w /build'
+          run: ${{ matrix.settings.build }}
+      
+      - name: Build
+        run: ${{ matrix.settings.build }}
+        if: ${{ !matrix.settings.docker }}
+        shell: bash
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bindings-${{ matrix.settings.target }}
+          path: crates/fob-native/${{ env.APP_NAME }}.*.node
+          if-no-files-found: error
+
+  test-macOS-windows-binding:
+    name: Test bindings on ${{ matrix.settings.target }} - node@${{ matrix.node }}
+    needs:
+      - build
+    strategy:
+      fail-fast: false
+      matrix:
+        settings:
+          - host: macos-latest
+            target: x86_64-apple-darwin
+          - host: windows-latest
+            target: x86_64-pc-windows-msvc
+        node:
+          - '18'
+          - '20'
+    runs-on: ${{ matrix.settings.host }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: bindings-${{ matrix.settings.target }}
+          path: crates/fob-native
+      
+      - name: List packages
+        run: ls -R crates/fob-native
+        shell: bash
+      
+      - name: Test bindings
+        run: cd crates/fob-native && pnpm test
+
+  test-linux-x64-gnu-binding:
+    name: Test bindings on Linux-x64-gnu - node@${{ matrix.node }}
+    needs:
+      - build
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - '18'
+          - '20'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: bindings-x86_64-unknown-linux-gnu
+          path: crates/fob-native
+      
+      - name: List packages
+        run: ls -R crates/fob-native
+        shell: bash
+      
+      - name: Test bindings
+        run: cd crates/fob-native && pnpm test
+
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    needs:
+      - test-macOS-windows-binding
+      - test-linux-x64-gnu-binding
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: crates/fob-native/artifacts
+      
+      - name: Move artifacts
+        run: cd crates/fob-native && pnpm exec napi artifacts
+      
+      - name: List packages
+        run: ls -R crates/fob-native/npm
+        shell: bash
+      
+      - name: Publish
+        run: |
+          cd crates/fob-native
+          npm config set provenance true
+          if git log -1 --pretty=%B | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+$";
+          then
+            echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+            npm publish --access public
+          elif git log -1 --pretty=%B | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+";
+          then
+            echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+            npm publish --tag next --access public
+          else
+            echo "Not a release, skipping publish"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

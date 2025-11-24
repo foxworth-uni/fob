@@ -1,0 +1,22 @@
+{
+  "name": "@fob/react-static-site-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Example of building a React static site with fob CLI (tsup-style)",
+  "type": "module",
+  "scripts": {
+    "build": "fob build",
+    "dev": "fob dev",
+    "build:prod": "fob build --minify",
+    "serve": "npx serve ."
+  },
+  "dependencies": {
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "@types/react": "latest",
+    "@types/react-dom": "latest"
+  }
+}
+

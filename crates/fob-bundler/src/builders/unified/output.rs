@@ -177,18 +177,23 @@ impl BuildOutput {
     pub fn write_to(&self, dir: impl AsRef<Path>, overwrite: bool) -> Result<()> {
         use crate::output::writer::write_bundle_to;
 
+        eprintln!("[DEBUG] BuildOutput::write_to called, dir: {}", dir.as_ref().display());
         match self {
             BuildOutput::Single(bundle) => {
+                eprintln!("[DEBUG] Single bundle mode, assets: {}", bundle.assets.len());
                 write_bundle_to(bundle, dir.as_ref(), overwrite)?;
             }
             BuildOutput::Multiple(bundles) => {
+                eprintln!("[DEBUG] Multiple bundles mode, count: {}", bundles.len());
                 let dir = dir.as_ref();
                 for (name, bundle) in bundles {
+                    eprintln!("[DEBUG] Writing bundle '{}' with {} assets", name, bundle.assets.len());
                     let component_dir = dir.join(name);
                     write_bundle_to(bundle, &component_dir, overwrite)?;
                 }
             }
         }
+        eprintln!("[DEBUG] BuildOutput::write_to completed successfully");
         Ok(())
     }
 

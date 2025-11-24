@@ -1,0 +1,8 @@
+{
+  "entry": ["./src/index.tsx"],
+  "outDir": "./dist",
+  "bundle": true,
+  "platform": "browser",
+  "sourcemap": "external"
+}
+

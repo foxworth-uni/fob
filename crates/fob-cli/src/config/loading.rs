@@ -46,7 +46,7 @@ impl FobConfig {
 
         // Preserve existing entry when CLI explicitly omits entries so other CLI flags still apply.
         let base_entry =
-            if args.entry.is_none() || args.entry.as_ref().map_or(false, |e| e.is_empty()) {
+            if args.entry.is_none() || args.entry.as_ref().is_some_and(|e| e.is_empty()) {
                 let base: Self = figment.clone().extract().map_err(convert_figment_error)?;
                 Some(base.entry)
             } else {

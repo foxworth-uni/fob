@@ -71,7 +71,7 @@ pub use rolldown_common::{Output, OutputAsset, OutputChunk};
 
 // Re-export TypeScript-related types from rolldown_common
 pub use rolldown_common::{
-    BundlerTransformOptions, IsolatedDeclarationsOptions, TypeScriptOptions,
+    BundlerTransformOptions, DecoratorOptions, IsolatedDeclarationsOptions, TypeScriptOptions,
 };
 
 // Re-export bundler APIs
@@ -202,6 +202,81 @@ impl std::fmt::Display for diagnostics::DiagnosticKind {
             diagnostics::DiagnosticKind::Plugin => write!(f, "Plugin"),
             diagnostics::DiagnosticKind::Transform => write!(f, "Transform"),
             diagnostics::DiagnosticKind::Other(s) => write!(f, "{}", s),
+        }
+    }
+}
+
+impl miette::Diagnostic for Error {
+    fn code(&self) -> Option<Box<dyn std::fmt::Display + '_>> {
+        Some(Box::new(match self {
+            Error::Bundler(_) => "BUNDLER_ERROR",
+            Error::InvalidConfig(_) => "INVALID_CONFIG",
+            Error::Io(_) => "IO_ERROR",
+            Error::InvalidOutputPath(_) => "INVALID_OUTPUT_PATH",
+            Error::WriteFailure(_) => "WRITE_FAILURE",
+            Error::OutputExists(_) => "OUTPUT_EXISTS",
+            Error::AssetNotFound { .. } => "ASSET_NOT_FOUND",
+            Error::AssetSecurityViolation { .. } => "ASSET_SECURITY_VIOLATION",
+            Error::AssetTooLarge { .. } => "ASSET_TOO_LARGE",
+            Error::IoError { .. } => "IO_ERROR",
+            Error::Foundation(_) => "FOUNDATION_ERROR",
+        }))
+    }
+
+    fn severity(&self) -> Option<miette::Severity> {
+        Some(miette::Severity::Error)
+    }
+
+    fn help(&self) -> Option<Box<dyn std::fmt::Display + '_>> {
+        match self {
+            Error::InvalidConfig(msg) => Some(Box::new(format!(
+                "Check your configuration file for syntax errors.\nError: {}",
+                msg
+            ))),
+            Error::InvalidOutputPath(path) => Some(Box::new(format!(
+                "The output path '{}' is invalid. Ensure it's within the project directory and doesn't contain '..' components.",
+                path
+            ))),
+            Error::WriteFailure(msg) => Some(Box::new(format!(
+                "Failed to write file. Check disk space and permissions.\nError: {}",
+                msg
+            ))),
+            Error::OutputExists(msg) => Some(Box::new(format!(
+                "Output file already exists: {}\nUse --overwrite flag to replace existing files.",
+                msg
+            ))),
+            Error::AssetNotFound { specifier, searched_from } => Some(Box::new(format!(
+                "Could not find asset '{}'.\nSearched from: {}\nCheck that the file exists and the path is correct.",
+                specifier, searched_from
+            ))),
+            Error::AssetSecurityViolation { path, reason } => Some(Box::new(format!(
+                "Security violation detected for path '{}': {}\nPaths must be within the project directory.",
+                path, reason
+            ))),
+            Error::AssetTooLarge { path, size, max_size } => Some(Box::new(format!(
+                "Asset '{}' is too large: {} bytes (max: {} bytes).\nConsider splitting large assets or increasing the size limit.",
+                path, size, max_size
+            ))),
+            Error::Bundler(diagnostics) => {
+                if diagnostics.len() == 1 {
+                    diagnostics[0].help.as_ref().map(|h| Box::new(h.clone()) as Box<dyn std::fmt::Display>)
+                } else {
+                    Some(Box::new(format!("Multiple bundler errors occurred. See details below.")))
+                }
+            }
+            _ => None,
+        }
+    }
+
+    fn related(&self) -> Option<Box<dyn Iterator<Item = &dyn miette::Diagnostic> + '_>> {
+        match self {
+            Error::Bundler(diagnostics) if diagnostics.len() > 1 => {
+                // Return all diagnostics as related errors
+                // This requires converting each diagnostic, which is complex
+                // For now, return None - the main error message will show the count
+                None
+            }
+            _ => None,
         }
     }
 }

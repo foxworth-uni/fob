@@ -4,7 +4,7 @@
 //! parsing, logging initialization, and command dispatch.
 
 use clap::Parser;
-use fob_cli::{cli, commands, logger, ui};
+use fob_cli::{cli, commands, error, logger, ui};
 use miette::Result;
 
 #[tokio::main]
@@ -24,6 +24,6 @@ async fn main() -> Result<()> {
         cli::Command::Check(check_args) => commands::check_execute(check_args).await,
     };
 
-    // Convert CLI errors to miette errors for beautiful error reporting
-    result.map_err(|e| miette::miette!("{}", e))
+    // Convert CLI errors to miette diagnostics for beautiful error reporting
+    result.map_err(error::cli_error_to_miette)
 }
