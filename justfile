@@ -522,6 +522,35 @@ tag:
     CURRENT_VERSION=$(grep -m1 '^version = ' Cargo.toml | cut -d '"' -f2)
     echo "📦 Current version: $CURRENT_VERSION"
 
+    # Check if repository has uncommitted changes
+    DIRTY_FILES=()
+    if ! git diff-index --quiet HEAD -- || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+        echo ""
+        echo "⚠️  Repository has uncommitted changes:"
+        git status --short
+        echo ""
+        if gum confirm "Include uncommitted changes in version bump commit?"; then
+            # Get all modified, staged, and untracked files
+            while IFS= read -r line; do
+                # git status --porcelain format: XY filename
+                # Extract filename (everything after the status codes)
+                file=$(echo "$line" | sed 's/^.. //')
+                if [ -f "$file" ]; then
+                    DIRTY_FILES+=("$file")
+                fi
+            done < <(git status --porcelain)
+            
+            if [ ${#DIRTY_FILES[@]} -gt 0 ]; then
+                echo "✓ Will include ${#DIRTY_FILES[@]} uncommitted file(s) in commit:"
+                printf "  - %s\n" "${DIRTY_FILES[@]}"
+                echo ""
+            fi
+        else
+            echo "⚠️  Proceeding without uncommitted changes"
+        fi
+        echo ""
+    fi
+
     # Choose version bump
     BUMP=$(gum choose "patch" "minor" "major" "custom" --header "Select version increment")
 
@@ -568,7 +597,15 @@ tag:
     git diff "${UPDATED_FILES[@]}" Cargo.lock || true
 
     if gum confirm "Commit and tag v${NEW_VERSION}?"; then
+        # Stage version files
         git add "${UPDATED_FILES[@]}" Cargo.lock
+        
+        # Stage uncommitted changes if user chose to include them
+        if [ ${#DIRTY_FILES[@]} -gt 0 ]; then
+            echo "📝 Staging uncommitted changes..."
+            git add "${DIRTY_FILES[@]}"
+        fi
+        
         git commit -m "chore: bump version to v${NEW_VERSION}"
         git tag -a "v${NEW_VERSION}" -m "Release v${NEW_VERSION}"
         echo "✨ Tagged v${NEW_VERSION}"
