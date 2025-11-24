@@ -85,7 +85,7 @@ jobs:
           cache: pnpm
       
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v4.2.0
       
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -154,7 +154,7 @@ jobs:
           cache: pnpm
       
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v4.2.0
       
       - name: Install dependencies
         run: pnpm install
@@ -193,7 +193,7 @@ jobs:
           cache: pnpm
       
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v4.2.0
       
       - name: Install dependencies
         run: pnpm install
@@ -227,7 +227,7 @@ jobs:
           cache: pnpm
       
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v4.2.0
       
       - name: Install dependencies
         run: pnpm install
