@@ -165,16 +165,15 @@ impl Plugin for BunnyMdxPlugin {
 
             let path = std::path::Path::new(&specifier);
 
-            // If already absolute and exists, return as-is
+            // If already absolute, always claim it - don't check existence here.
+            // The load hook will handle missing files with better error messages.
+            // This prevents Rolldown from applying normalize_relative_external_id
+            // which breaks when the importer is a virtual module.
             if path.is_absolute() {
-                if path.exists() {
-                    return Ok(Some(HookResolveIdOutput {
-                        id: specifier.into(),
-                        ..Default::default()
-                    }));
-                }
-                // File doesn't exist, let other resolvers handle it
-                return Ok(None);
+                return Ok(Some(HookResolveIdOutput {
+                    id: specifier.into(),
+                    ..Default::default()
+                }));
             }
 
             // Relative path - resolve against project_root
