@@ -25,13 +25,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for (path, is_entry) in modules {
         let id = ModuleId::new(path)?;
-        let module = Module::builder(
-            id.clone(),
-            PathBuf::from(path),
-            SourceType::TypeScript,
-        )
-        .entry(is_entry)
-        .build();
+        let module = Module::builder(id.clone(), PathBuf::from(path), SourceType::TypeScript)
+            .entry(is_entry)
+            .build();
         graph.add_module(module)?;
     }
 
@@ -115,8 +111,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nFinal graph statistics:");
     println!("  Modules: {}", final_stats.module_count);
     println!("  Entry points: {}", final_stats.entry_point_count);
-    println!("  External dependencies: {}", final_stats.external_dependency_count);
+    println!(
+        "  External dependencies: {}",
+        final_stats.external_dependency_count
+    );
 
     Ok(())
 }
-

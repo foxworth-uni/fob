@@ -69,36 +69,36 @@ impl fmt::Display for AnalysisResult {
         writeln!(f, "Analysis Result")?;
         writeln!(f, "================")?;
         writeln!(f, "Entry points: {}", self.entry_points.len())?;
-        
+
         if let Ok(modules) = self.graph.modules() {
             writeln!(f, "Total modules: {}", modules.len())?;
         }
-        
+
         if let Ok(unused) = self.unused_exports() {
             writeln!(f, "Unused exports: {}", unused.len())?;
         }
-        
+
         if let Ok(external) = self.external_dependencies() {
             writeln!(f, "External dependencies: {}", external.len())?;
         }
-        
+
         writeln!(f, "Warnings: {}", self.warnings.len())?;
         writeln!(f, "Errors: {}", self.errors.len())?;
-        
+
         if !self.warnings.is_empty() {
             writeln!(f, "\nWarnings:")?;
             for warning in &self.warnings {
                 writeln!(f, "  - {}", warning)?;
             }
         }
-        
+
         if !self.errors.is_empty() {
             writeln!(f, "\nErrors:")?;
             for error in &self.errors {
                 writeln!(f, "  - {}", error)?;
             }
         }
-        
+
         Ok(())
     }
 }

@@ -27,15 +27,16 @@ impl CoreBundler {
             .ok_or_else(|| "Failed to determine working directory".to_string())?;
 
         let runtime: Arc<dyn Runtime> = Arc::new(
-            NativeRuntime::new(cwd)
-                .map_err(|e| format!("Failed to create runtime: {}", e))?,
+            NativeRuntime::new(cwd).map_err(|e| format!("Failed to create runtime: {}", e))?,
         );
 
         Ok(Self { config, runtime })
     }
 
     /// Bundle the configured entries
-    pub async fn bundle(&self) -> Result<crate::conversion::result::BundleResult, fob_bundler::Error> {
+    pub async fn bundle(
+        &self,
+    ) -> Result<crate::conversion::result::BundleResult, fob_bundler::Error> {
         // Validation
         if self.config.entries.is_empty() {
             return Err(fob_bundler::Error::InvalidConfig(
@@ -45,13 +46,22 @@ impl CoreBundler {
 
         let format = convert_format(self.config.format.clone());
         let cwd = self.runtime.get_cwd().map_err(|e| {
-            fob_bundler::Error::Io(io::Error::new(io::ErrorKind::Other, format!("Failed to get cwd: {}", e)))
+            fob_bundler::Error::Io(io::Error::new(
+                io::ErrorKind::Other,
+                format!("Failed to get cwd: {}", e),
+            ))
         })?;
-        
+
         // Validate and normalize output directory
-        eprintln!("[BUNDLER DEBUG] config.output_dir = {:?}", self.config.output_dir);
+        eprintln!(
+            "[BUNDLER DEBUG] config.output_dir = {:?}",
+            self.config.output_dir
+        );
         let out_dir = if let Some(output_dir) = &self.config.output_dir {
-            eprintln!("[BUNDLER DEBUG] Using output_dir from config: {}", output_dir);
+            eprintln!(
+                "[BUNDLER DEBUG] Using output_dir from config: {}",
+                output_dir
+            );
             let path = PathBuf::from(output_dir);
             validate_path(&cwd, &path, "output_dir")
                 .map_err(|e| fob_bundler::Error::InvalidOutputPath(e.to_string()))?
@@ -59,7 +69,7 @@ impl CoreBundler {
             eprintln!("[BUNDLER DEBUG] No output_dir in config, using default: dist");
             cwd.join("dist")
         };
-        
+
         // Validate entry paths
         for entry in &self.config.entries {
             let entry_path = PathBuf::from(entry);
@@ -74,12 +84,15 @@ impl CoreBundler {
             } else {
                 BuildOptions::components(self.config.entries.clone())
             };
-            
-            options = options.cwd(cwd).format(format).runtime(self.runtime.clone());
-            
+
+            options = options
+                .cwd(cwd)
+                .format(format)
+                .runtime(self.runtime.clone());
+
             // Set sourcemap based on mode
             options = convert_sourcemap_mode(options, self.config.sourcemap.clone());
-            
+
             options.build().await?
         };
 
@@ -90,4 +103,3 @@ impl CoreBundler {
         Ok(crate::conversion::result::BundleResult::from(build_result))
     }
 }
-

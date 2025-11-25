@@ -11,8 +11,8 @@ use serde::{Deserialize, Serialize};
 use super::ModuleId;
 
 pub use metadata::{
-    ClassMemberMetadata, CodeQualityMetadata, EnumMemberMetadata, EnumMemberValue,
-    SymbolMetadata, Visibility,
+    ClassMemberMetadata, CodeQualityMetadata, EnumMemberMetadata, EnumMemberValue, SymbolMetadata,
+    Visibility,
 };
 pub use statistics::SymbolStatistics;
 
@@ -479,4 +479,3 @@ mod tests {
         assert_eq!(stats.unused_percentage(), 50.0);
     }
 }
-

@@ -1,8 +1,8 @@
 //! Utility functions for semantic analysis.
 
+use super::super::symbol::SymbolKind;
 use super::super::SourceType;
 use fob::oxc::SourceType as OxcSourceType;
-use super::super::symbol::SymbolKind;
 
 /// Convert Fob's SourceType to Oxc's SourceType.
 pub(super) fn convert_source_type(source_type: SourceType, filename: &str) -> OxcSourceType {
@@ -75,4 +75,3 @@ pub(super) fn get_line_column(source: &str, offset: u32) -> (u32, u32) {
 
     (line, column)
 }
-

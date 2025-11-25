@@ -27,4 +27,3 @@ pub(super) fn detect_unreachable_with_visitor(
 
     visitor.unreachable
 }
-

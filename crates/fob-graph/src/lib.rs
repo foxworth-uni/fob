@@ -119,7 +119,6 @@
 
 // Core graph types and primitives
 mod class_enum_extraction;
-mod quality;
 pub mod collection;
 pub mod dependency_chain;
 pub mod export;
@@ -130,6 +129,7 @@ pub mod import;
 pub mod module;
 pub mod module_id;
 pub mod package_json;
+mod quality;
 pub mod semantic;
 pub mod span;
 pub mod statistics;
@@ -177,4 +177,3 @@ pub use symbol::{
 
 #[cfg(test)]
 mod tests;
-

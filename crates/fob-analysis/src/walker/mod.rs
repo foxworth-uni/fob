@@ -11,8 +11,8 @@ pub use validation::{normalize_and_validate_path, validate_path_within_cwd, Path
 
 use std::sync::Arc;
 
-use fob_graph::collection::CollectionState;
 use fob::runtime::Runtime;
+use fob_graph::collection::CollectionState;
 
 use crate::config::AnalyzerConfig;
 use crate::resolver::ModuleResolver;
@@ -54,10 +54,7 @@ pub enum WalkerError {
     },
 
     #[error("Too many modules processed: {count} modules (max: {max} allowed)")]
-    TooManyModules {
-        count: usize,
-        max: usize,
-    },
+    TooManyModules { count: usize, max: usize },
 
     #[error("File too large: {path} is {size} bytes (max: {max} bytes)")]
     FileTooLarge {
@@ -88,4 +85,3 @@ impl GraphWalker {
         traversal.traverse(runtime).await
     }
 }
-

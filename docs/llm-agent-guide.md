@@ -1,9 +1,11 @@
 # Fob: LLM Agent Guide
+
 **A JavaScript bundler you can embed in your Rust code**
 
 ## Quick Start (30-second orientation)
 
 **What is Fob?**
+
 - JavaScript/TypeScript bundler implemented as a **Rust library** (not CLI)
 - Embeddable in meta-frameworks, build tools, and custom toolchains
 - Cross-platform: Native (Rust/Node.js) and WASM (browser/edge)
@@ -12,6 +14,7 @@
 **Key Philosophy**: Library-first, not CLI-first. You call Fob functions from your code.
 
 **Most Common Use Cases**:
+
 1. Building component libraries with React/Vue/Svelte
 2. Creating meta-frameworks with file-based routing
 3. Dynamic bundling at runtime
@@ -92,6 +95,7 @@ result.write_to_force("dist")?;
 **When**: You want to bundle JavaScript/TypeScript files.
 
 **Presets**:
+
 - `.app()` - Bundle everything with code splitting (for browsers/Node apps)
 - `.library()` - Externalize dependencies (for npm packages)
 - `.components()` - Multiple entry points without code splitting (for tree-shaking)
@@ -119,8 +123,9 @@ let stats = analysis.stats();
 **When**: You need dependency graph info but don't need bundled output.
 
 **Use Cases**:
+
 - Finding unused exports
-- Detecting circular dependencies  
+- Detecting circular dependencies
 - Computing module counts/sizes
 - LSP/IDE integration
 
@@ -154,6 +159,7 @@ let deps = graph.dependencies(&id)?;
 **Location**: `crates/fob-bundler/src/builders/unified/options.rs`
 
 **Entry Points**:
+
 ```rust
 BuildOptions::new(entry)              // Single entry, basic bundling
 BuildOptions::new_multiple(entries)   // Multiple entries, basic bundling
@@ -163,6 +169,7 @@ BuildOptions::components(entries)     // Multiple entry points (no code splittin
 ```
 
 **Common Methods**:
+
 ```rust
 .runtime(Arc<dyn Runtime>)  // Required: platform abstraction
 .outdir("dist")              // Output directory
@@ -184,6 +191,7 @@ BuildOptions::components(entries)     // Multiple entry points (no code splittin
 ```
 
 **Result Type**:
+
 ```rust
 struct BuildResult {
     output: BuildOutput,      // Chunks and assets
@@ -201,6 +209,7 @@ result.write_to_force("dist")?;
 **Location**: `crates/fob-analysis/src/analyzer.rs`
 
 **Typestate Flow**:
+
 ```rust
 Analyzer::new()                     // Analyzer<Unconfigured>
     .entry("src/index.ts")          // → Analyzer<Configured>
@@ -208,6 +217,7 @@ Analyzer::new()                     // Analyzer<Unconfigured>
 ```
 
 **Configuration**:
+
 ```rust
 .entry(path)                  // Single entry (transitions state)
 .entries(Vec<path>)           // Multiple entries (transitions state)
@@ -219,6 +229,7 @@ Analyzer::new()                     // Analyzer<Unconfigured>
 ```
 
 **Analysis Methods**:
+
 ```rust
 analysis.unused_exports()?                  // Find unused exports
 analysis.find_circular_dependencies()?      // Detect cycles
@@ -231,6 +242,7 @@ analysis.graph()                            // Access ModuleGraph
 **Location**: `crates/fob-graph/src/memory/graph.rs`
 
 **Core Operations**:
+
 ```rust
 let graph = ModuleGraph::new()?;
 
@@ -256,10 +268,12 @@ graph.statistics()?
 **Location**: `crates/fob/src/runtime.rs`
 
 **Implementations**:
+
 - `NativeRuntime` - Uses `std::fs` and tokio
 - `WasmRuntime` - Browser/WASM environment (future)
 
 **Key Methods**:
+
 ```rust
 trait Runtime: Send + Sync {
     async fn read_file(&self, path: &Path) -> RuntimeResult<Vec<u8>>;
@@ -392,6 +406,7 @@ let result = BuildOptions::new("virtual:entry")
 ## Key Files (Where to Look)
 
 ### Entry Points & Public APIs
+
 - `crates/fob-bundler/src/lib.rs` - Main bundling API exports
 - `crates/fob-bundler/src/builders/unified/options.rs` - BuildOptions implementation
 - `crates/fob-bundler/src/builders/unified/output.rs` - BuildResult types
@@ -400,6 +415,7 @@ let result = BuildOptions::new("virtual:entry")
 - `crates/fob-graph/src/lib.rs` - Graph types and exports
 
 ### Core Data Types
+
 - `crates/fob-graph/src/module.rs` - Module representation
 - `crates/fob-graph/src/module_id.rs` - Module identifier
 - `crates/fob-graph/src/import.rs` - Import representation
@@ -407,15 +423,18 @@ let result = BuildOptions::new("virtual:entry")
 - `crates/fob-graph/src/memory/graph.rs` - ModuleGraph implementation
 
 ### Configuration
+
 - `crates/fob-config/src/config.rs` - Configuration types
 - `crates/fob-bundler/src/builders/common.rs` - Build execution logic
 
 ### Runtime Abstraction
+
 - `crates/fob/src/runtime.rs` - Runtime trait definition
 - `crates/fob/src/native_runtime.rs` - Native implementation
 - `crates/fob/src/wasm_runtime.rs` - WASM implementation
 
 ### Plugins
+
 - `crates/fob-plugin-css/src/lib.rs` - CSS plugin
 - `crates/fob-plugin-mdx/src/lib.rs` - MDX plugin
 - `crates/fob-plugin-tailwind/src/lib.rs` - Tailwind plugin
@@ -428,10 +447,12 @@ let result = BuildOptions::new("virtual:entry")
 ## Testing Strategy
 
 ### Unit Tests
+
 - Located in `src/` directories as `#[cfg(test)]` modules
 - Or in `crates/*/tests/*.rs` for integration tests
 
 ### Running Tests
+
 ```bash
 # All tests
 cargo test
@@ -447,6 +468,7 @@ cargo test -- --nocapture
 ```
 
 ### Test Utilities
+
 - `fob` crate has `test-utils` feature for test helpers
 - `tempfile` crate for temporary directories
 - Example fixtures in `crates/*/tests/fixtures/`
@@ -458,16 +480,19 @@ cargo test -- --nocapture
 ### WASM Compatibility Rules
 
 **Never use directly**:
+
 - `std::fs` - Use `Runtime` trait instead
 - `std::env::current_dir()` - Use `runtime.get_cwd()`
 - `tokio` with default features - Use minimal features
 
 **Always**:
+
 - Pass `Arc<dyn Runtime>` to APIs
 - Use async I/O via Runtime trait
 - Check target with `#[cfg(target_family = "wasm")]`
 
 **Layer Compatibility**:
+
 - ✅ `fob`, `fob-config`, `fob-graph`, `fob-gen` - WASM-compatible
 - ✅ `fob-analysis` - WASM-compatible (uses Runtime)
 - ⚠️ `fob-bundler` - WASM-compatible via rolldown (requires Runtime)
@@ -476,10 +501,12 @@ cargo test -- --nocapture
 ### Runtime Requirements
 
 **Native platforms**:
+
 - `NativeRuntime` is automatically created if not provided
 - Uses `std::fs` and `tokio::fs` internally
 
 **WASM platforms**:
+
 - **Must** provide a `Runtime` implementation
 - Cannot use `std::fs` directly
 - Must bridge to JavaScript filesystem APIs
@@ -489,6 +516,7 @@ cargo test -- --nocapture
 ## Code Patterns & Idioms
 
 ### 1. Error Handling
+
 ```rust
 // Use anyhow for application code
 use anyhow::Result;
@@ -502,6 +530,7 @@ pub enum MyError {
 ```
 
 ### 2. Async/Await
+
 ```rust
 // Always use async-trait for trait methods
 use async_trait::async_trait;
@@ -513,6 +542,7 @@ trait MyTrait {
 ```
 
 ### 3. Builder Pattern
+
 ```rust
 // Typestate builders for compile-time safety
 pub struct Builder<S> {
@@ -530,6 +560,7 @@ impl Builder<Configured> {
 ```
 
 ### 4. Arc for Shared Ownership
+
 ```rust
 // Graph types use Arc for efficient cloning
 let graph: Arc<ModuleGraph> = Arc::new(ModuleGraph::new()?);
@@ -537,6 +568,7 @@ let graph_clone = Arc::clone(&graph);  // Cheap
 ```
 
 ### 5. Runtime Pattern
+
 ```rust
 // Always use Arc<dyn Runtime> for cross-platform support
 let runtime: Arc<dyn Runtime> = Arc::new(NativeRuntime);
@@ -590,37 +622,45 @@ BuildOptions::new("src/index.js")
 **I want to...**
 
 → **Bundle JavaScript for production**
-  - Use `fob-bundler::BuildOptions::app()` or `BuildOptions::new()`
-  - See: `examples/rust/basic-bundler`
+
+- Use `fob-bundler::BuildOptions::app()` or `BuildOptions::new()`
+- See: `examples/rust/basic-bundler`
 
 → **Build an npm package**
-  - Use `fob-bundler::BuildOptions::library()`
-  - See: `examples/rust/component-library`
+
+- Use `fob-bundler::BuildOptions::library()`
+- See: `examples/rust/component-library`
 
 → **Find unused code**
-  - Use `fob-analysis::Analyzer`
-  - Call `.unused_exports()`
+
+- Use `fob-analysis::Analyzer`
+- Call `.unused_exports()`
 
 → **Detect circular dependencies**
-  - Use `fob-analysis::Analyzer`
-  - Call `.find_circular_dependencies()`
+
+- Use `fob-analysis::Analyzer`
+- Call `.find_circular_dependencies()`
 
 → **Build a meta-framework**
-  - Discover routes from filesystem
-  - Use `BuildOptions::app(routes)` with path aliases
-  - See: `examples/rust/meta-framework`
+
+- Discover routes from filesystem
+- Use `BuildOptions::app(routes)` with path aliases
+- See: `examples/rust/meta-framework`
 
 → **Analyze module graph manually**
-  - Use `fob-graph::ModuleGraph` directly
-  - See: `crates/fob-graph/examples/`
+
+- Use `fob-graph::ModuleGraph` directly
+- See: `crates/fob-graph/examples/`
 
 → **Add custom framework support** (Astro, Svelte, etc)
-  - Implement `FrameworkRule` trait
-  - See: `crates/fob-graph/src/framework_rules/`
+
+- Implement `FrameworkRule` trait
+- See: `crates/fob-graph/src/framework_rules/`
 
 → **Bundle with CSS/MDX/Tailwind**
-  - Use plugins: `fob_plugin_css`, `fob_plugin_mdx`, `fob_plugin_tailwind`
-  - Add via `.plugin(plugin(...))`
+
+- Use plugins: `fob_plugin_css`, `fob_plugin_mdx`, `fob_plugin_tailwind`
+- Add via `.plugin(plugin(...))`
 
 ---
 
@@ -647,6 +687,7 @@ BuildOptions::new("src/index.js")
 ## Common Pitfalls
 
 ❌ **Forgetting to set runtime**
+
 ```rust
 BuildOptions::app(["src/index.js"])
     .build()  // Error: missing runtime (on WASM)
@@ -654,6 +695,7 @@ BuildOptions::app(["src/index.js"])
 ```
 
 ✅ **Always provide runtime (or use NativeRuntime on native)**
+
 ```rust
 BuildOptions::app(["src/index.js"])
     .runtime(Arc::new(NativeRuntime))  // ✓
@@ -662,6 +704,7 @@ BuildOptions::app(["src/index.js"])
 ```
 
 ❌ **Calling analyze() without entry**
+
 ```rust
 Analyzer::new()
     .analyze()  // Compile error: no .entry() called
@@ -669,6 +712,7 @@ Analyzer::new()
 ```
 
 ✅ **Entry required (typestate enforces this)**
+
 ```rust
 Analyzer::new()
     .entry("src/index.ts")  // ✓
@@ -677,16 +721,19 @@ Analyzer::new()
 ```
 
 ❌ **Using std::fs in WASM-compatible code**
+
 ```rust
 let content = std::fs::read("file.js")?;  // Breaks WASM
 ```
 
 ✅ **Use Runtime trait**
+
 ```rust
 let content = runtime.read_file(Path::new("file.js")).await?;
 ```
 
 ❌ **Using outfile with multiple entries**
+
 ```rust
 BuildOptions::app(["a.js", "b.js"])
     .outfile("bundle.js")  // Error: outfile only for single entry
@@ -695,6 +742,7 @@ BuildOptions::app(["a.js", "b.js"])
 ```
 
 ✅ **Use outdir for multiple entries**
+
 ```rust
 BuildOptions::app(["a.js", "b.js"])
     .outdir("dist")  // ✓
@@ -703,6 +751,7 @@ BuildOptions::app(["a.js", "b.js"])
 ```
 
 ❌ **Using splitting without bundle**
+
 ```rust
 BuildOptions::new("src/index.js")
     .bundle(false)
@@ -712,6 +761,7 @@ BuildOptions::new("src/index.js")
 ```
 
 ✅ **Enable bundling for code splitting**
+
 ```rust
 BuildOptions::app(["a.js", "b.js"])
     .bundle(true)     // ✓
@@ -725,12 +775,14 @@ BuildOptions::app(["a.js", "b.js"])
 ## Debugging Tips
 
 **Enable logging**:
+
 ```rust
 use tracing_subscriber;
 tracing_subscriber::fmt::init();
 ```
 
 **Inspect build result**:
+
 ```rust
 let result = BuildOptions::app(["src/index.js"])
     .build()
@@ -742,6 +794,7 @@ println!("Cache: {:#?}", result.cache);
 ```
 
 **Check module graph**:
+
 ```rust
 let analysis = Analyzer::new()
     .entry("src/index.ts")
@@ -757,6 +810,7 @@ for module in graph.all_modules() {
 ```
 
 **Validate build options**:
+
 ```rust
 let options = BuildOptions::app(["src/index.js"])
     .outfile("bundle.js");  // Invalid: outfile with multiple entries
@@ -767,6 +821,7 @@ if let Err(e) = options.validate() {
 ```
 
 **Check for errors in build result**:
+
 ```rust
 let result = BuildOptions::app(["src/index.js"])
     .build()
@@ -785,6 +840,7 @@ if !result.diagnostics.is_empty() {
 ## Integration with Other Tools
 
 ### Using with Tokio
+
 ```rust
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -797,12 +853,14 @@ async fn main() -> Result<()> {
 ```
 
 ### Using with Async Runtime
+
 ```rust
 // Works with any async runtime that supports async-trait
 // Tokio is the default for native platforms
 ```
 
 ### Using with WASM
+
 ```rust
 // On WASM, you must provide a Runtime implementation
 // that bridges to JavaScript filesystem APIs
@@ -818,16 +876,19 @@ BuildOptions::new("src/index.js")
 ## Performance Considerations
 
 **Caching**:
+
 - Build results include cache statistics
 - Module graph analysis is cached automatically
 - File reads are cached during analysis
 
 **Parallel Processing**:
+
 - Module graph construction is parallelized
 - Analysis uses rayon for parallel traversal
 - Bundle execution uses Rolldown's parallel processing
 
 **Memory Usage**:
+
 - ModuleGraph uses Arc for efficient sharing
 - Large graphs are memory-efficient
 - WASM builds have additional constraints
@@ -837,16 +898,19 @@ BuildOptions::new("src/index.js")
 ## Security Considerations
 
 **Path Traversal Protection**:
+
 - All paths are validated to prevent `..` escapes
 - Asset resolution includes security checks
 - Output paths are sanitized
 
 **DoS Protection**:
+
 - Maximum depth limits in Analyzer
 - Maximum module count limits
 - File size limits (10MB default)
 
 **Asset Security**:
+
 - Asset paths are validated
 - Directory traversal attempts are blocked
 - Large files are rejected
@@ -856,16 +920,19 @@ BuildOptions::new("src/index.js")
 ## Contributing Guidelines
 
 **Code Style**:
+
 - Follow Rust standard formatting (`cargo fmt`)
 - Use `cargo clippy` for linting
 - Document public APIs with `///` comments
 
 **Testing**:
+
 - Write unit tests in `#[cfg(test)]` modules
 - Write integration tests in `tests/` directories
 - Use fixtures from `tests/fixtures/` for test data
 
 **Documentation**:
+
 - Update this guide when adding new APIs
 - Add examples for new features
 - Document breaking changes clearly
@@ -911,5 +978,4 @@ trait Runtime: Send + Sync {
 
 ---
 
-*Last updated: Based on Fob v0.1.3*
-
+_Last updated: Based on Fob v0.1.3_

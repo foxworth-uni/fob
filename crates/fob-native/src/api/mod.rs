@@ -9,4 +9,3 @@ mod functions;
 pub use bundler::Fob;
 pub use config::BundleConfig;
 pub use functions::{bundle_single, version};
-

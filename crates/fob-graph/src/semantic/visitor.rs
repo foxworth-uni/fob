@@ -78,4 +78,3 @@ impl<'a, 'ast> Visit<'ast> for UnreachableCodeVisitor<'a> {
         walk::walk_function_body(self, body);
     }
 }
-

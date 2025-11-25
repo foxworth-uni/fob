@@ -30,17 +30,14 @@ mod decorator_tests {
         let bundle = result.output.as_single().expect("single bundle");
 
         // Basic smoke test: verify output was generated
-        assert!(
-            !bundle.assets.is_empty(),
-            "Should generate output assets"
-        );
+        assert!(!bundle.assets.is_empty(), "Should generate output assets");
 
         // Get the first chunk to verify it contains code
-        let chunk = result.chunks().next().expect("Should have at least one chunk");
-        assert!(
-            chunk.code.len() > 0,
-            "Generated code should not be empty"
-        );
+        let chunk = result
+            .chunks()
+            .next()
+            .expect("Should have at least one chunk");
+        assert!(chunk.code.len() > 0, "Generated code should not be empty");
 
         // Verify the transformed code contains our class and method
         assert!(chunk.code.contains("MyClass"), "Should contain MyClass");

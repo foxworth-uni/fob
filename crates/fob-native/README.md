@@ -32,7 +32,7 @@ const bundler = new Fob({
   outputDir: './dist',
   format: OutputFormat.Esm,
   sourcemap: SourceMapMode.External,
-  cwd: process.cwd()
+  cwd: process.cwd(),
 });
 
 const result = await bundler.bundle();
@@ -44,11 +44,7 @@ console.log(`Built ${result.chunks.length} chunks in ${result.stats.durationMs}m
 ```typescript
 import { bundleSingle, OutputFormat } from '@fox-uni/fob';
 
-const result = await bundleSingle(
-  './src/index.js',
-  './dist',
-  OutputFormat.Esm
-);
+const result = await bundleSingle('./src/index.js', './dist', OutputFormat.Esm);
 ```
 
 ## API
@@ -62,6 +58,7 @@ new Fob(config: BundleConfig)
 ```
 
 **BundleConfig:**
+
 - `entries: string[]` - Entry points to bundle
 - `outputDir?: string` - Output directory (default: `"dist"`)
 - `format?: OutputFormat` - Output format: `Esm`, `Cjs`, or `Iife` (default: `Esm`)
@@ -75,6 +72,7 @@ new Fob(config: BundleConfig)
 Bundles the configured entries and returns detailed bundle information.
 
 **Returns:** `BundleResult`
+
 - `chunks: ChunkInfo[]` - Generated chunks
 - `manifest: ManifestInfo` - Bundle manifest
 - `stats: BuildStatsInfo` - Build statistics

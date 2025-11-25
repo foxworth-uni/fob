@@ -288,7 +288,6 @@ async fn test_wide_dependencies() {
     assert!(analysis.stats.module_count >= 21);
 }
 
-
 #[tokio::test]
 async fn test_dependency_chains() {
     let temp = TempDir::new().unwrap();

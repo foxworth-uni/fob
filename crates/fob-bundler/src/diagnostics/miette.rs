@@ -10,12 +10,13 @@ use std::path::Path;
 use std::sync::{LazyLock, Mutex};
 
 /// Cache for loaded source code files
-static SOURCE_CACHE: LazyLock<Mutex<HashMap<String, String>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+static SOURCE_CACHE: LazyLock<Mutex<HashMap<String, String>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// Load source code from a file path
 pub fn load_source(file: &str) -> Option<String> {
     let mut cache = SOURCE_CACHE.lock().unwrap();
-    
+
     // Check cache first
     if let Some(source) = cache.get(file) {
         return Some(source.clone());
@@ -32,7 +33,6 @@ pub fn load_source(file: &str) -> Option<String> {
 
     None
 }
-
 
 /// Convert line and column to byte offset
 pub fn line_col_to_offset(source: &str, line: u32, column: u32) -> Option<usize> {
@@ -69,10 +69,10 @@ pub fn calculate_span_length(source: &str, offset: usize) -> usize {
     if offset >= source.len() {
         return 1;
     }
-    
+
     // Try to find the end of the current token/identifier
     let remaining = &source[offset..];
-    
+
     // For identifiers, find the end of the word
     if let Some(end) = remaining
         .char_indices()
@@ -91,9 +91,9 @@ pub fn calculate_enhanced_span(source: &str, offset: usize, kind: &DiagnosticKin
     if offset >= source.len() {
         return 1;
     }
-    
+
     let remaining = &source[offset..];
-    
+
     match kind {
         DiagnosticKind::MissingExport => {
             // For missing exports, try to highlight the import statement
@@ -154,7 +154,10 @@ impl Diagnostic for DiagnosticError {
     }
 
     fn help(&self) -> Option<Box<dyn std::fmt::Display + '_>> {
-        self.diag.help.as_ref().map(|h| Box::new(h.clone()) as Box<dyn std::fmt::Display>)
+        self.diag
+            .help
+            .as_ref()
+            .map(|h| Box::new(h.clone()) as Box<dyn std::fmt::Display>)
     }
 
     fn source_code(&self) -> Option<&dyn miette::SourceCode> {
@@ -165,12 +168,14 @@ impl Diagnostic for DiagnosticError {
     }
 
     fn labels(&self) -> Option<Box<dyn Iterator<Item = LabeledSpan> + '_>> {
-        if let (Some(_file), Some(line), Some(column)) = (&self.diag.file, self.diag.line, self.diag.column) {
+        if let (Some(_file), Some(line), Some(column)) =
+            (&self.diag.file, self.diag.line, self.diag.column)
+        {
             if let Some((_, source)) = &self.source_code {
                 if let Some(offset) = line_col_to_offset(source, line, column) {
                     let length = calculate_enhanced_span(source, offset, &self.diag.kind);
                     let span = SourceSpan::new(offset.into(), length.into());
-                    
+
                     let label = match &self.diag.kind {
                         DiagnosticKind::MissingExport => "Missing export",
                         DiagnosticKind::ParseError => "Parse error",
@@ -197,12 +202,10 @@ impl Diagnostic for DiagnosticError {
 
 /// Convert ExtractedDiagnostic to a DiagnosticError with source code loaded
 pub fn to_diagnostic_error(diag: ExtractedDiagnostic) -> DiagnosticError {
-    let source_code = diag.file.as_ref()
+    let source_code = diag
+        .file
+        .as_ref()
         .and_then(|file| load_source(file).map(|source| (file.clone(), source)));
-    
-    DiagnosticError {
-        diag,
-        source_code,
-    }
-}
 
+    DiagnosticError { diag, source_code }
+}

@@ -4,8 +4,8 @@
 //! for beautiful error reporting in CLI contexts.
 
 use crate::error::FobErrorDetails;
-use fob_bundler::diagnostics::{calculate_span_length, line_col_to_offset, load_source};
 use ::miette::{Diagnostic, LabeledSpan, Severity, SourceSpan};
+use fob_bundler::diagnostics::{calculate_span_length, line_col_to_offset, load_source};
 
 /// Wrapper to implement Diagnostic for FobErrorDetails
 #[derive(Debug)]
@@ -20,7 +20,11 @@ impl std::fmt::Display for FobErrorDiagnostic {
         match &self.error {
             FobErrorDetails::MdxSyntax(e) => write!(f, "{}", e.message),
             FobErrorDetails::MissingExport(e) => {
-                write!(f, "Missing export '{}' from module '{}'", e.export_name, e.module_id)
+                write!(
+                    f,
+                    "Missing export '{}' from module '{}'",
+                    e.export_name, e.module_id
+                )
             }
             FobErrorDetails::Transform(e) => write!(f, "Transform error in {}", e.path),
             FobErrorDetails::CircularDependency(e) => {
@@ -123,7 +127,8 @@ impl Diagnostic for FobErrorDiagnostic {
             FobErrorDetails::Transform(e) => {
                 if let Some(first) = e.diagnostics.first() {
                     if let Some(source) = load_source(&e.path) {
-                        if let Some(offset) = line_col_to_offset(&source, first.line, first.column) {
+                        if let Some(offset) = line_col_to_offset(&source, first.line, first.column)
+                        {
                             let length = calculate_span_length(&source, offset);
                             let span = SourceSpan::new(offset.into(), length.into());
                             return Some(Box::new(std::iter::once(LabeledSpan::new(
@@ -157,4 +162,3 @@ impl Diagnostic for FobErrorDiagnostic {
 pub fn to_miette_diagnostic(error: FobErrorDetails) -> FobErrorDiagnostic {
     FobErrorDiagnostic { error }
 }
-

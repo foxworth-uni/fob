@@ -41,14 +41,14 @@ pnpm test
 
 ## Available Scripts
 
-| Script | Description |
-|--------|-------------|
-| `pnpm rebuild` | Fast debug build of the native module |
-| `pnpm rebuild:release` | Optimized release build |
-| `pnpm test` | Run all test suites |
-| `pnpm test:simple` | Basic API tests only |
-| `pnpm test:advanced` | Advanced feature tests |
-| `pnpm test:errors` | Error handling tests |
+| Script                 | Description                           |
+| ---------------------- | ------------------------------------- |
+| `pnpm rebuild`         | Fast debug build of the native module |
+| `pnpm rebuild:release` | Optimized release build               |
+| `pnpm test`            | Run all test suites                   |
+| `pnpm test:simple`     | Basic API tests only                  |
+| `pnpm test:advanced`   | Advanced feature tests                |
+| `pnpm test:errors`     | Error handling tests                  |
 
 ## API Overview
 
@@ -57,6 +57,7 @@ The `fob-native` NAPI module exposes the following:
 ### Functions
 
 #### `version(): string`
+
 Returns the bundler version.
 
 ```javascript
@@ -65,22 +66,20 @@ console.log(version()); // "0.1.0"
 ```
 
 #### `bundleSingle(entry, outputDir, format?): Promise<BundleResult>`
+
 Quick helper for single-entry bundling.
 
 ```javascript
 import { bundleSingle, OutputFormat } from 'fob-native-build';
 
-const result = await bundleSingle(
-  './src/index.js',
-  './dist',
-  OutputFormat.Esm
-);
+const result = await bundleSingle('./src/index.js', './dist', OutputFormat.Esm);
 console.log(result.outputPath); // "./dist/index.js"
 ```
 
 ### Classes
 
 #### `Fob`
+
 Main bundler class with full configuration.
 
 ```javascript
@@ -93,7 +92,7 @@ const bundler = new Fob({
   format: OutputFormat.Esm,
   platform: 'browser',
   sourcemap: SourceMapMode.External,
-  minify: false
+  minify: false,
 });
 
 const result = await bundler.bundle();
@@ -103,11 +102,13 @@ console.log(`Bundled ${result.moduleCount} modules`);
 ### Enums
 
 #### `OutputFormat`
+
 - `OutputFormat.Esm` - ES Modules
 - `OutputFormat.Cjs` - CommonJS
 - `OutputFormat.Iife` - Immediately Invoked Function Expression
 
 #### `SourceMapMode`
+
 - `SourceMapMode.External` - Separate .map file
 - `SourceMapMode.Inline` - Inline data URL
 - `SourceMapMode.Hidden` - Generate but don't reference
@@ -117,14 +118,14 @@ console.log(`Bundled ${result.moduleCount} modules`);
 
 ```typescript
 interface BundleConfig {
-  entry: string[];          // Entry point files
-  outDir: string;          // Output directory
-  bundle: boolean;         // Bundle dependencies
-  format: OutputFormat;    // Output format
-  platform?: 'browser' | 'node';  // Target platform
-  sourcemap?: SourceMapMode;      // Sourcemap generation
-  minify?: boolean;               // Minify output
-  external?: string[];            // External packages
+  entry: string[]; // Entry point files
+  outDir: string; // Output directory
+  bundle: boolean; // Bundle dependencies
+  format: OutputFormat; // Output format
+  platform?: 'browser' | 'node'; // Target platform
+  sourcemap?: SourceMapMode; // Sourcemap generation
+  minify?: boolean; // Minify output
+  external?: string[]; // External packages
 }
 ```
 
@@ -137,10 +138,10 @@ try {
   await bundleSingle('./nonexistent.js', './dist');
 } catch (err) {
   const error = JSON.parse(err.message);
-  console.log(error.kind);     // "UnresolvedEntry"
-  console.log(error.message);  // "Cannot find entry..."
-  console.log(error.file);     // File path if applicable
-  console.log(error.line);     // Line number if applicable
+  console.log(error.kind); // "UnresolvedEntry"
+  console.log(error.message); // "Cannot find entry..."
+  console.log(error.file); // File path if applicable
+  console.log(error.line); // Line number if applicable
 }
 ```
 
@@ -154,14 +155,18 @@ try {
 ## Test Files
 
 ### test-simple.js
+
 Basic functionality tests:
+
 - Version checking
 - Simple bundling (ESM/CJS)
 - Basic Fob class usage
 - Import resolution
 
 ### test-advanced.js
+
 Advanced feature tests:
+
 - Multiple entry points
 - IIFE format
 - Inline sourcemaps
@@ -170,7 +175,9 @@ Advanced feature tests:
 - Minification
 
 ### test-errors.js
+
 Error handling tests:
+
 - Non-existent files
 - Syntax errors
 - Invalid configuration
@@ -179,18 +186,22 @@ Error handling tests:
 ## Common Pitfalls
 
 ### ❌ Stale Native Binary
+
 **Problem**: You made Rust changes but tests still use old code.
 **Solution**: Always run `pnpm rebuild` after Rust changes.
 
 ### ❌ Platform Mismatch
+
 **Problem**: `.node` file doesn't match your platform.
 **Solution**: Rebuild on your platform: `pnpm rebuild`
 
 ### ❌ Path Resolution
+
 **Problem**: Entry files not found.
 **Solution**: Use absolute paths with `join(__dirname, 'file.js')`
 
 ### ❌ Not Awaiting Promises
+
 **Problem**: Tests finish before bundling completes.
 **Solution**: Always `await` the bundle operations
 
@@ -199,12 +210,14 @@ Error handling tests:
 ### Binary Sync Issues
 
 **Check if binary is stale:**
+
 ```bash
 md5 ../../crates/fob-native/fob-native.darwin-arm64.node
 md5 node_modules/.pnpm/fob-native-build*/node_modules/*/fob-native.darwin-arm64.node
 ```
 
 If MD5s differ:
+
 ```bash
 pnpm rebuild  # Rebuilds and auto-syncs
 ```
@@ -219,17 +232,19 @@ The `sync-binary.js` script automatically runs after builds to keep node_modules
 - ❌ `output_dir` (wrong - will be ignored!)
 
 Always use camelCase in JavaScript/TypeScript configs:
+
 ```javascript
 const config = {
   entries: ['./src/index.js'],
-  outputDir: './dist',  // ✅ camelCase
-  format: OutputFormat.Esm
+  outputDir: './dist', // ✅ camelCase
+  format: OutputFormat.Esm,
 };
 ```
 
 ### Clean Test State
 
 Before debugging, clean outputs:
+
 ```bash
 rm -rf dist/
 pnpm test
@@ -238,15 +253,19 @@ pnpm test
 The `test-all.js` script automatically cleans the `dist/` directory before running tests.
 
 ### "Cannot find module 'fob-native-build'"
+
 Run `pnpm install` in this directory to link the native package.
 
 ### "Error loading shared library"
+
 The native module wasn't built. Run `pnpm rebuild`.
 
 ### "Permission denied"
+
 On macOS, you might need to allow the binary: System Preferences → Security & Privacy
 
 ### Tests failing after Rust changes
+
 1. Rebuild: `pnpm rebuild`
 2. Clear dist: `rm -rf dist/`
 3. Run tests: `pnpm test`
@@ -265,8 +284,8 @@ If files aren't being written to the configured `outputDir`:
    ```javascript
    const config = {
      entries: [join(__dirname, 'src/index.js')],
-     outputDir: join(__dirname, 'dist'),  // ✅ Absolute path
-     cwd: __dirname
+     outputDir: join(__dirname, 'dist'), // ✅ Absolute path
+     cwd: __dirname,
    };
    ```
 

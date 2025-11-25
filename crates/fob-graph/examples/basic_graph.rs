@@ -79,8 +79,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nGraph statistics:");
     println!("  Total modules: {}", stats.module_count);
     println!("  Entry points: {}", stats.entry_point_count);
-    println!("  External dependencies: {}", stats.external_dependency_count);
+    println!(
+        "  External dependencies: {}",
+        stats.external_dependency_count
+    );
 
     Ok(())
 }
-

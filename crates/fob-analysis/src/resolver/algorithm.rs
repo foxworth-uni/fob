@@ -8,9 +8,9 @@ use std::path::Path;
 use fob::runtime::{Runtime, RuntimeError};
 use path_clean::PathClean;
 
-use crate::config::ResolveResult;
 use super::aliases::resolve_path_alias;
 use super::extensions::{resolve_with_extensions, try_extensions, try_index_files};
+use crate::config::ResolveResult;
 
 /// Check if a specifier is explicitly marked as external.
 pub fn is_external(specifier: &str, external: &[String]) -> bool {
@@ -82,4 +82,3 @@ pub async fn resolve_with_alias(
 
     Ok(None)
 }
-

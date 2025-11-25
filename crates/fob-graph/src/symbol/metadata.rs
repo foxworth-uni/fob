@@ -153,4 +153,3 @@ pub enum SymbolMetadata {
     /// Code quality metrics (for functions and classes)
     CodeQuality(CodeQualityMetadata),
 }
-

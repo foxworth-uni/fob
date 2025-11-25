@@ -78,17 +78,17 @@ impl PackageJson {
         }
 
         // Read and parse the file
-        let content_bytes = runtime.read_file(path).await.map_err(|e| {
-            fob::Error::InvalidConfig(format!("Failed to read package.json: {e}"))
-        })?;
+        let content_bytes = runtime
+            .read_file(path)
+            .await
+            .map_err(|e| fob::Error::InvalidConfig(format!("Failed to read package.json: {e}")))?;
 
         let content = String::from_utf8(content_bytes).map_err(|e| {
             fob::Error::InvalidConfig(format!("package.json contains invalid UTF-8: {e}"))
         })?;
 
-        let mut pkg: PackageJson = serde_json::from_str(&content).map_err(|e| {
-            fob::Error::InvalidConfig(format!("Invalid package.json format: {e}"))
-        })?;
+        let mut pkg: PackageJson = serde_json::from_str(&content)
+            .map_err(|e| fob::Error::InvalidConfig(format!("Invalid package.json format: {e}")))?;
 
         pkg.path = path.to_path_buf();
         Ok(pkg)
@@ -314,7 +314,7 @@ pub struct TypeCoverage {
 /// # Example
 ///
 /// ```
-    /// # use fob_graph::extract_package_name;
+/// # use fob_graph::extract_package_name;
 /// assert_eq!(extract_package_name("@babel/core"), "@babel/core");
 /// assert_eq!(extract_package_name("@babel/core/lib/index"), "@babel/core");
 /// assert_eq!(extract_package_name("lodash"), "lodash");

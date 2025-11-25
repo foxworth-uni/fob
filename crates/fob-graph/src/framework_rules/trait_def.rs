@@ -1,8 +1,8 @@
 //! Framework rule trait definition for marking framework-convention exports.
 
 use crate::ModuleGraph;
-use fob::Result;
 use async_trait::async_trait;
+use fob::Result;
 
 /// Framework-specific rule for marking exports as used by framework conventions.
 ///

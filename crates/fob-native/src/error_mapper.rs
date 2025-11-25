@@ -15,11 +15,11 @@ pub fn map_bundler_error(error: &BundlerError) -> FobErrorDetails {
                     message: msg.clone(),
                 })
             }
-        },
+        }
 
-        BundlerError::InvalidOutputPath(path) => FobErrorDetails::InvalidEntry(InvalidEntryError {
-            path: path.clone(),
-        }),
+        BundlerError::InvalidOutputPath(path) => {
+            FobErrorDetails::InvalidEntry(InvalidEntryError { path: path.clone() })
+        }
 
         BundlerError::WriteFailure(msg) => FobErrorDetails::Runtime(RuntimeError {
             message: format!("Write failure: {}", msg),
@@ -89,11 +89,21 @@ fn map_single_diagnostic(diag: &ExtractedDiagnostic) -> FobErrorDetails {
     match &diag.kind {
         DiagnosticKind::MissingExport => {
             // Use structured context if available, otherwise fall back to parsing
-            let (export_name, module_id, available_exports) = if let Some(DiagnosticContext::MissingExport { export_name, module_id, available_exports }) = &diag.context {
-                (export_name.clone(), module_id.clone(), available_exports.clone())
-            } else {
-                extract_missing_export_info(&diag.message, &diag.help)
-            };
+            let (export_name, module_id, available_exports) =
+                if let Some(DiagnosticContext::MissingExport {
+                    export_name,
+                    module_id,
+                    available_exports,
+                }) = &diag.context
+                {
+                    (
+                        export_name.clone(),
+                        module_id.clone(),
+                        available_exports.clone(),
+                    )
+                } else {
+                    extract_missing_export_info(&diag.message, &diag.help)
+                };
 
             FobErrorDetails::MissingExport(MissingExportError {
                 export_name,
@@ -146,44 +156,41 @@ fn map_single_diagnostic(diag: &ExtractedDiagnostic) -> FobErrorDetails {
 
         DiagnosticKind::Plugin => {
             // Use structured context if available, otherwise fall back to parsing
-            let (name, message) = if let Some(DiagnosticContext::Plugin { plugin_name }) = &diag.context {
-                (plugin_name.clone(), diag.message.clone())
-            } else {
-                extract_plugin_info(&diag.message)
-            };
+            let (name, message) =
+                if let Some(DiagnosticContext::Plugin { plugin_name }) = &diag.context {
+                    (plugin_name.clone(), diag.message.clone())
+                } else {
+                    extract_plugin_info(&diag.message)
+                };
 
-            FobErrorDetails::Plugin(PluginError {
-                name,
-                message,
-            })
+            FobErrorDetails::Plugin(PluginError { name, message })
         }
 
         DiagnosticKind::CircularDependency => {
             // Use structured context if available, otherwise fall back to parsing
-            let cycle_path = if let Some(DiagnosticContext::CircularDependency { cycle_path }) = &diag.context {
-                cycle_path.clone()
-            } else {
-                extract_cycle_path(&diag.message)
-            };
+            let cycle_path =
+                if let Some(DiagnosticContext::CircularDependency { cycle_path }) = &diag.context {
+                    cycle_path.clone()
+                } else {
+                    extract_cycle_path(&diag.message)
+                };
 
-            FobErrorDetails::CircularDependency(CircularDependencyError {
-                cycle_path,
-            })
+            FobErrorDetails::CircularDependency(CircularDependencyError { cycle_path })
         }
 
         DiagnosticKind::UnresolvedEntry => {
-            let path = if let Some(DiagnosticContext::UnresolvedEntry { entry_path }) = &diag.context {
-                entry_path.clone()
-            } else {
-                diag.file.clone().unwrap_or_else(|| {
-                    // Try to extract from message
-                    extract_path_from_message(&diag.message).unwrap_or_else(|| "unknown".to_string())
-                })
-            };
+            let path =
+                if let Some(DiagnosticContext::UnresolvedEntry { entry_path }) = &diag.context {
+                    entry_path.clone()
+                } else {
+                    diag.file.clone().unwrap_or_else(|| {
+                        // Try to extract from message
+                        extract_path_from_message(&diag.message)
+                            .unwrap_or_else(|| "unknown".to_string())
+                    })
+                };
 
-            FobErrorDetails::InvalidEntry(InvalidEntryError {
-                path,
-            })
+            FobErrorDetails::InvalidEntry(InvalidEntryError { path })
         }
 
         DiagnosticKind::UnresolvedImport

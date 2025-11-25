@@ -7,7 +7,7 @@
 mod miette;
 
 pub use miette::{
-    calculate_enhanced_span, calculate_span_length, load_source, line_col_to_offset,
+    calculate_enhanced_span, calculate_span_length, line_col_to_offset, load_source,
     to_diagnostic_error, DiagnosticError,
 };
 
@@ -172,10 +172,14 @@ fn extract_single_from_string(error_str: &str) -> ExtractedDiagnostic {
         DiagnosticKind::Transform => file.as_ref().map(|f| DiagnosticContext::Transform {
             file_path: f.clone(),
         }),
-        DiagnosticKind::UnresolvedEntry => file.as_ref().map(|f| DiagnosticContext::UnresolvedEntry {
-            entry_path: f.clone(),
-        }),
-        DiagnosticKind::UnresolvedImport => extract_unresolved_import_context(error_str, file.as_ref()),
+        DiagnosticKind::UnresolvedEntry => {
+            file.as_ref().map(|f| DiagnosticContext::UnresolvedEntry {
+                entry_path: f.clone(),
+            })
+        }
+        DiagnosticKind::UnresolvedImport => {
+            extract_unresolved_import_context(error_str, file.as_ref())
+        }
         _ => None,
     };
 
@@ -310,7 +314,10 @@ fn extract_help_text(text: &str) -> Option<String> {
 }
 
 /// Extract context for missing export errors
-fn extract_missing_export_context(error_str: &str, help: &Option<String>) -> Option<DiagnosticContext> {
+fn extract_missing_export_context(
+    error_str: &str,
+    help: &Option<String>,
+) -> Option<DiagnosticContext> {
     // Try to extract export name
     let export_name = extract_quoted_string_after(error_str, "export")
         .or_else(|| extract_quoted_string_after(error_str, "MissingExport"))
@@ -322,7 +329,8 @@ fn extract_missing_export_context(error_str: &str, help: &Option<String>) -> Opt
         .unwrap_or_else(|| "unknown".to_string());
 
     // Try to extract available exports from help text
-    let available_exports = help.as_ref()
+    let available_exports = help
+        .as_ref()
         .and_then(|h| extract_available_exports_list(h))
         .unwrap_or_default();
 
@@ -383,7 +391,10 @@ fn extract_plugin_context(error_str: &str) -> Option<DiagnosticContext> {
 }
 
 /// Extract context for unresolved import errors
-fn extract_unresolved_import_context(error_str: &str, file: Option<&String>) -> Option<DiagnosticContext> {
+fn extract_unresolved_import_context(
+    error_str: &str,
+    file: Option<&String>,
+) -> Option<DiagnosticContext> {
     // Try to extract specifier
     let specifier = extract_quoted_string_after(error_str, "Cannot resolve")
         .or_else(|| extract_quoted_string_after(error_str, "import"))

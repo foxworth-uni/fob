@@ -72,9 +72,10 @@ impl Plugin for ModuleCollectionPlugin {
             let is_entry = {
                 let state = state.lock().unwrap();
                 // Match against stored entry specifiers
-                state.entry_points.iter().any(|spec| {
-                    id.ends_with(spec) || id.contains(spec) || spec == &id
-                })
+                state
+                    .entry_points
+                    .iter()
+                    .any(|spec| id.ends_with(spec) || id.contains(spec) || spec == &id)
             };
 
             if is_entry {

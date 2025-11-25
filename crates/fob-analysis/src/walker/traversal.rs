@@ -9,14 +9,14 @@ use std::sync::Arc;
 
 use rustc_hash::FxHashSet;
 
-use fob_graph::collection::{CollectedImportKind, CollectionState};
 use fob::runtime::Runtime;
+use fob_graph::collection::{CollectedImportKind, CollectionState};
 
-use crate::config::{AnalyzerConfig, ResolveResult};
-use crate::resolver::ModuleResolver;
 use super::parser::ModuleParser;
 use super::validation::normalize_and_validate_path;
 use super::WalkerError;
+use crate::config::{AnalyzerConfig, ResolveResult};
+use crate::resolver::ModuleResolver;
 
 /// BFS traversal state and logic.
 pub struct Traversal<'a> {
@@ -208,7 +208,11 @@ impl<'a> Traversal<'a> {
     }
 
     /// Normalize a path to an absolute path with security validation.
-    fn normalize_path(&self, path: &std::path::Path, runtime: &dyn Runtime) -> Result<PathBuf, WalkerError> {
+    fn normalize_path(
+        &self,
+        path: &std::path::Path,
+        runtime: &dyn Runtime,
+    ) -> Result<PathBuf, WalkerError> {
         let cwd = self
             .resolver
             .get_cwd(runtime)
@@ -225,7 +229,11 @@ impl<'a> Traversal<'a> {
     }
 
     /// Convert an absolute path to a path relative to cwd for storage.
-    fn path_for_storage(&self, path: &std::path::Path, runtime: &dyn Runtime) -> Result<String, WalkerError> {
+    fn path_for_storage(
+        &self,
+        path: &std::path::Path,
+        runtime: &dyn Runtime,
+    ) -> Result<String, WalkerError> {
         let cwd = self
             .resolver
             .get_cwd(runtime)
@@ -244,4 +252,3 @@ impl<'a> Traversal<'a> {
         }
     }
 }
-

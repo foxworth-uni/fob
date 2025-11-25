@@ -171,7 +171,10 @@ impl FobErrorDetails {
             },
             FobErrorDetails::CircularDependency(err) => NapiError {
                 kind: "CircularDependency".to_string(),
-                message: format!("Circular dependency detected: {}", err.cycle_path.join(" -> ")),
+                message: format!(
+                    "Circular dependency detected: {}",
+                    err.cycle_path.join(" -> ")
+                ),
                 file: err.cycle_path.first().cloned(),
                 line: None,
                 column: None,

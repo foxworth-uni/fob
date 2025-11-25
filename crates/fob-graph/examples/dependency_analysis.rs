@@ -26,12 +26,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         (&c_id, "src/c.ts"),
         (&d_id, "src/d.ts"),
     ] {
-        let module = Module::builder(
-            id.clone(),
-            PathBuf::from(path),
-            SourceType::TypeScript,
-        )
-        .build();
+        let module =
+            Module::builder(id.clone(), PathBuf::from(path), SourceType::TypeScript).build();
         graph.add_module(module)?;
     }
 
@@ -74,7 +70,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if circular_chains.is_empty() {
         println!("  No circular dependencies found ✓");
     } else {
-        println!("  Found {} circular dependency chain(s):", circular_chains.len());
+        println!(
+            "  Found {} circular dependency chain(s):",
+            circular_chains.len()
+        );
         for chain in circular_chains {
             println!("    {}", chain.format_chain());
         }
@@ -92,4 +91,3 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-

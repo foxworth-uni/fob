@@ -88,4 +88,3 @@ pub async fn resolve_with_extensions(
         candidate.to_string_lossy().to_string(),
     ))
 }
-

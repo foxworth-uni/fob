@@ -13,9 +13,9 @@ use std::sync::Arc;
 use rustc_hash::FxHashMap;
 
 use crate::{result::AnalysisResult, stats::compute_stats, AnalyzeOptions};
-use fob_graph::ModuleGraph;
 use fob::runtime::Runtime;
 use fob::{Error, Result};
+use fob_graph::ModuleGraph;
 
 use super::config::AnalyzerConfig;
 use super::walker::GraphWalker;
@@ -79,14 +79,17 @@ impl Analyzer<Unconfigured> {
             _state: std::marker::PhantomData,
         }
     }
-    }
+}
 
 impl<State> Analyzer<State> {
     /// Add multiple entry points.
     ///
     /// This method is available in both `Unconfigured` and `Configured` states.
     /// If called on `Unconfigured`, it transitions to `Configured`.
-    pub fn entries(mut self, paths: impl IntoIterator<Item = impl Into<PathBuf>>) -> Analyzer<Configured> {
+    pub fn entries(
+        mut self,
+        paths: impl IntoIterator<Item = impl Into<PathBuf>>,
+    ) -> Analyzer<Configured> {
         self.config
             .entries
             .extend(paths.into_iter().map(|p| p.into()));
@@ -168,7 +171,7 @@ impl<State> Analyzer<State> {
         self.config.cwd = Some(cwd.into());
         self
     }
-    }
+}
 
 impl Analyzer<Configured> {
     /// Execute the analysis with default options.
@@ -229,7 +232,9 @@ impl Analyzer<Configured> {
             {
                 graph
                     .apply_framework_rules(options.framework_rules)
-                    .map_err(|e| Error::Operation(format!("Failed to apply framework rules: {}", e)))?;
+                    .map_err(|e| {
+                        Error::Operation(format!("Failed to apply framework rules: {}", e))
+                    })?;
             }
             #[cfg(target_family = "wasm")]
             {

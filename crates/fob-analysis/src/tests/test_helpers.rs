@@ -21,8 +21,7 @@ pub fn create_test_project(temp: &TempDir, files: &[(&str, &str)]) -> PathBuf {
             fs::create_dir_all(parent)
                 .expect(&format!("Failed to create parent directory for {}", path));
         }
-        fs::write(&file_path, content)
-            .expect(&format!("Failed to write file {}", path));
+        fs::write(&file_path, content).expect(&format!("Failed to write file {}", path));
     }
 
     root

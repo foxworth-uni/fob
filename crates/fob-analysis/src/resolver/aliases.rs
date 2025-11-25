@@ -41,4 +41,3 @@ pub fn resolve_path_alias(
     }
     None
 }
-

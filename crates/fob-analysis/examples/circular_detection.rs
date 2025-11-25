@@ -6,10 +6,7 @@ use fob_analysis::Analyzer;
 
 #[tokio::main]
 async fn main() -> fob::Result<()> {
-    let analysis = Analyzer::new()
-        .entry("src/index.ts")
-        .analyze()
-        .await?;
+    let analysis = Analyzer::new().entry("src/index.ts").analyze().await?;
 
     // Find circular dependencies
     let circular = analysis.find_circular_dependencies()?;
@@ -36,4 +33,3 @@ async fn main() -> fob::Result<()> {
 
     Ok(())
 }
-

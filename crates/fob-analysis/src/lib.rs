@@ -276,4 +276,3 @@ where
 {
     analyze_with_options(entries, AnalyzeOptions::default()).await
 }
-

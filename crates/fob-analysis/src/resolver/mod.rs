@@ -109,10 +109,7 @@ mod tests {
             Ok(())
         }
 
-        async fn metadata(
-            &self,
-            path: &Path,
-        ) -> Result<fob::runtime::FileMetadata, RuntimeError> {
+        async fn metadata(&self, path: &Path) -> Result<fob::runtime::FileMetadata, RuntimeError> {
             if self.files.iter().any(|f| f == path) {
                 Ok(fob::runtime::FileMetadata {
                     is_file: true,
@@ -175,4 +172,3 @@ mod tests {
         assert!(matches!(result, ResolveResult::External(_)));
     }
 }
-

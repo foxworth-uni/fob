@@ -14,7 +14,7 @@ try {
   const config = {
     entries: [
       join(__dirname, 'fixtures/multi-entry/a.js'),
-      join(__dirname, 'fixtures/multi-entry/b.js')
+      join(__dirname, 'fixtures/multi-entry/b.js'),
     ],
     outputDir: join(__dirname, 'dist/advanced-1'),
     bundle: true,
@@ -42,7 +42,7 @@ try {
     bundle: true,
     format: OutputFormat.Iife,
     cwd: __dirname,
-    platform: 'browser'
+    platform: 'browser',
   };
 
   rmSync(config.outputDir, { recursive: true, force: true });
@@ -66,7 +66,7 @@ try {
     bundle: true,
     format: OutputFormat.Esm,
     cwd: __dirname,
-    sourcemap: SourceMapMode.Inline
+    sourcemap: SourceMapMode.Inline,
   };
 
   rmSync(config.outputDir, { recursive: true, force: true });
@@ -99,7 +99,7 @@ try {
     bundle: true,
     format: OutputFormat.Esm,
     cwd: __dirname,
-    sourcemap: SourceMapMode.External
+    sourcemap: SourceMapMode.External,
   };
 
   rmSync(config.outputDir, { recursive: true, force: true });
@@ -129,7 +129,7 @@ try {
     bundle: true,
     format: OutputFormat.Esm,
     cwd: __dirname,
-    sourcemap: SourceMapMode.Disabled
+    sourcemap: SourceMapMode.Disabled,
   };
 
   rmSync(config.outputDir, { recursive: true, force: true });
@@ -162,7 +162,7 @@ try {
     bundle: true,
     format: OutputFormat.Esm,
     cwd: __dirname,
-    minify: true
+    minify: true,
   };
 
   rmSync(config.outputDir, { recursive: true, force: true });

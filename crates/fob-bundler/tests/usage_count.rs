@@ -2,11 +2,11 @@
 //!
 //! Tests the compute_export_usage_counts() functionality across various scenarios.
 
+use fob_bundler::Result;
 use fob_graph::{
     Export, ExportKind, Import, ImportKind, ImportSpecifier, Module, ModuleGraph, ModuleId,
     SourceSpan, SourceType,
 };
-use fob_bundler::Result;
 
 /// Helper to create a basic module with given exports.
 fn create_module(id: &str, exports: Vec<(&str, ExportKind)>, imports: Vec<Import>) -> Module {

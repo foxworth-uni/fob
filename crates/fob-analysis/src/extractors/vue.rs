@@ -301,7 +301,9 @@ const x = 1
 </script>
 "#;
         let extractor = VueExtractor;
-        let sources = extractor.extract(vue).expect("Should handle malformed lang");
+        let sources = extractor
+            .extract(vue)
+            .expect("Should handle malformed lang");
         assert_eq!(sources.len(), 1);
         assert_eq!(sources[0].lang, "js"); // Should default to "js"
 
@@ -311,7 +313,9 @@ const x = 1
 const x = 1
 </script>
 "#;
-        let sources2 = extractor.extract(vue2).expect("Should handle whitespace-only lang");
+        let sources2 = extractor
+            .extract(vue2)
+            .expect("Should handle whitespace-only lang");
         assert_eq!(sources2.len(), 1);
         assert_eq!(sources2[0].lang, "js"); // Should default to "js"
     }

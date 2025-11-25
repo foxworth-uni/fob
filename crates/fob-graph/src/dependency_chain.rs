@@ -209,13 +209,13 @@ mod tests {
         // This should never happen in practice, but we handle it defensively
         let entry = mock_module_id("entry");
         let target = mock_module_id("target");
-        
+
         // Create a get_dependencies function that returns empty vec
         let get_dependencies = |_id: &ModuleId| -> Vec<ModuleId> { vec![] };
-        
+
         // Should not panic even with edge cases
         let chains = find_chains(&[entry], &target, get_dependencies);
-        
+
         // With no dependencies, we should only find the entry point if it matches target
         // Since entry != target, chains should be empty
         assert_eq!(chains.len(), 0);

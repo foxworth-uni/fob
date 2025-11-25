@@ -116,6 +116,7 @@ for chain in circular {
 ### ModuleGraph
 
 The main graph structure. Provides methods for:
+
 - Adding/removing modules
 - Querying dependencies and dependents
 - Finding circular dependencies
@@ -125,6 +126,7 @@ The main graph structure. Provides methods for:
 ### Module
 
 Represents a single module in the graph:
+
 - **ModuleId**: Unique identifier (path-based or virtual)
 - **Imports**: List of imports from this module
 - **Exports**: List of exports from this module
@@ -133,6 +135,7 @@ Represents a single module in the graph:
 ### SymbolTable
 
 Tracks symbols within a single module:
+
 - Variable declarations
 - Function declarations
 - Class declarations
@@ -155,6 +158,7 @@ let circular = graph.find_circular_dependencies()?;
 ## Thread Safety
 
 `ModuleGraph` uses `Arc` internally for efficient shared ownership. Multiple threads can safely:
+
 - Read from the graph concurrently
 - Query dependencies/dependents
 - Compute statistics
@@ -171,6 +175,7 @@ For modifications, use appropriate synchronization (e.g., `Mutex` or `RwLock`).
 ## WASM Compatibility
 
 The crate is designed to work in WASM environments:
+
 - No file system dependencies
 - No network dependencies
 - Pure Rust data structures
@@ -179,6 +184,7 @@ The crate is designed to work in WASM environments:
 ## Examples
 
 See the `examples/` directory for more detailed usage:
+
 - `basic_graph.rs` - Simple graph construction
 - `symbol_analysis.rs` - Symbol table usage
 - `dependency_analysis.rs` - Finding dependencies
@@ -200,4 +206,3 @@ See the workspace root for license information.
 ## Contributing
 
 Contributions are welcome! Please see the workspace contributing guidelines.
-

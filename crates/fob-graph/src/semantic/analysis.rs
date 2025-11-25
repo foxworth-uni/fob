@@ -1,8 +1,8 @@
 //! Symbol analysis functions for extracting symbol information from source code.
 
-use fob::oxc::SemanticBuilder;
 use super::super::symbol::{Symbol, SymbolSpan, SymbolTable};
 use super::utils::{determine_symbol_kind, get_line_column};
+use fob::oxc::SemanticBuilder;
 
 /// Extract symbols from parsed program using Oxc's semantic analysis.
 ///
@@ -69,5 +69,3 @@ pub(super) fn extract_symbols_from_program(
 
     table
 }
-
-

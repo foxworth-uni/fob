@@ -9,7 +9,7 @@
 
 #![cfg(feature = "proptest")]
 
-use crate::{ModuleGraph, ModuleId, Module, SourceType};
+use crate::{Module, ModuleGraph, ModuleId, SourceType};
 use proptest::prelude::*;
 use std::collections::HashSet;
 use std::path::PathBuf;
@@ -17,19 +17,15 @@ use std::path::PathBuf;
 /// Strategy for generating valid module IDs.
 fn module_id_strategy() -> impl Strategy<Value = ModuleId> {
     // Generate valid file paths
-    prop::collection::vec("[a-z]{1,10}", 1..=5)
-        .prop_map(|parts| {
-            let path = format!("src/{}.ts", parts.join("/"));
-            ModuleId::new(&path).unwrap()
-        })
+    prop::collection::vec("[a-z]{1,10}", 1..=5).prop_map(|parts| {
+        let path = format!("src/{}.ts", parts.join("/"));
+        ModuleId::new(&path).unwrap()
+    })
 }
 
 /// Strategy for generating small module graphs (1-20 modules).
 fn small_graph_strategy() -> impl Strategy<Value = Vec<(ModuleId, bool)>> {
-    prop::collection::vec(
-        (module_id_strategy(), prop::bool::ANY),
-        1..=20,
-    )
+    prop::collection::vec((module_id_strategy(), prop::bool::ANY), 1..=20)
 }
 
 proptest! {
@@ -327,4 +323,3 @@ proptest! {
         }
     }
 }
-

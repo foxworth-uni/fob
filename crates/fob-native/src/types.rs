@@ -27,4 +27,3 @@ pub enum SourceMapMode {
     /// Disable source map generation
     Disabled,
 }
-

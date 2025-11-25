@@ -37,7 +37,7 @@ if (targetFromEnv) {
   // Fallback to host detection (for local development)
   const platform = os.platform();
   const arch = os.arch();
-  
+
   if (platform === 'darwin') {
     const darwinArch = arch === 'arm64' ? 'arm64' : 'x64';
     binaryName = `fob-native.darwin-${darwinArch}.node`;
@@ -69,7 +69,7 @@ console.log('Available .node files in crates/fob-native/:');
 const nativeDir = path.join(__dirname, '..');
 try {
   const files = fs.readdirSync(nativeDir);
-  const nodeFiles = files.filter(f => f.endsWith('.node'));
+  const nodeFiles = files.filter((f) => f.endsWith('.node'));
   if (nodeFiles.length === 0) {
     console.log('  ⚠️  No .node files found!');
     console.log('');
@@ -79,7 +79,7 @@ try {
     console.log('  3. The artifact path is incorrect');
     process.exit(1);
   } else {
-    nodeFiles.forEach(f => {
+    nodeFiles.forEach((f) => {
       const stat = fs.statSync(path.join(nativeDir, f));
       console.log(`  ✓ ${f} (${(stat.size / 1024).toFixed(2)} KB)`);
     });
@@ -109,12 +109,12 @@ const targets = [];
 
 const findPnpmLocations = (dir, depth = 0) => {
   if (depth > 5) return;
-  
+
   try {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
-      
+
       if (entry.isDirectory()) {
         if (entry.name.startsWith('fob-native-build@')) {
           const packageDir = path.join(fullPath, 'node_modules', 'fob-native-build');
@@ -146,7 +146,7 @@ if (fs.existsSync(fixturesDir)) {
   findPnpmLocations(fixturesDir);
 }
 
-const uniqueTargets = [...new Set(targets.map(t => path.resolve(t)))];
+const uniqueTargets = [...new Set(targets.map((t) => path.resolve(t)))];
 
 if (uniqueTargets.length === 0) {
   console.warn('⚠️  No node_modules locations found.');
@@ -160,7 +160,7 @@ if (uniqueTargets.length === 0) {
 }
 
 console.log(`Found ${uniqueTargets.length} target location(s):`);
-uniqueTargets.forEach(t => console.log(`  - ${path.relative(rootDir, t)}`));
+uniqueTargets.forEach((t) => console.log(`  - ${path.relative(rootDir, t)}`));
 console.log('');
 
 // Copy binary to all targets
@@ -170,7 +170,7 @@ let failCount = 0;
 console.log('Syncing binary...');
 for (const targetDir of uniqueTargets) {
   const targetPath = path.join(targetDir, binaryName);
-  
+
   try {
     fs.mkdirSync(targetDir, { recursive: true });
     fs.copyFileSync(sourcePath, targetPath);
@@ -190,4 +190,3 @@ console.log(`Failed: ${failCount}`);
 if (failCount > 0) {
   process.exit(1);
 }
-

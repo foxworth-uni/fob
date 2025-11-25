@@ -23,7 +23,11 @@ pub fn cli_error_to_miette(err: CliError) -> Report {
 /// Convert BuildError to miette Report
 pub fn build_error_to_miette(err: BuildError) -> Report {
     match err {
-        BuildError::ResolutionFailed { module, importer, hint } => {
+        BuildError::ResolutionFailed {
+            module,
+            importer,
+            hint,
+        } => {
             miette::miette!(
                 "Failed to resolve module: {}\nImported from: {}\n\nHint: {}",
                 module,
@@ -72,4 +76,3 @@ pub fn bundler_error_to_miette(err: fob_bundler::Error) -> Report {
         }
     }
 }
-

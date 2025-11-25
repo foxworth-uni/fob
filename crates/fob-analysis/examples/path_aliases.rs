@@ -13,9 +13,9 @@ async fn main() -> fob::Result<()> {
     // - "#" → "./src" (another alternative)
     let analysis = Analyzer::new()
         .entry("src/index.ts")
-        .path_alias("@", "./src")  // "@/components/Button" → "./src/components/Button"
-        .path_alias("~", "./src")  // "~/utils/helpers" → "./src/utils/helpers"
-        .external(vec!["react", "lodash"])  // Mark npm packages as external
+        .path_alias("@", "./src") // "@/components/Button" → "./src/components/Button"
+        .path_alias("~", "./src") // "~/utils/helpers" → "./src/utils/helpers"
+        .external(vec!["react", "lodash"]) // Mark npm packages as external
         .analyze()
         .await?;
 
@@ -24,4 +24,3 @@ async fn main() -> fob::Result<()> {
 
     Ok(())
 }
-

@@ -198,8 +198,8 @@ pub fn detect_unreachable_code(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::symbol::SymbolKind;
+    use super::*;
 
     #[test]
     fn test_analyze_simple_symbols() {
@@ -500,4 +500,3 @@ function f() {}
         assert_eq!(class_sym[0].kind, SymbolKind::Class);
     }
 }
-

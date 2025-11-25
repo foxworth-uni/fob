@@ -11,12 +11,12 @@ try {
     entries: [join(__dirname, 'fixtures/simple/index.js')],
     output_dir: join(__dirname, 'dist/debug'),
     format: OutputFormat.Esm,
-    cwd: __dirname
+    cwd: __dirname,
   };
 
   const bundler = new Fob(config);
   const result = await bundler.bundle();
-  
+
   console.log('Result keys:', Object.keys(result));
   console.log('moduleCount:', result.moduleCount);
   console.log('module_count:', result.module_count);
@@ -34,4 +34,3 @@ try {
     console.log('Raw error:', err);
   }
 }
-

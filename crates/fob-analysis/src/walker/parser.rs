@@ -5,12 +5,12 @@
 
 use std::path::Path;
 
-use fob_graph::collection::{CollectedExport, CollectedImport};
 use fob::runtime::{Runtime, RuntimeError};
+use fob_graph::collection::{CollectedExport, CollectedImport};
 
-use crate::extractors::extract_scripts;
-use crate::config::MAX_FILE_SIZE;
 use super::WalkerError;
+use crate::config::MAX_FILE_SIZE;
+use crate::extractors::extract_scripts;
 
 /// Module parser that reads and parses files.
 pub struct ModuleParser;
@@ -103,7 +103,8 @@ impl ModuleParser {
     /// Uses the existing parse_module_structure function from collection module.
     /// If parsing fails, returns empty imports/exports and assumes side effects.
     fn parse_module(&self, code: &str) -> (Vec<CollectedImport>, Vec<CollectedExport>, bool) {
-        fob_graph::collection::parse_module_structure(code).unwrap_or_else(|_| (vec![], vec![], true))
+        fob_graph::collection::parse_module_structure(code)
+            .unwrap_or_else(|_| (vec![], vec![], true))
     }
 }
 
@@ -114,4 +115,3 @@ pub struct ParsedModule {
     pub exports: Vec<CollectedExport>,
     pub has_side_effects: bool,
 }
-

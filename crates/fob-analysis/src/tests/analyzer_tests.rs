@@ -27,10 +27,10 @@ async fn test_analyzer_default_values() {
     // Test that default analyzer is in Unconfigured state
     // With typestate pattern, analyze() is not available on Unconfigured
     let _analyzer: Analyzer<crate::Unconfigured> = Analyzer::new();
-    
+
     // This would be a compile error:
     // let result = analyzer.analyze().await;  // ❌ Compile error!
-    
+
     // Typestate pattern ensures entry is required at compile time
 }
 
@@ -57,10 +57,10 @@ async fn test_analyzer_requires_entry() {
     // With typestate pattern, entry() is required to transition to Configured
     // This test verifies the typestate pattern works correctly
     let _unconfigured: Analyzer<crate::Unconfigured> = Analyzer::new();
-    
+
     // This would be a compile error - analyze() only exists on Configured:
     // let result = unconfigured.analyze().await;  // ❌ Compile error!
-    
+
     // Must call entry() first to get Configured state
     let configured: Analyzer<crate::Configured> = Analyzer::new().entry("src/index.ts");
     // Now analyze() is available (though will fail at runtime without proper setup)

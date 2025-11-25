@@ -164,4 +164,3 @@ function complexFunction(x) {
         assert!(metadata.complexity.unwrap() > 1);
     }
 }
-

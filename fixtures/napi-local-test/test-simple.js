@@ -25,7 +25,7 @@ try {
     entries: [join(__dirname, 'fixtures/simple/index.js')],
     outputDir: join(__dirname, 'dist/test2'),
     format: OutputFormat.Esm,
-    cwd: __dirname
+    cwd: __dirname,
   };
 
   // Clean and create output dir
@@ -50,7 +50,7 @@ try {
     entries: [join(__dirname, 'fixtures/simple/index.js')],
     outputDir: join(__dirname, 'dist/test3'),
     format: OutputFormat.Cjs,
-    cwd: __dirname
+    cwd: __dirname,
   };
 
   rmSync(config.outputDir, { recursive: true, force: true });
@@ -73,7 +73,7 @@ try {
     entries: [join(__dirname, 'fixtures/with-import/index.js')],
     outputDir: join(__dirname, 'dist/test4'),
     format: OutputFormat.Esm,
-    cwd: __dirname
+    cwd: __dirname,
   };
 
   rmSync(config.outputDir, { recursive: true, force: true });

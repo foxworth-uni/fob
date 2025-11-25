@@ -14,7 +14,7 @@ console.log('✨ Clean!\n');
 const tests = [
   { name: 'Simple Tests', script: 'test-simple.js' },
   { name: 'Advanced Tests', script: 'test-advanced.js' },
-  { name: 'Error Handling', script: 'test-errors.js' }
+  { name: 'Error Handling', script: 'test-errors.js' },
 ];
 
 console.log('╔═══════════════════════════════════════════╗');
@@ -29,7 +29,7 @@ async function runTest(test) {
 
     const proc = spawn('node', [test.script], {
       cwd: __dirname,
-      stdio: 'inherit'
+      stdio: 'inherit',
     });
 
     proc.on('close', (code) => {

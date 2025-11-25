@@ -2,16 +2,18 @@
 //!
 //! Tests conversion from fob-bundler errors to FobErrorDetails.
 
-use fob_bundler::diagnostics::{DiagnosticContext, DiagnosticKind, DiagnosticSeverity, ExtractedDiagnostic};
+use fob_bundler::diagnostics::{
+    DiagnosticContext, DiagnosticKind, DiagnosticSeverity, ExtractedDiagnostic,
+};
 use fob_bundler::Error as BundlerError;
-use fob_native::error_mapper::map_bundler_error;
 use fob_native::error::FobErrorDetails;
+use fob_native::error_mapper::map_bundler_error;
 
 #[test]
 fn test_map_invalid_config_error() {
     let error = BundlerError::InvalidConfig("Invalid configuration".to_string());
     let mapped = map_bundler_error(&error);
-    
+
     match mapped {
         FobErrorDetails::Validation(e) => {
             assert_eq!(e.message, "Invalid configuration");
@@ -24,7 +26,7 @@ fn test_map_invalid_config_error() {
 fn test_map_invalid_output_path_error() {
     let error = BundlerError::InvalidOutputPath("/invalid/path".to_string());
     let mapped = map_bundler_error(&error);
-    
+
     match mapped {
         FobErrorDetails::InvalidEntry(e) => {
             assert_eq!(e.path, "/invalid/path");
@@ -49,10 +51,10 @@ fn test_map_missing_export_diagnostic() {
             available_exports: vec!["bar".to_string(), "baz".to_string()],
         }),
     };
-    
+
     let error = BundlerError::Bundler(vec![diagnostic]);
     let mapped = map_bundler_error(&error);
-    
+
     match mapped {
         FobErrorDetails::MissingExport(e) => {
             assert_eq!(e.export_name, "foo");
@@ -79,10 +81,10 @@ fn test_map_circular_dependency_diagnostic() {
             cycle_path: vec!["a.js".to_string(), "b.js".to_string(), "a.js".to_string()],
         }),
     };
-    
+
     let error = BundlerError::Bundler(vec![diagnostic]);
     let mapped = map_bundler_error(&error);
-    
+
     match mapped {
         FobErrorDetails::CircularDependency(e) => {
             assert_eq!(e.cycle_path.len(), 3);
@@ -107,10 +109,10 @@ fn test_map_plugin_error() {
             plugin_name: "test-plugin".to_string(),
         }),
     };
-    
+
     let error = BundlerError::Bundler(vec![diagnostic]);
     let mapped = map_bundler_error(&error);
-    
+
     match mapped {
         FobErrorDetails::Plugin(e) => {
             assert_eq!(e.name, "test-plugin");
@@ -143,10 +145,10 @@ fn test_map_multiple_diagnostics() {
             context: None,
         },
     ];
-    
+
     let error = BundlerError::Bundler(diagnostics);
     let mapped = map_bundler_error(&error);
-    
+
     match mapped {
         FobErrorDetails::Multiple(e) => {
             assert_eq!(e.errors.len(), 2);
@@ -159,11 +161,11 @@ fn test_map_multiple_diagnostics() {
 #[test]
 fn test_map_io_error() {
     use std::io;
-    
+
     let io_error = io::Error::new(io::ErrorKind::NotFound, "File not found");
     let error = BundlerError::Io(io_error);
     let mapped = map_bundler_error(&error);
-    
+
     match mapped {
         FobErrorDetails::Runtime(e) => {
             assert!(e.message.contains("I/O error"));
@@ -175,15 +177,15 @@ fn test_map_io_error() {
 #[test]
 fn test_error_json_serialization() {
     use fob_native::error::{FobErrorDetails, NoEntriesError, ValidationError};
-    
+
     // Test NoEntries error
     let error = FobErrorDetails::NoEntries(NoEntriesError {});
     let json = error.to_json_string();
-    
+
     // Should be valid JSON
-    let parsed: serde_json::Value = serde_json::from_str(&json)
-        .expect("Error should serialize to valid JSON");
-    
+    let parsed: serde_json::Value =
+        serde_json::from_str(&json).expect("Error should serialize to valid JSON");
+
     // Should have type field (from serde tag)
     // Note: serde uses the struct name for empty structs, so it's "NoEntriesError"
     assert!(
@@ -191,16 +193,16 @@ fn test_error_json_serialization() {
         "Type should be NoEntries or NoEntriesError, got: {}",
         parsed["type"]
     );
-    
+
     // Test Validation error
     let error = FobErrorDetails::Validation(ValidationError {
         message: "test message".to_string(),
     });
     let json = error.to_json_string();
-    
-    let parsed: serde_json::Value = serde_json::from_str(&json)
-        .expect("Error should serialize to valid JSON");
-    
+
+    let parsed: serde_json::Value =
+        serde_json::from_str(&json).expect("Error should serialize to valid JSON");
+
     // Note: serde uses the struct name, so it's "ValidationError"
     assert!(
         parsed["type"] == "Validation" || parsed["type"] == "ValidationError",
@@ -213,16 +215,16 @@ fn test_error_json_serialization() {
 #[test]
 fn test_error_envelope_versioning() {
     use fob_native::error::{FobErrorDetails, NoEntriesError};
-    
+
     let error = FobErrorDetails::NoEntries(NoEntriesError {});
-    
+
     let envelope = error.into_envelope_v1();
     assert_eq!(envelope.version, 1);
-    
+
     // Verify envelope serializes correctly
     let json = serde_json::to_string(&envelope).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
-    
+
     assert_eq!(parsed["version"], 1);
     // Note: serde uses the struct name for empty structs, so it's "NoEntriesError"
     assert!(
@@ -230,7 +232,7 @@ fn test_error_envelope_versioning() {
         "Type should be NoEntries or NoEntriesError, got: {}",
         parsed["error"]["type"]
     );
-    
+
     // Test custom version
     let error = FobErrorDetails::NoEntries(NoEntriesError {});
     let envelope = error.into_envelope(2);
@@ -240,7 +242,7 @@ fn test_error_envelope_versioning() {
 #[test]
 fn test_all_error_types_serialize() {
     use fob_native::error::*;
-    
+
     // Test all error variants serialize correctly
     let errors = vec![
         FobErrorDetails::NoEntries(NoEntriesError {}),
@@ -267,16 +269,18 @@ fn test_all_error_types_serialize() {
             message: "error".to_string(),
         }),
     ];
-    
+
     for error in errors {
         let json = error.to_json_string();
-        
+
         // Should be valid JSON
-        let parsed: serde_json::Value = serde_json::from_str(&json)
-            .expect("All error types should serialize to valid JSON");
-        
+        let parsed: serde_json::Value =
+            serde_json::from_str(&json).expect("All error types should serialize to valid JSON");
+
         // Should have type field
-        assert!(parsed.get("type").is_some(), "All errors should have 'type' field");
+        assert!(
+            parsed.get("type").is_some(),
+            "All errors should have 'type' field"
+        );
     }
 }
-

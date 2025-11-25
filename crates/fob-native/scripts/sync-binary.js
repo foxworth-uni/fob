@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Syncs the built NAPI binary to all node_modules locations where it might be loaded.
- * 
+ *
  * This script handles the case where pnpm's file: protocol copies packages at install time,
  * so rebuilding the binary in the source location doesn't automatically update the copy
  * in node_modules.
@@ -55,12 +55,12 @@ if (fs.existsSync(rootNodeModules)) {
 // 2. pnpm store locations (.pnpm directory)
 const findPnpmLocations = (dir, depth = 0) => {
   if (depth > 5) return; // Limit recursion depth
-  
+
   try {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
-      
+
       if (entry.isDirectory()) {
         // Check if this is a pnpm package directory (format: package@version)
         if (entry.name.startsWith('fob-native-build@')) {
@@ -101,7 +101,7 @@ if (fs.existsSync(fixturesDir)) {
 const rootPnpmDir = path.join(rootDir, 'node_modules', '.pnpm');
 if (fs.existsSync(rootPnpmDir)) {
   findPnpmLocations(rootPnpmDir);
-  
+
   // Also directly check for fob-native-build packages
   try {
     const entries = fs.readdirSync(rootPnpmDir, { withFileTypes: true });
@@ -119,7 +119,7 @@ if (fs.existsSync(rootPnpmDir)) {
 }
 
 // Remove duplicates
-const uniqueTargets = [...new Set(targets.map(t => path.resolve(t)))];
+const uniqueTargets = [...new Set(targets.map((t) => path.resolve(t)))];
 
 if (uniqueTargets.length === 0) {
   console.warn('Warning: No node_modules locations found. Binary may not be synced.');
@@ -133,11 +133,11 @@ let failCount = 0;
 
 for (const targetDir of uniqueTargets) {
   const targetPath = path.join(targetDir, binaryName);
-  
+
   try {
     // Ensure target directory exists
     fs.mkdirSync(targetDir, { recursive: true });
-    
+
     // Copy the file
     fs.copyFileSync(sourcePath, targetPath);
     console.log(`✓ Synced to ${path.relative(rootDir, targetPath)}`);
@@ -153,4 +153,3 @@ console.log(`\nSync complete: ${successCount} succeeded, ${failCount} failed`);
 if (failCount > 0) {
   process.exit(1);
 }
-

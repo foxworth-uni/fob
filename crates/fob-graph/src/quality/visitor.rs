@@ -54,4 +54,3 @@ impl<'a, 'ast> Visit<'ast> for QualityCalculator<'a> {
         walk::walk_class(self, class);
     }
 }
-

@@ -61,7 +61,7 @@ try {
 console.log('📦 Test 3: Invalid configuration (empty entry)');
 try {
   const config = {
-    entries: [],  // Invalid: empty array
+    entries: [], // Invalid: empty array
     outputDir: join(__dirname, 'dist/error-3'),
     bundle: true,
     format: OutputFormat.Esm,
@@ -89,7 +89,7 @@ try {
     entries: [join(__dirname, 'fixtures/simple/index.js')],
     outputDir: join(__dirname, 'dist/error-4'),
     bundle: true,
-    format: 'invalid-format'  // Should be one of the OutputFormat enum values
+    format: 'invalid-format', // Should be one of the OutputFormat enum values
   };
 
   const bundler = new Fob(config);

@@ -14,7 +14,7 @@ try {
     bundle: true,
     format: OutputFormat.Esm,
     cwd: __dirname,
-    sourcemap: SourceMapMode.Inline
+    sourcemap: SourceMapMode.Inline,
   };
 
   rmSync(config.output_dir, { recursive: true, force: true });
@@ -26,7 +26,7 @@ try {
   console.log('Result chunks:', result.chunks.length);
   console.log('First chunk fileName:', result.chunks[0]?.fileName);
   console.log('First chunk code length:', result.chunks[0]?.code?.length);
-  
+
   // Manually write the file to test
   if (result.chunks[0]) {
     const outputFile = join(config.output_dir, result.chunks[0].fileName);
@@ -39,4 +39,3 @@ try {
   console.error('Stack:', err.stack);
   process.exit(1);
 }
-

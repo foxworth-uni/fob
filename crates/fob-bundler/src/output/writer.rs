@@ -93,7 +93,7 @@ use crate::{Error, Result};
 pub fn write_bundle_to(output: &BundleOutput, dir: &Path, overwrite: bool) -> Result<()> {
     eprintln!("[DEBUG] write_bundle_to called with dir: {}", dir.display());
     eprintln!("[DEBUG] output.assets.len(): {}", output.assets.len());
-    
+
     // Validate and normalize the output directory
     let dir = validate_and_normalize_dir(dir)?;
     eprintln!("[DEBUG] Normalized dir: {}", dir.display());
@@ -109,9 +109,16 @@ pub fn write_bundle_to(output: &BundleOutput, dir: &Path, overwrite: bool) -> Re
 
     // Collect all file operations to perform
     let mut operations = Vec::new();
-    eprintln!("[DEBUG] Starting to iterate over {} assets", output.assets.len());
+    eprintln!(
+        "[DEBUG] Starting to iterate over {} assets",
+        output.assets.len()
+    );
     for (idx, output_item) in output.assets.iter().enumerate() {
-        eprintln!("[DEBUG] Processing asset[{}]: type={:?}", idx, std::mem::discriminant(output_item));
+        eprintln!(
+            "[DEBUG] Processing asset[{}]: type={:?}",
+            idx,
+            std::mem::discriminant(output_item)
+        );
         // Only process assets (skip chunks if present)
         if let Output::Asset(asset) = output_item {
             eprintln!("[DEBUG] Found Asset: filename='{}'", asset.filename);
@@ -129,7 +136,11 @@ pub fn write_bundle_to(output: &BundleOutput, dir: &Path, overwrite: bool) -> Re
 
             operations.push((target_path, asset.source.as_bytes()));
         } else if let Output::Chunk(chunk) = output_item {
-            eprintln!("[DEBUG] Found Chunk: filename='{}', code_len={}", chunk.filename, chunk.code.len());
+            eprintln!(
+                "[DEBUG] Found Chunk: filename='{}', code_len={}",
+                chunk.filename,
+                chunk.code.len()
+            );
             let filename = chunk.filename.as_str();
             let target_path = validate_output_path(&dir, filename)?;
             eprintln!("[DEBUG] Chunk target_path: {}", target_path.display());
@@ -149,11 +160,19 @@ pub fn write_bundle_to(output: &BundleOutput, dir: &Path, overwrite: bool) -> Re
     }
     eprintln!("[DEBUG] Collected {} operations to write", operations.len());
     for (i, (path, content)) in operations.iter().enumerate() {
-        eprintln!("[DEBUG] Operation[{}]: {} ({} bytes)", i, path.display(), content.len());
+        eprintln!(
+            "[DEBUG] Operation[{}]: {} ({} bytes)",
+            i,
+            path.display(),
+            content.len()
+        );
     }
 
     // Write all files atomically
-    eprintln!("[DEBUG] About to call write_files_atomic with {} operations", operations.len());
+    eprintln!(
+        "[DEBUG] About to call write_files_atomic with {} operations",
+        operations.len()
+    );
     write_files_atomic(&operations)?;
     eprintln!("[DEBUG] write_files_atomic completed successfully");
 
@@ -257,12 +276,20 @@ fn validate_output_path(base_dir: &Path, filename: &str) -> Result<PathBuf> {
 /// The `rename()` operation is atomic on most filesystems, so readers will never
 /// see partial file contents.
 fn write_files_atomic(operations: &[(PathBuf, &[u8])]) -> Result<()> {
-    eprintln!("[DEBUG] write_files_atomic: {} operations", operations.len());
+    eprintln!(
+        "[DEBUG] write_files_atomic: {} operations",
+        operations.len()
+    );
     let mut temp_files = Vec::new();
 
     // Phase 1: Write to temporary files
     for (idx, (target_path, content)) in operations.iter().enumerate() {
-        eprintln!("[DEBUG] Phase 1[{}/{}]: Writing temp file for {}", idx + 1, operations.len(), target_path.display());
+        eprintln!(
+            "[DEBUG] Phase 1[{}/{}]: Writing temp file for {}",
+            idx + 1,
+            operations.len(),
+            target_path.display()
+        );
         // Create parent directories if needed
         if let Some(parent) = target_path.parent() {
             fs::create_dir_all(parent).map_err(|e| {
@@ -277,9 +304,17 @@ fn write_files_atomic(operations: &[(PathBuf, &[u8])]) -> Result<()> {
 
         // Write to temporary file
         let temp_path = target_path.with_extension("tmp");
-        eprintln!("[DEBUG] Writing temp file: {} ({} bytes)", temp_path.display(), content.len());
+        eprintln!(
+            "[DEBUG] Writing temp file: {} ({} bytes)",
+            temp_path.display(),
+            content.len()
+        );
         fs::write(&temp_path, content).map_err(|e| {
-            eprintln!("[DEBUG] ERROR writing temp file {}: {}", temp_path.display(), e);
+            eprintln!(
+                "[DEBUG] ERROR writing temp file {}: {}",
+                temp_path.display(),
+                e
+            );
             cleanup_temp_files(&temp_files);
             Error::WriteFailure(format!(
                 "Failed to write temporary file '{}': {}",
@@ -287,16 +322,30 @@ fn write_files_atomic(operations: &[(PathBuf, &[u8])]) -> Result<()> {
                 e
             ))
         })?;
-        eprintln!("[DEBUG] Temp file written successfully: {}", temp_path.display());
+        eprintln!(
+            "[DEBUG] Temp file written successfully: {}",
+            temp_path.display()
+        );
         temp_files.push((temp_path, target_path.clone()));
     }
 
     // Phase 2: Rename temp files to final names (atomic operation)
     eprintln!("[DEBUG] Phase 2: Renaming {} temp files", temp_files.len());
     for (idx, (temp_path, target_path)) in temp_files.iter().enumerate() {
-        eprintln!("[DEBUG] Renaming[{}/{}]: {} -> {}", idx + 1, temp_files.len(), temp_path.display(), target_path.display());
+        eprintln!(
+            "[DEBUG] Renaming[{}/{}]: {} -> {}",
+            idx + 1,
+            temp_files.len(),
+            temp_path.display(),
+            target_path.display()
+        );
         fs::rename(temp_path, target_path).map_err(|e| {
-            eprintln!("[DEBUG] ERROR renaming {} to {}: {}", temp_path.display(), target_path.display(), e);
+            eprintln!(
+                "[DEBUG] ERROR renaming {} to {}: {}",
+                temp_path.display(),
+                target_path.display(),
+                e
+            );
             // On failure, try to clean up temp files
             cleanup_temp_files(&temp_files);
             Error::WriteFailure(format!(
@@ -308,7 +357,10 @@ fn write_files_atomic(operations: &[(PathBuf, &[u8])]) -> Result<()> {
         })?;
         eprintln!("[DEBUG] Successfully renamed to: {}", target_path.display());
     }
-    eprintln!("[DEBUG] write_files_atomic completed: {} files written", operations.len());
+    eprintln!(
+        "[DEBUG] write_files_atomic completed: {} files written",
+        operations.len()
+    );
     Ok(())
 }
 

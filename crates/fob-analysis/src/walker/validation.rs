@@ -34,10 +34,9 @@ pub fn validate_path_within_cwd(
     cwd: &Path,
 ) -> Result<(), PathTraversalError> {
     // First, try with canonicalized paths (most accurate)
-    if let (Ok(normalized), Ok(cwd_normalized)) = (
-        normalized_path.canonicalize(),
-        cwd.canonicalize(),
-    ) {
+    if let (Ok(normalized), Ok(cwd_normalized)) =
+        (normalized_path.canonicalize(), cwd.canonicalize())
+    {
         if normalized.starts_with(&cwd_normalized) {
             return Ok(());
         }
@@ -50,10 +49,11 @@ pub fn validate_path_within_cwd(
         // Additional check: ensure the path doesn't contain ".." that would escape
         // This is a safety check for the fallback case
         // Count how many directory levels we're going up from cwd
-        let relative = normalized_path.strip_prefix(cwd)
+        let relative = normalized_path
+            .strip_prefix(cwd)
             .ok()
             .and_then(|p| p.to_str());
-        
+
         if let Some(rel) = relative {
             // Check if the relative path contains excessive ".."
             let dot_dot_count = rel.matches("../").count();
@@ -62,7 +62,7 @@ pub fn validate_path_within_cwd(
                 return Ok(());
             }
         }
-        
+
         // If we have ".." components, be more strict
         // Only allow if canonicalization succeeded and passed the starts_with check above
         // Otherwise, reject to be safe
@@ -94,10 +94,7 @@ pub fn validate_path_within_cwd(
 /// # Returns
 ///
 /// The normalized absolute path, or an error if path traversal is detected
-pub fn normalize_and_validate_path(
-    path: &Path,
-    cwd: &Path,
-) -> Result<PathBuf, PathTraversalError> {
+pub fn normalize_and_validate_path(path: &Path, cwd: &Path) -> Result<PathBuf, PathTraversalError> {
     use path_clean::PathClean;
 
     let normalized = if path.is_absolute() {
@@ -178,4 +175,3 @@ mod tests {
         assert_eq!(result, expected);
     }
 }
-

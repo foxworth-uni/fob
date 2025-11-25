@@ -14,7 +14,10 @@ async fn test_empty_file() {
     let temp = TempDir::new().expect("Failed to create temp dir");
     let root = create_test_project(
         &temp,
-        &[("src/index.ts", ""), ("src/utils.ts", "export const x = 1;")],
+        &[
+            ("src/index.ts", ""),
+            ("src/utils.ts", "export const x = 1;"),
+        ],
     );
 
     let runtime = TestRuntime::new(root.clone());
@@ -75,7 +78,7 @@ async fn test_very_deep_nesting() {
     let runtime = TestRuntime::new(root.clone());
     let analysis = Analyzer::new()
         .entry(root.join("src/level0.ts"))
-        .max_depth(Some(100))  // Allow deep nesting
+        .max_depth(Some(100)) // Allow deep nesting
         .runtime(Arc::new(runtime))
         .analyze()
         .await;
@@ -90,7 +93,10 @@ async fn test_very_wide_graph() {
 
     // Create a wide graph (many modules importing from one)
     let width = 100;
-    let mut files: Vec<(String, String)> = vec![("src/index.ts".to_string(), "export const x = 1;".to_string())];
+    let mut files: Vec<(String, String)> = vec![(
+        "src/index.ts".to_string(),
+        "export const x = 1;".to_string(),
+    )];
 
     for i in 0..width {
         files.push((
@@ -110,7 +116,7 @@ async fn test_very_wide_graph() {
     let runtime = TestRuntime::new(project_root.clone());
     let analysis = Analyzer::new()
         .entry(project_root.join("src/index.ts"))
-        .max_modules(Some(200))  // Allow wide graph
+        .max_modules(Some(200)) // Allow wide graph
         .runtime(Arc::new(runtime))
         .analyze()
         .await;
@@ -142,7 +148,7 @@ async fn test_max_depth_enforcement() {
     let runtime = TestRuntime::new(root.clone());
     let analysis = Analyzer::new()
         .entry(root.join("src/level0.ts"))
-        .max_depth(Some(5))  // Set limit below actual depth
+        .max_depth(Some(5)) // Set limit below actual depth
         .runtime(Arc::new(runtime))
         .analyze()
         .await;
@@ -178,12 +184,14 @@ async fn test_max_modules_enforcement() {
     let runtime = TestRuntime::new(root.clone());
     let analysis = Analyzer::new()
         .entry(root.join("src/index.ts"))
-        .max_modules(Some(10))  // Set limit below actual count
+        .max_modules(Some(10)) // Set limit below actual count
         .runtime(Arc::new(runtime))
         .analyze()
         .await;
 
     // Should fail with too many modules
-    assert!(analysis.is_err(), "Should fail when max modules is exceeded");
+    assert!(
+        analysis.is_err(),
+        "Should fail when max modules is exceeded"
+    );
 }
-

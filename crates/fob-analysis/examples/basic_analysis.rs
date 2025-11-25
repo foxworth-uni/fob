@@ -8,7 +8,7 @@ use fob_analysis::Analyzer;
 async fn main() -> fob::Result<()> {
     // Create analyzer and configure entry point
     let analysis = Analyzer::new()
-        .entry("src/index.ts")  // Required: transitions to Configured state
+        .entry("src/index.ts") // Required: transitions to Configured state
         .analyze()
         .await?;
 
@@ -25,4 +25,3 @@ async fn main() -> fob::Result<()> {
 
     Ok(())
 }
-

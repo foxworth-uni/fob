@@ -5,11 +5,13 @@ This example demonstrates how to build a simple React static site using the fob 
 ## Quick Start
 
 1. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 2. Start the development server:
+
 ```bash
 pnpm dev
 ```
@@ -17,6 +19,7 @@ pnpm dev
 The dev server will start on `http://localhost:3000` (or the next available port) with hot module replacement (HMR).
 
 3. Build for production:
+
 ```bash
 pnpm build
 ```
@@ -24,6 +27,7 @@ pnpm build
 This creates a production bundle in the `dist/` directory.
 
 4. Build with minification:
+
 ```bash
 pnpm build:prod
 ```
@@ -51,6 +55,7 @@ This example follows a similar pattern to tsup:
 - **fob**: `fob-cli build` (configured via `fob.config.json`)
 
 The main differences:
+
 - fob uses a config file (`fob.config.json`) instead of CLI flags
 - fob includes a built-in dev server with HMR
 - fob handles TypeScript/TSX automatically without additional configuration
@@ -76,4 +81,3 @@ react-static-site/
 - Hot Module Replacement in dev mode
 - Production bundling with source maps
 - Modern ES modules
-

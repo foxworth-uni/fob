@@ -12,4 +12,3 @@ pub fn convert_format(format: Option<OutputFormat>) -> BundlerOutputFormat {
         None => BundlerOutputFormat::Esm,
     }
 }
-

@@ -3,7 +3,7 @@
 //! This example shows how to analyze framework components (Astro, Svelte, Vue)
 //! which require script extraction before parsing.
 
-use fob_analysis::{Analyzer, AnalyzeOptions};
+use fob_analysis::{AnalyzeOptions, Analyzer};
 
 #[tokio::main]
 async fn main() -> fob::Result<()> {
@@ -14,11 +14,11 @@ async fn main() -> fob::Result<()> {
     // - Vue Single File Components (.vue)
     let analysis = Analyzer::new()
         .entries(vec![
-            "src/components/App.astro",      // Astro component
-            "src/components/Button.svelte",  // Svelte component
-            "src/components/Card.vue",       // Vue component
+            "src/components/App.astro",     // Astro component
+            "src/components/Button.svelte", // Svelte component
+            "src/components/Card.vue",      // Vue component
         ])
-        .external(vec!["react", "vue", "svelte"])  // Mark frameworks as external
+        .external(vec!["react", "vue", "svelte"]) // Mark frameworks as external
         .analyze()
         .await?;
 
@@ -44,4 +44,3 @@ async fn main() -> fob::Result<()> {
 
     Ok(())
 }
-
