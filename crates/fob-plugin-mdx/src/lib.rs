@@ -29,7 +29,10 @@
 use anyhow::Context;
 use bunny_mdx::{compile, MdxCompileOptions};
 use rolldown_common::ModuleType;
-use rolldown_plugin::{HookLoadArgs, HookLoadOutput, HookLoadReturn, Plugin, PluginContext};
+use rolldown_plugin::{
+    HookLoadArgs, HookLoadOutput, HookLoadReturn, HookResolveIdArgs, HookResolveIdOutput,
+    HookResolveIdReturn, Plugin, PluginContext,
+};
 use std::borrow::Cow;
 use std::path::PathBuf;
 
@@ -130,8 +133,62 @@ impl Plugin for BunnyMdxPlugin {
     /// This allows Rolldown to optimize by skipping unused hooks.
     fn register_hook_usage(&self) -> rolldown_plugin::HookUsage {
         use rolldown_plugin::HookUsage;
-        // We only use the load hook
-        HookUsage::Load
+        // We use resolve_id to intercept MDX imports before Rolldown normalizes paths,
+        // and load to compile MDX files to JSX
+        HookUsage::ResolveId | HookUsage::Load
+    }
+
+    /// Resolve ID hook - intercepts `.mdx` imports before Rolldown's resolver normalizes them
+    ///
+    /// This hook ensures that MDX files are resolved with consistent absolute paths,
+    /// preventing Rolldown from converting absolute paths to relative paths when the
+    /// importer is a virtual module (which has no filesystem location).
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(Some(output))` - Successfully resolved MDX file to absolute path
+    /// - `Ok(None)` - Not an MDX file or file doesn't exist, let other resolvers handle it
+    /// - `Err(e)` - Resolution error
+    fn resolve_id(
+        &self,
+        _ctx: &PluginContext,
+        args: &HookResolveIdArgs<'_>,
+    ) -> impl std::future::Future<Output = HookResolveIdReturn> + Send {
+        let specifier = args.specifier.to_string();
+        let project_root = self.project_root.clone();
+
+        async move {
+            // Only handle .mdx files
+            if !specifier.ends_with(".mdx") {
+                return Ok(None);
+            }
+
+            let path = std::path::Path::new(&specifier);
+
+            // If already absolute and exists, return as-is
+            if path.is_absolute() {
+                if path.exists() {
+                    return Ok(Some(HookResolveIdOutput {
+                        id: specifier.into(),
+                        ..Default::default()
+                    }));
+                }
+                // File doesn't exist, let other resolvers handle it
+                return Ok(None);
+            }
+
+            // Relative path - resolve against project_root
+            let resolved = project_root.join(&specifier);
+            if resolved.exists() {
+                return Ok(Some(HookResolveIdOutput {
+                    id: resolved.to_string_lossy().into_owned().into(),
+                    ..Default::default()
+                }));
+            }
+
+            // File doesn't exist, let other resolvers handle it
+            Ok(None)
+        }
     }
 
     /// Load hook - intercepts `.mdx` files and compiles them to JSX

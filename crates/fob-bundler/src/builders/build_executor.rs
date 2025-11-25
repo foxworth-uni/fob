@@ -379,6 +379,7 @@ fn configure_resolution(
             ".mjs".to_string(),
             ".ts".to_string(),
             ".tsx".to_string(),
+            ".mdx".to_string(),
         ]),
         modules: Some(modules),
         symlinks: Some(true), // Follow symlinks (important for pnpm)
