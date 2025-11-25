@@ -216,3 +216,52 @@ async fn test_multiple_mdx_files() {
         "Expected at least 2 output assets for 2 MDX files"
     );
 }
+
+#[tokio::test]
+async fn test_mdx_relative_import() {
+    let dir = TempDir::new().unwrap();
+
+    // Create a subdirectory structure to test relative imports
+    let src_dir = dir.path().join("src");
+    std::fs::create_dir_all(&src_dir).unwrap();
+
+    // Create the imported MDX file
+    std::fs::write(
+        src_dir.join("utils.mdx"),
+        r#"# Utility Component
+
+export const greeting = "Hello from utils!"
+"#,
+    )
+    .unwrap();
+
+    // Create entry MDX that imports the other MDX with relative path
+    std::fs::write(
+        src_dir.join("index.mdx"),
+        r#"import { greeting } from './utils.mdx'
+
+# Main Page
+
+The greeting is: {greeting}
+"#,
+    )
+    .unwrap();
+
+    let runtime = Arc::new(TestRuntime::new(dir.path().to_path_buf()));
+
+    let result = BuildOptions::new(src_dir.join("index.mdx"))
+        .bundle(true)
+        .platform(Platform::Node)
+        .cwd(dir.path())
+        .runtime(runtime)
+        .plugin(plugin(BunnyMdxPlugin::new(dir.path().to_path_buf())))
+        .build()
+        .await
+        .expect("relative MDX import should resolve correctly");
+
+    let bundle = result.output.as_single().expect("single bundle");
+    assert!(
+        !bundle.assets.is_empty(),
+        "Expected at least one output asset with relative MDX import"
+    );
+}

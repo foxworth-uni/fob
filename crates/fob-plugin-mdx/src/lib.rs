@@ -156,6 +156,7 @@ impl Plugin for BunnyMdxPlugin {
     ) -> impl std::future::Future<Output = HookResolveIdReturn> + Send {
         let specifier = args.specifier.to_string();
         let project_root = self.project_root.clone();
+        let importer = args.importer.map(|s| s.to_string());
 
         async move {
             // Only handle .mdx files
@@ -176,7 +177,28 @@ impl Plugin for BunnyMdxPlugin {
                 }));
             }
 
-            // Relative path - resolve against project_root
+            // Relative path - resolve against importer's directory (not project_root!)
+            if let Some(importer_path) = &importer {
+                if specifier.starts_with("./") || specifier.starts_with("../") {
+                    let importer = std::path::Path::new(importer_path);
+                    if let Some(importer_dir) = importer.parent() {
+                        let resolved = importer_dir.join(&specifier);
+                        if resolved.exists() {
+                            return Ok(Some(HookResolveIdOutput {
+                                id: resolved
+                                    .canonicalize()
+                                    .unwrap_or(resolved)
+                                    .to_string_lossy()
+                                    .into_owned()
+                                    .into(),
+                                ..Default::default()
+                            }));
+                        }
+                    }
+                }
+            }
+
+            // Bare specifier or no importer - resolve against project_root
             let resolved = project_root.join(&specifier);
             if resolved.exists() {
                 return Ok(Some(HookResolveIdOutput {
