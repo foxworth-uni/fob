@@ -37,6 +37,7 @@ use rolldown_plugin::{
 use rustc_hash::FxHashSet;
 use std::borrow::Cow;
 use std::sync::Arc;
+use tracing::debug;
 
 mod config;
 mod error;
@@ -73,6 +74,105 @@ pub struct FobTailwindPlugin {
 
     /// Project root directory for resolving paths
     project_root: std::path::PathBuf,
+}
+
+/// Check if a file path should be scanned based on exclusion patterns
+fn should_scan_file_path(id: &str) -> bool {
+    // Skip node_modules and vendor directories
+    if id.contains("/node_modules/")
+        || id.contains("/.pnpm/")
+        || id.contains("/dist/")
+        || id.contains("/vendor/")
+        || id.contains("/.cache/")
+        || id.contains("\\node_modules\\")
+        || id.contains("\\.pnpm\\")
+        || id.contains("\\dist\\")
+        || id.contains("\\vendor\\")
+        || id.contains("\\.cache\\")
+    {
+        return false;
+    }
+    true
+}
+
+/// Check if a file matches content patterns from config
+fn matches_content_patterns(id: &str, patterns: &[String]) -> bool {
+    if patterns.is_empty() {
+        // If no patterns specified, allow all matching extensions
+        return true;
+    }
+
+    // Simple glob pattern matching for common patterns
+    // This handles basic patterns like "./src/**/*.{js,jsx,ts,tsx}"
+    for pattern in patterns {
+        // Normalize pattern: remove leading "./" and handle **
+        let normalized_pattern = pattern.trim_start_matches("./");
+        
+        // Simple matching: check if the file path contains the base directory
+        // For patterns like "src/**/*.{js,jsx}", check if path starts with "src/"
+        if normalized_pattern.contains("**") {
+            let base = normalized_pattern.split("**").next().unwrap_or("");
+            if !base.is_empty() && id.contains(base) {
+                return true;
+            }
+        } else if id.contains(normalized_pattern.trim_end_matches("*")) {
+            return true;
+        }
+    }
+    
+    false
+}
+
+/// Validate that a class name is a valid CSS class (not a JS keyword/identifier)
+fn is_valid_css_class(class: &str) -> bool {
+    // Reject empty strings
+    if class.is_empty() {
+        return false;
+    }
+
+    // Reject JavaScript keywords and common identifiers
+    let js_keywords = [
+        "class", "function", "const", "let", "var", "if", "else", "for", "while",
+        "return", "import", "export", "default", "async", "await", "try", "catch",
+        "throw", "new", "this", "super", "extends", "implements", "interface",
+        "type", "enum", "namespace", "module", "declare", "abstract", "static",
+        "public", "private", "protected", "readonly", "get", "set", "of", "in",
+        "instanceof", "typeof", "void", "null", "undefined", "true", "false",
+        "break", "continue", "switch", "case", "do", "with", "debugger", "yield",
+    ];
+
+    // Check if it's a JS keyword (case-insensitive)
+    if js_keywords.iter().any(|&kw| class.eq_ignore_ascii_case(kw)) {
+        return false;
+    }
+
+    // Reject identifiers that look like JS (camelCase function names, PascalCase classes)
+    // But allow valid Tailwind classes that might be camelCase
+    // A simple heuristic: reject if it's purely alphanumeric and starts with uppercase
+    // (likely a class name like "Component" or "React")
+    if class.chars().next().map(|c| c.is_uppercase()).unwrap_or(false)
+        && class.chars().all(|c| c.is_alphanumeric() || c == '_')
+        && class.len() > 1
+        && !class.contains('-')
+        && !class.contains(':')
+        && !class.contains('.')
+        && !class.contains('/')
+        && !class.contains('[')
+        && !class.contains(']')
+    {
+        // Likely a JS identifier, but allow if it contains Tailwind-specific characters
+        return false;
+    }
+
+    // Allow classes that contain Tailwind-specific characters (:, /, [, ], etc.)
+    // or contain hyphens (common in CSS)
+    if class.contains('-') || class.contains(':') || class.contains('/') || class.contains('[') {
+        return true;
+    }
+
+    // For simple identifiers, be more permissive but reject obvious JS patterns
+    // Allow if it's a valid CSS identifier pattern
+    true
 }
 
 impl FobTailwindPlugin {
@@ -249,11 +349,11 @@ impl Plugin for FobTailwindPlugin {
         async move {
             // Handle CSS files with @tailwind directives
             if id.ends_with(".css") {
-                eprintln!("[fob-tailwind] Transform hook called for CSS: {}", id);
+                debug!("[fob-tailwind] Transform hook called for CSS: {}", id);
 
                 // Check if it contains @tailwind directives
                 if !code.contains("@tailwind") {
-                    eprintln!("[fob-tailwind] No @tailwind directives found, skipping");
+                    debug!("[fob-tailwind] No @tailwind directives found, skipping");
                     return Ok(None);
                 }
 
@@ -261,7 +361,7 @@ impl Plugin for FobTailwindPlugin {
                 let classes_set = class_registry.lock().clone();
                 let classes: Vec<String> = classes_set.into_iter().collect();
 
-                eprintln!(
+                debug!(
                     "[fob-tailwind] Processing CSS with {} classes",
                     classes.len()
                 );
@@ -279,7 +379,7 @@ impl Plugin for FobTailwindPlugin {
                     .await
                     .with_context(|| format!("Failed to process Tailwind CSS in: {}", id))?;
 
-                eprintln!(
+                debug!(
                     "[fob-tailwind] Processed {} ({} → {} bytes, {} classes)",
                     id,
                     code.len(),
@@ -297,16 +397,34 @@ impl Plugin for FobTailwindPlugin {
             }
 
             // Handle source files - scan for class names
-            let should_scan = id.ends_with(".tsx")
+            // First check file extension
+            let has_valid_extension = id.ends_with(".tsx")
                 || id.ends_with(".jsx")
                 || id.ends_with(".ts")
-                || id.ends_with(".js");
+                || id.ends_with(".js")
+                || id.ends_with(".html")
+                || id.ends_with(".vue")
+                || id.ends_with(".svelte")
+                || id.ends_with(".astro")
+                || id.ends_with(".mdx");
 
-            if !should_scan {
+            if !has_valid_extension {
                 return Ok(None);
             }
 
-            eprintln!("[fob-tailwind] Scanning for classes: {}", id);
+            // Check path exclusions (node_modules, etc.)
+            if !should_scan_file_path(&id) {
+                debug!("[fob-tailwind] Skipping excluded path: {}", id);
+                return Ok(None);
+            }
+
+            // Check content patterns from config
+            if !matches_content_patterns(&id, &config.content) {
+                debug!("[fob-tailwind] File does not match content patterns: {}", id);
+                return Ok(None);
+            }
+
+            debug!("[fob-tailwind] Scanning for classes: {}", id);
 
             // Scan for class names using tailwindcss-oxide
             use tailwindcss_oxide::extractor::{Extracted, Extractor};
@@ -322,6 +440,7 @@ impl Plugin for FobTailwindPlugin {
                     }
                     Extracted::CssVariable(_) => None,
                 })
+                .filter(|class| is_valid_css_class(class))
                 .collect();
 
             // Add to registry
@@ -333,7 +452,7 @@ impl Plugin for FobTailwindPlugin {
                 }
                 let new_classes = registry.len() - count_before;
                 if new_classes > 0 {
-                    eprintln!("[fob-tailwind] Found {} new classes in {}", new_classes, id);
+                    debug!("[fob-tailwind] Found {} new classes in {}", new_classes, id);
                 }
             }
 

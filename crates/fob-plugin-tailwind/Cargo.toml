@@ -29,3 +29,6 @@ serde_json.workspace = true
 
 # Async runtime for CLI process spawning
 tokio = { workspace = true, features = ["process", "io-util", "time"] }
+
+# Logging
+tracing.workspace = true
