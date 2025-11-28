@@ -1,7 +1,6 @@
 {
   "name": "fob-native-build",
   "version": "0.1.0",
-  "private": true,
   "napi": {
     "binaryName": "fob-native",
     "packageName": "@fox-uni/fob",

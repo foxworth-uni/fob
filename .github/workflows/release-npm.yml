@@ -1,7 +1,7 @@
-# This workflow is responsible for publishing the @fob/bundler NPM package
+# This workflow is responsible for publishing the @fox-uni/fob NPM package
 # and its platform-specific native addons.
 #
-# It is triggered manually or when a new tag matching 'v*' is pushed.
+# It is triggered when a new tag matching 'v*' is pushed.
 #
 name: Release NPM
 
@@ -15,50 +15,179 @@ permissions:
   contents: write
   id-token: write
 
+env:
+  DEBUG: napi:*
+  APP_NAME: fob-native
+  MACOSX_DEPLOYMENT_TARGET: '10.13'
+
 jobs:
-  publish:
-    name: Publish NPM Packages
-    runs-on: ubuntu-latest
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        settings:
+          - host: macos-13
+            target: x86_64-apple-darwin
+            build: |
+              cd crates/fob-native &&
+              pnpm exec napi build --platform --release --target x86_64-apple-darwin &&
+              strip -x *.node
+          - host: macos-latest
+            target: aarch64-apple-darwin
+            build: |
+              cd crates/fob-native &&
+              pnpm exec napi build --platform --release --target aarch64-apple-darwin &&
+              strip -x *.node
+          - host: windows-latest
+            target: x86_64-pc-windows-msvc
+            build: |
+              cd crates/fob-native &&
+              pnpm exec napi build --platform --release --target x86_64-pc-windows-msvc
+          - host: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            build: |
+              cd crates/fob-native &&
+              pnpm exec napi build --platform --release --target x86_64-unknown-linux-gnu
+          - host: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            build: |
+              cd crates/fob-native &&
+              pnpm exec napi build --platform --release --target x86_64-unknown-linux-musl
+          - host: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            build: |
+              cd crates/fob-native &&
+              pnpm exec napi build --platform --release --target aarch64-unknown-linux-gnu
+          - host: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            build: |
+              cd crates/fob-native &&
+              pnpm exec napi build --platform --release --target aarch64-unknown-linux-musl
+    name: Build - ${{ matrix.settings.target }}
+    runs-on: ${{ matrix.settings.host }}
     timeout-minutes: 45
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           # Fetch all history and tags to allow version bumping
           fetch-depth: 0
       
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+          targets: ${{ matrix.settings.target }}
       
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
       
-      - name: Install Node.js
-        uses: actions/setup-node@v4
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: ${{ matrix.settings.build }}
+        shell: bash
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          node-version: '20'
-          # Use the public NPM registry
-          registry-url: 'https://registry.npmjs.org'
+          name: bindings-${{ matrix.settings.target }}
+          path: crates/fob-native/${{ env.APP_NAME }}.*.node
+          if-no-files-found: error
+
+  test:
+    name: Test bindings on ${{ matrix.settings.target }} - node@${{ matrix.node }}
+    needs:
+      - build
+    strategy:
+      fail-fast: false
+      matrix:
+        settings:
+          - host: macos-13
+            target: x86_64-apple-darwin
+          - host: macos-latest
+            target: aarch64-apple-darwin
+        node:
+          - '18'
+          - '20'
+    runs-on: ${{ matrix.settings.host }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
       
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
-
-      - name: Install pnpm dependencies
+        uses: pnpm/action-setup@v4
+      
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      
+      - name: Install dependencies
         run: pnpm install
       
-      # The `napi publish` command is a high-level command from the @napi-rs/cli.
-      # It performs the following steps:
-      # 1. Builds the native binaries for all target platforms defined in `packages/fob-bundler/package.json`.
-      # 2. Publishes each platform-specific package (e.g., @fob/bundler-darwin-arm64) to NPM.
-      # 3. Updates the version of the main package (`@fob/bundler`) according to the tag.
-      # 4. Commits the version change and pushes it back to the repository.
-      #
-      # UNCOMMENT THE FOLLOWING STEP TO ENABLE AUTOMATIC PUBLISHING
-      # - name: Publish to NPM
-      #   run: pnpm --filter @fob/bundler publish --access public
-      #   env:
-      #     # The NODE_AUTH_TOKEN is automatically provided by the setup-node action
-      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: bindings-${{ matrix.settings.target }}
+          path: crates/fob-native
+      
+      - name: Sync binary to node_modules (CI)
+        run: cd crates/fob-native && node scripts/sync-binary-ci.js
+        env:
+          NAPI_TARGET: ${{ matrix.settings.target }}
+      
+      - name: Test bindings
+        run: cd fixtures/napi-local-test && pnpm test
+
+  publish:
+    name: Publish NPM Packages
+    needs:
+      - test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Fetch all history and tags to allow version bumping
+          fetch-depth: 0
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: crates/fob-native/artifacts
+      
+      - name: Organize artifacts
+        run: cd crates/fob-native && pnpm exec napi artifacts
+      
+      - name: Publish to NPM
+        run: |
+          cd crates/fob-native
+          npm config set provenance true
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+          npm publish --access public
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
