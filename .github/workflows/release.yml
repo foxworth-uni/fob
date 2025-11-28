@@ -63,14 +63,8 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v3.0.0
       
-      - name: Install just (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
-      
-      - name: Install just (Windows)
-        if: runner.os == 'Windows'
-        run: choco install just
+      - name: Install just
+        uses: extractions/setup-just@v3
       
       - name: Install musl tools (Linux musl only)
         if: matrix.target == 'x86_64-unknown-linux-musl'
