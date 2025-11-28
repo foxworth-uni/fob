@@ -584,11 +584,27 @@ tag:
     echo "🔍 Finding crates with explicit versions..."
     while IFS= read -r file; do
         if [ -f "$file" ]; then
+            # Update package version (start of line)
             sed -i '' "s/^version = \"${CURRENT_VERSION}\"/version = \"${NEW_VERSION}\"/" "$file"
+            # Update dependency version specs (inline, e.g., fob = { path = "...", version = "X.Y.Z" })
+            sed -i '' "s/version = \"${CURRENT_VERSION}\"/version = \"${NEW_VERSION}\"/g" "$file"
             UPDATED_FILES+=("$file")
             echo "  ✓ Updated $(basename $(dirname "$file"))/Cargo.toml"
         fi
-    done < <(find crates -name "Cargo.toml" -exec grep -l "^version = \"${CURRENT_VERSION}\"" {} \; 2>/dev/null || true)
+    done < <(find crates -name "Cargo.toml" -exec grep -l "version = \"${CURRENT_VERSION}\"" {} \; 2>/dev/null || true)
+
+    # Update npm package.json versions
+    NPM_PKG="crates/fob-native/package.json"
+    if [ -f "$NPM_PKG" ]; then
+        # Update main version field
+        sed -i '' "s/\"version\": \"${CURRENT_VERSION}\"/\"version\": \"${NEW_VERSION}\"/" "$NPM_PKG"
+
+        # Update optionalDependencies versions (platform-specific packages)
+        sed -i '' "s/\": \"${CURRENT_VERSION}\"/\": \"${NEW_VERSION}\"/g" "$NPM_PKG"
+
+        UPDATED_FILES+=("$NPM_PKG")
+        echo "  ✓ Updated crates/fob-native/package.json"
+    fi
 
     echo "🔄 Updating lockfile..."
     cargo check --workspace > /dev/null
@@ -746,3 +762,28 @@ loc:
 # Show dependency tree for a package
 deps package:
     @cargo tree --package {{package}}
+
+# =============================================================================
+# Rolldown Publishing (fob_rolldown on crates.io)
+# =============================================================================
+
+# Reset to upstream + transform + build (for updating to new rolldown version)
+rolldown-update version tag="main":
+    @cargo run --package rolldown-vendor -- update --version {{version}} --tag {{tag}}
+
+# Transform + build (for re-running on already-reset repo)
+rolldown-build version:
+    @cargo run --package rolldown-vendor -- build --version {{version}}
+
+# Publish to crates.io
+rolldown-publish:
+    @cargo run --package rolldown-vendor -- publish
+
+# Dry-run publish (verify packaging)
+rolldown-publish-dry:
+    @cargo run --package rolldown-vendor -- publish --dry-run
+
+# Transform + build + publish-dry (verification without reset)
+rolldown-check version:
+    @cargo run --package rolldown-vendor -- check --version {{version}}
+

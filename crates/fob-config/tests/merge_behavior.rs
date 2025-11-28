@@ -15,7 +15,7 @@ fn test_lock() -> &'static Mutex<()> {
 #[test]
 fn merge_replaces_primitive_values() {
     let _guard = test_lock().lock().expect("lock");
-    env::remove_var("JOY_BUNDLE__MINIFY");
+    unsafe { env::remove_var("JOY_BUNDLE__MINIFY") };
     let dir = TempDir::new().expect("tempdir");
     let config_path = dir.path().join("fob.toml");
     fs::write(
@@ -43,7 +43,7 @@ shared_chunk_threshold = 5000
 #[test]
 fn merge_preserves_unspecified_fields() {
     let _guard = test_lock().lock().expect("lock");
-    env::remove_var("JOY_BUNDLE__MINIFY");
+    unsafe { env::remove_var("JOY_BUNDLE__MINIFY") };
     let dir = TempDir::new().expect("tempdir");
     let config_path = dir.path().join("fob.toml");
     fs::write(
@@ -72,7 +72,7 @@ minify = true
 #[test]
 fn merge_handles_nested_objects() {
     let _guard = test_lock().lock().expect("lock");
-    env::remove_var("JOY_BUNDLE__CACHE_CONFIG__ENABLED");
+    unsafe { env::remove_var("JOY_BUNDLE__CACHE_CONFIG__ENABLED") };
     let dir = TempDir::new().expect("tempdir");
     let config_path = dir.path().join("fob.toml");
     fs::write(
@@ -111,7 +111,7 @@ wasm = true
 #[test]
 fn merge_replaces_entire_arrays() {
     let _guard = test_lock().lock().expect("lock");
-    env::remove_var("JOY_BUNDLE__EXTERNAL");
+    unsafe { env::remove_var("JOY_BUNDLE__EXTERNAL") };
     let dir = TempDir::new().expect("tempdir");
     let config_path = dir.path().join("fob.toml");
     fs::write(
@@ -137,7 +137,7 @@ external = ["react"]
 #[test]
 fn merge_handles_null_values() {
     let _guard = test_lock().lock().expect("lock");
-    env::remove_var("JOY_DEV__HOST");
+    unsafe { env::remove_var("JOY_DEV__HOST") };
 
     let dir = TempDir::new().expect("tempdir");
     fs::write(
@@ -168,7 +168,7 @@ port = 3000
 #[test]
 fn merge_plugin_config_deeply() {
     let _guard = test_lock().lock().expect("lock");
-    env::remove_var("JOY_PLUGINS__CONFIG");
+    unsafe { env::remove_var("JOY_PLUGINS__CONFIG") };
     let dir = TempDir::new().expect("tempdir");
     let config_path = dir.path().join("fob.toml");
     fs::write(
@@ -207,7 +207,7 @@ level2 = "overridden"
 #[test]
 fn merge_creates_object_from_null() {
     let _guard = test_lock().lock().expect("lock");
-    env::remove_var("JOY_DEV__HOST");
+    unsafe { env::remove_var("JOY_DEV__HOST") };
     let dir = TempDir::new().expect("tempdir");
     fs::write(
         dir.path().join("fob.toml"),
@@ -235,7 +235,7 @@ port = 3000
 #[test]
 fn merge_handles_empty_profile() {
     let _guard = test_lock().lock().expect("lock");
-    env::remove_var("JOY_BUNDLE__MINIFY");
+    unsafe { env::remove_var("JOY_BUNDLE__MINIFY") };
     let dir = TempDir::new().expect("tempdir");
     let config_path = dir.path().join("fob.toml");
     fs::write(

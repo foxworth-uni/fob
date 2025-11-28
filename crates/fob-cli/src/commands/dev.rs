@@ -162,6 +162,9 @@ async fn handle_file_change(change: FileChange, builder: &DevBuilder, state: &Sh
     let path = change.path();
     ui::info(&format!("File changed: {}", path.display()));
 
+    // Clear cached source code before rebuild to ensure fresh data
+    fob_bundler::diagnostics::clear_source_cache();
+
     // Start build
     state.start_build();
     let _ = state.broadcast(&DevEvent::BuildStarted).await;

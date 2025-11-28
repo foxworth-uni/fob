@@ -13,6 +13,14 @@ use std::sync::{LazyLock, Mutex};
 static SOURCE_CACHE: LazyLock<Mutex<HashMap<String, String>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
+/// Clear the source code cache.
+///
+/// This should be called before rebuilds to ensure stale cached source
+/// code doesn't persist across file changes.
+pub fn clear_source_cache() {
+    SOURCE_CACHE.lock().unwrap().clear();
+}
+
 /// Load source code from a file path
 pub fn load_source(file: &str) -> Option<String> {
     let mut cache = SOURCE_CACHE.lock().unwrap();

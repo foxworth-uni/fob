@@ -110,11 +110,13 @@ mod tests {
     #[test]
     fn test_is_ci_no_env() {
         // Remove CI vars if they exist
-        std::env::remove_var("CI");
-        std::env::remove_var("GITHUB_ACTIONS");
-        std::env::remove_var("GITLAB_CI");
-        std::env::remove_var("CIRCLECI");
-        std::env::remove_var("TRAVIS");
+        unsafe {
+            std::env::remove_var("CI");
+            std::env::remove_var("GITHUB_ACTIONS");
+            std::env::remove_var("GITLAB_CI");
+            std::env::remove_var("CIRCLECI");
+            std::env::remove_var("TRAVIS");
+        }
 
         // This might be false or true depending on test environment
         // Just verify it doesn't panic
@@ -125,37 +127,37 @@ mod tests {
     fn test_is_ci_with_ci_var() {
         std::env::set_var("CI", "true");
         assert!(is_ci());
-        std::env::remove_var("CI");
+        unsafe { std::env::remove_var("CI"); }
     }
 
     #[test]
     fn test_is_ci_with_github_actions() {
         std::env::set_var("GITHUB_ACTIONS", "true");
         assert!(is_ci());
-        std::env::remove_var("GITHUB_ACTIONS");
+        unsafe { std::env::remove_var("GITHUB_ACTIONS"); }
     }
 
     #[test]
     fn test_is_ci_with_gitlab() {
         std::env::set_var("GITLAB_CI", "true");
         assert!(is_ci());
-        std::env::remove_var("GITLAB_CI");
+        unsafe { std::env::remove_var("GITLAB_CI"); }
     }
 
     #[test]
     fn test_should_use_color_no_color() {
         std::env::set_var("NO_COLOR", "1");
-        std::env::remove_var("FORCE_COLOR");
+        unsafe { std::env::remove_var("FORCE_COLOR"); }
         assert!(!should_use_color());
-        std::env::remove_var("NO_COLOR");
+        unsafe { std::env::remove_var("NO_COLOR"); }
     }
 
     #[test]
     fn test_should_use_color_force_color() {
-        std::env::remove_var("NO_COLOR");
+        unsafe { std::env::remove_var("NO_COLOR"); }
         std::env::set_var("FORCE_COLOR", "1");
         assert!(should_use_color());
-        std::env::remove_var("FORCE_COLOR");
+        unsafe { std::env::remove_var("FORCE_COLOR"); }
     }
 
     #[test]
@@ -164,8 +166,10 @@ mod tests {
         std::env::set_var("FORCE_COLOR", "1");
         // NO_COLOR takes precedence
         assert!(!should_use_color());
-        std::env::remove_var("NO_COLOR");
-        std::env::remove_var("FORCE_COLOR");
+        unsafe {
+            std::env::remove_var("NO_COLOR");
+            std::env::remove_var("FORCE_COLOR");
+        }
     }
 
     #[test]

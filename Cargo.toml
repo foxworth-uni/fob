@@ -9,13 +9,14 @@ members = [
     "crates/fob-native",
     "crates/fob-cli",
     "crates/fob-plugin-css",
-    "crates/fob-plugin-mdx",
+    # "crates/fob-plugin-mdx",  # Moved to bunny repository
     "crates/fob-plugin-tailwind",
     "crates/fob-plugin-vue",
     "crates/fob-plugin-svelte",
     "crates/fob-plugin-astro",
     "crates/fob-gen",
     "crates/fob-browser-test",
+    "crates/rolldown-vendor",
     "examples/rust/*",
 ]
 # Exclude WASM crate from default build (requires --target wasm32-wasip1)
@@ -28,21 +29,22 @@ default-members = [
     "crates/fob-native",
     "crates/fob-cli",
     "crates/fob-plugin-css",
-    "crates/fob-plugin-mdx",
+    # "crates/fob-plugin-mdx",  # Moved to bunny repository
     "crates/fob-plugin-tailwind",
     "crates/fob-plugin-vue",
     "crates/fob-plugin-svelte",
     "crates/fob-plugin-astro",
     "crates/fob-gen",
     "crates/fob-browser-test",
+    "crates/rolldown-vendor",
     "examples/rust/*",
 ]
 
 [workspace.package]
 version = "0.2.0"
 authors = ["Fob Contributors"]
-edition = "2021"
-rust-version = "1.77"
+edition = "2024"
+rust-version = "1.85"
 license = "MIT"
 repository = "https://github.com/foxworth-uni/fob"
 homepage = "https://fob.dev"
@@ -81,6 +83,7 @@ indexmap = "2.12.1"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 toml = "0.9.8"
+toml_edit = "0.22"
 anyhow = "1.0.100"
 thiserror = "2.0.17"
 
@@ -166,7 +169,7 @@ getrandom = { version = "0.3.4", features = ["wasm_js"] }
 # This triggers feature unification, forcing rolldown's transitive uuid to use js feature
 
 # External Workspace Dependencies
-bunny-mdx = { git = "https://github.com/foxworth-uni/bunny", package = "bunny-mdx", branch = "main" }
+# bunny-mdx = { git = "https://github.com/foxworth-uni/bunny", package = "bunny-mdx", branch = "main" }  # Moved to bunny repository
 tailwindcss-oxide = { git = "https://github.com/tailwindlabs/tailwindcss", package = "tailwindcss-oxide" }
 
 # Native Bindings

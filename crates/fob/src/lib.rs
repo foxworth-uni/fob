@@ -32,7 +32,7 @@ pub use wasm_runtime::WasmRuntime;
 pub use runtime::{FileMetadata, Runtime, RuntimeError, RuntimeResult};
 
 // Re-export MDX plugin (WASM-compatible)
-pub use fob_plugin_mdx::BunnyMdxPlugin;
+// pub use fob_plugin_mdx::BunnyMdxPlugin;  // Moved to bunny repository
 
 // Re-export OXC foundation types for consistent version usage across workspace
 // These are commonly used types that appear in public APIs and cross crate boundaries
@@ -62,9 +62,12 @@ pub mod oxc {
     pub use oxc_semantic::{ScopeFlags, SemanticBuilder};
 }
 
-// Note: AnalyzedBundle is available in fob-bundler, not here
-// Note: Graph types are available in fob-graph
-// Note: Analysis types (Analyzer, AnalysisResult, etc.) are available in fob-analysis
+// Re-export core crates that don't depend on fob (to avoid cycles)
+// Note: fob-graph, fob-analysis, and fob-bundler depend on fob, so they cannot be re-exported
+#[cfg(not(target_family = "wasm"))]
+pub use fob_gen as codegen;
+#[cfg(not(target_family = "wasm"))]
+pub use fob_config as config;
 
 /// Error types for fob operations.
 #[derive(Debug, thiserror::Error)]

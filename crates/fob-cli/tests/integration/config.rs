@@ -184,7 +184,7 @@ fn test_config_environment_variables() {
     impl Drop for EnvGuard {
         fn drop(&mut self) {
             for var in &self.vars {
-                std::env::remove_var(var);
+                unsafe { std::env::remove_var(var); }
             }
         }
     }

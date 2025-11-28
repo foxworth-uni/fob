@@ -9,9 +9,9 @@ dts-generation = ["fob-bundler/dts-generation"]
 
 [dependencies]
 # Core dependencies
-fob-bundler = { path = "../fob-bundler" }
-fob-config = { path = "../fob-config" }
-fob-gen = { path = "../fob-gen" }
+fob-bundler = { path = "../fob-bundler", version = "0.2.0" }
+fob-config = { path = "../fob-config", version = "0.2.0" }
+fob-gen = { path = "../fob-gen", version = "0.2.0" }
 
 # Async runtime
 tokio = { workspace = true, features = ["macros", "rt-multi-thread", "fs", "signal"] }

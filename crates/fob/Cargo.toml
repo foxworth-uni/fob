@@ -11,8 +11,8 @@ description = "Fob foundation - Runtime abstraction and core types"
 [dependencies]
 
 # MDX compilation support from Bunny (WASM-compatible)
-bunny-mdx = { workspace = true }
-fob-plugin-mdx = { path = "../fob-plugin-mdx" }
+# bunny-mdx = { workspace = true }  # Moved to bunny repository
+# fob-plugin-mdx = { path = "../fob-plugin-mdx" }  # Moved to bunny repository
 
 # Core dependencies (all WASM-compatible)
 thiserror.workspace = true
@@ -35,10 +35,12 @@ test-utils = []
 # Platform-specific dependencies for native runtime
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 tokio = { workspace = true, features = ["rt", "fs"] }
+fob-gen = { path = "../fob-gen" }
+fob-config = { path = "../fob-config" }
 
 [dev-dependencies]
 tempfile.workspace = true
-fob-graph = { path = "../fob-graph" }
+fob-graph = { path = "../fob-graph", version = "0.2.0" }
 
 # Platform-specific dev dependencies for native tests
 [target.'cfg(not(target_family = "wasm"))'.dev-dependencies]

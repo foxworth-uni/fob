@@ -665,27 +665,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bunny-mdx"
-version = "0.1.0"
-source = "git+https://github.com/foxworth-uni/bunny?branch=main#2d748f0b84cde38f1bc07ff2fa86c98cf0169167"
-dependencies = [
- "anyhow",
- "markdown",
- "oxc_allocator",
- "oxc_parser",
- "oxc_span",
- "path-clean",
- "regex",
- "rustc-hash",
- "serde",
- "serde_json",
- "serde_yaml",
- "thiserror 2.0.17",
- "toml 0.9.8",
- "tracing",
-]
-
-[[package]]
 name = "bytecheck"
 version = "0.6.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1491,9 +1470,9 @@ name = "fob"
 version = "0.2.0"
 dependencies = [
  "async-trait",
- "bunny-mdx",
+ "fob-config",
+ "fob-gen",
  "fob-graph",
- "fob-plugin-mdx",
  "oxc_allocator",
  "oxc_ast",
  "oxc_ast_visit",
@@ -1724,17 +1703,6 @@ dependencies = [
  "thiserror 2.0.17",
  "tokio",
  "walkdir",
-]
-
-[[package]]
-name = "fob-plugin-mdx"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bunny-mdx",
- "rolldown",
- "rolldown_common",
- "rolldown_plugin",
 ]
 
 [[package]]
@@ -2641,15 +2609,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34080505efa8e45a4b816c349525ebe327ceaa8559756f0356cba97ef3bf7432"
 dependencies = [
  "value-bag",
-]
-
-[[package]]
-name = "markdown"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5cab8f2cadc416a82d2e783a1946388b31654d391d1c7d92cc1f03e295b1deb"
-dependencies = [
- "unicode-id",
 ]
 
 [[package]]
@@ -4329,6 +4288,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "598d3e49d0f0fb6f5be6664efc3138634d7aa0c9fc5d1186a0a435dd76e6660f"
 
 [[package]]
+name = "rolldown-vendor"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "tokio",
+ "toml_edit",
+ "walkdir",
+]
+
+[[package]]
 name = "rolldown_common"
 version = "0.1.0"
 source = "git+https://github.com/rolldown/rolldown?tag=v1.0.0-beta.50#9d93d34bc59b9c290387394e0342c597d64c4c09"
@@ -5735,12 +5705,6 @@ name = "unicode-general-category"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b993bddc193ae5bd0d623b49ec06ac3e9312875fdae725a975c51db1cc1677f"
-
-[[package]]
-name = "unicode-id"
-version = "0.3.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70ba288e709927c043cbe476718d37be306be53fb1fafecd0dbe36d072be2580"
 
 [[package]]
 name = "unicode-id-start"

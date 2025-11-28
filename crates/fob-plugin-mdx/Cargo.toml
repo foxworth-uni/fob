@@ -5,6 +5,7 @@ authors = ["Fob Contributors"]
 edition = "2021"
 rust-version = "1.75"
 license = "MIT OR Apache-2.0"
+publish = false
 description = "Rolldown bundler plugin for MDX - compile MDX files in Rolldown builds"
 
 [dependencies]

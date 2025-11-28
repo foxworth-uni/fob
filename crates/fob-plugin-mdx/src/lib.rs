@@ -271,6 +271,19 @@ impl Plugin for BunnyMdxPlugin {
             let result = compile(&source, opts)
                 .with_context(|| format!("Failed to compile MDX file: {}", id))?;
 
+            // Debug logging to diagnose MDX import issues
+            tracing::info!(
+                path = %file_path.display(),
+                code_len = result.code.len(),
+                "MDX compiled to JSX"
+            );
+            // Print first 3000 chars of code for inspection
+            let preview_len = result.code.len().min(3000);
+            tracing::debug!(
+                code = &result.code[..preview_len],
+                "Compiled MDX code preview"
+            );
+
             // Return JSX to Rolldown
             // IMPORTANT: Set module_type to Jsx so Rolldown knows how to parse it
             Ok(Some(HookLoadOutput {

@@ -234,6 +234,8 @@ fn test_config_environment_variables() {
     assert_eq!(config.out_dir, PathBuf::from("dist")); // CLI wins
 
     // Clean up
-    std::env::remove_var("FOB_OUT_DIR");
-    std::env::remove_var("FOB_FORMAT");
+    unsafe {
+        std::env::remove_var("FOB_OUT_DIR");
+        std::env::remove_var("FOB_FORMAT");
+    }
 }
