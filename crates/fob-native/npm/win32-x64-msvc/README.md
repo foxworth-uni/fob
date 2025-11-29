@@ -1,3 +1,3 @@
-# `fob-native-build-win32-x64-msvc`
+# `@fox-uni/fob-win32-x64-msvc`
 
-This is the **x86_64-pc-windows-msvc** binary for `fob-native-build`
+This is the **x86_64-pc-windows-msvc** binary for `@fox-uni/fob`

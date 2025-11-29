@@ -61,7 +61,7 @@ The `fob-native` NAPI module exposes the following:
 Returns the bundler version.
 
 ```javascript
-import { version } from 'fob-native-build';
+import { version } from '@fox-uni/fob';
 console.log(version()); // "0.1.0"
 ```
 
@@ -70,7 +70,7 @@ console.log(version()); // "0.1.0"
 Quick helper for single-entry bundling.
 
 ```javascript
-import { bundleSingle, OutputFormat } from 'fob-native-build';
+import { bundleSingle, OutputFormat } from '@fox-uni/fob';
 
 const result = await bundleSingle('./src/index.js', './dist', OutputFormat.Esm);
 console.log(result.outputPath); // "./dist/index.js"
@@ -83,7 +83,7 @@ console.log(result.outputPath); // "./dist/index.js"
 Main bundler class with full configuration.
 
 ```javascript
-import { Fob, OutputFormat, SourceMapMode } from 'fob-native-build';
+import { Fob, OutputFormat, SourceMapMode } from '@fox-uni/fob';
 
 const bundler = new Fob({
   entry: ['./src/index.js'],
@@ -213,7 +213,7 @@ Error handling tests:
 
 ```bash
 md5 ../../crates/fob-native/fob-native.darwin-arm64.node
-md5 node_modules/.pnpm/fob-native-build*/node_modules/*/fob-native.darwin-arm64.node
+md5 node_modules/.pnpm/@fox-uni+fob*/node_modules/*/fob-native.darwin-arm64.node
 ```
 
 If MD5s differ:
@@ -252,7 +252,7 @@ pnpm test
 
 The `test-all.js` script automatically cleans the `dist/` directory before running tests.
 
-### "Cannot find module 'fob-native-build'"
+### "Cannot find module '@fox-uni/fob'"
 
 Run `pnpm install` in this directory to link the native package.
 

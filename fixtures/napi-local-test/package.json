@@ -13,6 +13,6 @@
     "test:errors": "node test-errors.js"
   },
   "dependencies": {
-    "fob-native-build": "file:../../crates/fob-native"
+    "@fox-uni/fob": "file:../../crates/fob-native"
   }
 }

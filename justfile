@@ -364,34 +364,7 @@ release-dry level:
     echo "Previewing {{level}} release..."
     cargo release {{level}} --workspace --no-verify
 
-# Bootstrap publish - one crate at a time in dependency order
-# Safe to re-run: cargo publish skips already-published versions
-publish-bootstrap:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    CRATES=(
-        fob-browser-test
-        fob-config
-        fob-gen
-        fob-graph
-        fob-bundler
-        fob-cli
-        fob-plugin-css
-        fob-plugin-vue
-        fob-plugin-svelte
-        fob-plugin-astro
-    )
-
-    for crate in "${CRATES[@]}"; do
-        echo "Publishing $crate..."
-        cargo publish -p "$crate" --no-verify || echo "Skipped $crate (may already exist)"
-        sleep 2  # Be nice to crates.io
-    done
-
-    echo "Done!"
-
-# Publish using cargo-release (use after bootstrap, when crates exist)
+# Publish crates to crates.io (skips already-published)
 publish:
     #!/usr/bin/env bash
     set -euo pipefail

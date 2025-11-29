@@ -1,3 +1,3 @@
-# `fob-native-build-linux-arm64-gnu`
+# `@fox-uni/fob-linux-arm64-gnu`
 
-This is the **aarch64-unknown-linux-gnu** binary for `fob-native-build`
+This is the **aarch64-unknown-linux-gnu** binary for `@fox-uni/fob`

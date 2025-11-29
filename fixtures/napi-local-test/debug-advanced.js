@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { mkdirSync, rmSync, writeFileSync } from 'fs';
-import { Fob, OutputFormat, SourceMapMode } from 'fob-native-build';
+import { Fob, OutputFormat, SourceMapMode } from '@fox-uni/fob';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

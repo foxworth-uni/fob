@@ -1,3 +1,3 @@
-# `fob-native-build-darwin-x64`
+# `@fox-uni/fob-darwin-x64`
 
-This is the **x86_64-apple-darwin** binary for `fob-native-build`
+This is the **x86_64-apple-darwin** binary for `@fox-uni/fob`
