@@ -5,7 +5,7 @@ use rustc_hash::FxHashMap as HashMap;
 use super::super::ModuleId;
 use super::super::dependency_chain::{ChainAnalysis, DependencyChain, find_chains};
 use super::graph::ModuleGraph;
-use fob_core::Result;
+use crate::Result;
 
 impl ModuleGraph {
     /// Find all dependency chains from entry points to a target module.

@@ -41,10 +41,10 @@
 //! ```
 
 use anyhow::Context;
-use fob_analysis::extractors::{AstroExtractor, ExtractedScript, Extractor};
 use fob_bundler::{
     HookLoadArgs, HookLoadOutput, HookLoadReturn, ModuleType, Plugin, PluginContext,
 };
+use fob_graph::analysis::extractors::{AstroExtractor, ExtractedScript, Extractor};
 use std::borrow::Cow;
 
 /// Rolldown plugin that extracts JavaScript/TypeScript from Astro components
@@ -296,7 +296,7 @@ mod tests {
 
     #[test]
     fn test_combine_single_script() {
-        use fob_analysis::extractors::ScriptContext;
+        use fob_graph::analysis::extractors::ScriptContext;
         let scripts = vec![ExtractedScript::new(
             "const x = 1;",
             4,
@@ -310,7 +310,7 @@ mod tests {
 
     #[test]
     fn test_combine_multiple_scripts() {
-        use fob_analysis::extractors::ScriptContext;
+        use fob_graph::analysis::extractors::ScriptContext;
         let scripts = vec![
             ExtractedScript::new(
                 "const title = 'Page'",
@@ -332,7 +332,7 @@ mod tests {
 
     #[test]
     fn test_combine_only_scripts() {
-        use fob_analysis::extractors::ScriptContext;
+        use fob_graph::analysis::extractors::ScriptContext;
         let scripts = vec![
             ExtractedScript::new("console.log('a')", 50, ScriptContext::AstroScript, "js"),
             ExtractedScript::new("console.log('b')", 100, ScriptContext::AstroScript, "js"),

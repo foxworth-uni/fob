@@ -117,6 +117,13 @@
 //! - Pure Rust data structures
 //! - Compatible with `wasm-bindgen` and `wasm-pack`
 
+// Runtime abstraction (merged from fob-core)
+pub mod runtime;
+
+// Analysis functionality (merged from fob-analysis)
+#[path = "analysis/lib.rs"]
+pub mod analysis;
+
 // Core graph types and primitives
 mod class_enum_extraction;
 pub mod collection;
@@ -174,6 +181,85 @@ pub use symbol::{
     ClassMemberMetadata, EnumMemberMetadata, EnumMemberValue, Symbol, SymbolKind, SymbolMetadata,
     SymbolSpan, SymbolStatistics, SymbolTable, UnreachableCode, UnusedSymbol, Visibility,
 };
+
+// Re-export runtime types
+pub use runtime::{FileMetadata, Runtime, RuntimeError, RuntimeResult};
+
+// Platform-specific runtime implementations
+#[cfg(not(target_family = "wasm"))]
+pub use runtime::native::NativeRuntime;
+
+#[cfg(target_family = "wasm")]
+pub use runtime::wasm::WasmRuntime;
+
+// Test utilities (available in test builds)
+#[cfg(any(
+    all(any(test, doctest), not(target_family = "wasm")),
+    all(feature = "test-utils", not(target_family = "wasm"))
+))]
+pub use runtime::test_utils::TestRuntime;
+
+#[cfg(any(
+    all(any(test, doctest), not(target_family = "wasm")),
+    all(feature = "test-utils", not(target_family = "wasm"))
+))]
+pub mod test_utils {
+    pub use super::runtime::test_utils::*;
+}
+
+// Re-export analysis types (merged from fob-analysis)
+pub use analysis::{
+    AnalysisResult, AnalyzeError, AnalyzeOptions, Analyzer, CacheAnalysis, CacheEffectiveness,
+    Configured, ImportOutcome, ImportResolution, RenameEvent, RenamePhase, TransformationTrace,
+    Unconfigured, analyze, analyze_with_options,
+};
+
+// Re-export OXC foundation types for consistent version usage across workspace
+// These are commonly used types that appear in public APIs and cross crate boundaries
+pub mod oxc {
+    //! OXC (Oxidation Compiler) foundation types re-exported for workspace consistency.
+    //!
+    //! This ensures all workspace crates use the same OXC version for types that
+    //! cross crate boundaries. Specialized OXC crates (like `oxc_isolated_declarations`)
+    //! should still be imported directly by crates that need them.
+
+    /// Re-export allocator - required for all OXC AST operations
+    pub use oxc_allocator::Allocator;
+
+    /// Re-export AST types
+    pub use oxc_ast::ast;
+
+    /// Re-export AST visitor trait
+    pub use oxc_ast_visit::Visit;
+
+    /// Re-export span types for source location tracking
+    pub use oxc_span::{GetSpan, SourceType, Span};
+
+    /// Re-export parser for code analysis
+    pub use oxc_parser::{Parser, ParserReturn};
+
+    /// Re-export semantic analysis
+    pub use oxc_semantic::{ScopeFlags, SemanticBuilder};
+}
+
+/// Error types for fob operations.
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    /// Invalid configuration provided.
+    #[error("Invalid configuration: {0}")]
+    InvalidConfig(String),
+
+    /// I/O error.
+    #[error("I/O error: {0}")]
+    Io(#[from] std::io::Error),
+
+    /// Analysis or graph operation error.
+    #[error("Operation error: {0}")]
+    Operation(String),
+}
+
+/// Result type alias for fob operations.
+pub type Result<T> = std::result::Result<T, Error>;
 
 #[cfg(test)]
 mod tests;

@@ -19,7 +19,7 @@ impl BundleManifest {
     /// Generate manifest from build output and analysis
     pub fn from_build_output(
         output: &super::super::builders::unified::BuildOutput,
-        _analysis: &fob_analysis::AnalysisResult,
+        _analysis: &fob_graph::AnalysisResult,
     ) -> Self {
         use super::super::builders::unified::BuildOutput;
         use crate::Output;

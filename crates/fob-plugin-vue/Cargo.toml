@@ -9,9 +9,8 @@ description = "Rolldown bundler plugin for Vue - extract and process script bloc
 repository = "https://github.com/foxworth-uni/fob"
 
 [dependencies]
-# Fob core extractors
-fob = { path = "../fob", version = "0.2.0" }
-fob-analysis = { path = "../fob-analysis", version = "0.2.0" }
+# Fob graph (includes analysis)
+fob-graph = { path = "../fob-graph", version = "0.2.0" }
 
 # Fob bundler (re-exports rolldown types)
 fob-bundler = { path = "../fob-bundler", version = "0.2.0" }

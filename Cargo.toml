@@ -2,9 +2,7 @@
 resolver = "2"
 members = [
     "crates/fob-config",
-    "crates/fob",
     "crates/fob-graph",
-    "crates/fob-analysis",
     "crates/fob-bundler",
     "crates/fob-native",
     "crates/fob-cli",
@@ -21,10 +19,7 @@ members = [
 # Exclude WASM crate from default build (requires --target wasm32-wasip1)
 default-members = [
     "crates/fob-config",
-    "crates/fob-core",
-    "crates/fob",
     "crates/fob-graph",
-    "crates/fob-analysis",
     "crates/fob-bundler",
     "crates/fob-native",
     "crates/fob-cli",

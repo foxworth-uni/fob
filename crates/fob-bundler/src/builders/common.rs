@@ -13,7 +13,8 @@ use crate::builders::{asset_plugin::AssetDetectionPlugin, asset_registry::AssetR
 use crate::diagnostics;
 use crate::module_collection_plugin::ModuleCollectionPlugin;
 use crate::{Error, Result};
-use fob_analysis::{AnalysisResult, CacheAnalysis, TransformationTrace, stats::compute_stats};
+use fob_graph::analysis::stats::compute_stats;
+use fob_graph::{AnalysisResult, CacheAnalysis, TransformationTrace};
 
 /// Normalize an entry path by cleaning redundant `.` / `..` segments.
 pub(crate) fn normalize_entry_path(entry: impl AsRef<Path>) -> String {

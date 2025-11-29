@@ -3,10 +3,10 @@
 //! This module provides the Page type, which represents a browser tab/page
 //! and exposes methods for navigation, script execution, and waiting.
 
-use crate::console::{parse_console_event, ConsoleCapture};
+use crate::console::{ConsoleCapture, parse_console_event};
 use crate::error::{BrowserError, Result};
 use crate::server::DevServer;
-use crate::wait::{wait_for_result, WaitConfig};
+use crate::wait::{WaitConfig, wait_for_result};
 use chromiumoxide::cdp::js_protocol::runtime::EventConsoleApiCalled;
 use chromiumoxide::page::Page as ChromePage;
 use futures::StreamExt;

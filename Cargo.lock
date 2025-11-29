@@ -1829,41 +1829,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
-name = "fob"
-version = "0.2.0"
-dependencies = [
- "fob-analysis",
- "fob-bundler",
- "fob-config",
- "fob-core",
- "fob-gen",
- "fob-graph",
- "tempfile",
- "tokio",
-]
-
-[[package]]
-name = "fob-analysis"
-version = "0.2.0"
-dependencies = [
- "async-trait",
- "fob-core",
- "fob-graph",
- "memchr",
- "path-clean",
- "proptest",
- "regex",
- "rustc-hash",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.17",
- "tokio",
-]
-
-[[package]]
 name = "fob-browser-test"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "chromiumoxide",
@@ -1888,8 +1855,6 @@ dependencies = [
  "brk_rolldown_common",
  "brk_rolldown_error",
  "brk_rolldown_plugin",
- "fob-analysis",
- "fob-core",
  "fob-gen",
  "fob-graph",
  "miette",
@@ -1974,22 +1939,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fob-core"
-version = "0.2.0"
-dependencies = [
- "async-trait",
- "oxc_allocator 0.97.0",
- "oxc_ast 0.97.0",
- "oxc_ast_visit 0.97.0",
- "oxc_parser 0.97.0",
- "oxc_semantic 0.97.0",
- "oxc_span 0.97.0",
- "tempfile",
- "thiserror 2.0.17",
- "tokio",
-]
-
-[[package]]
 name = "fob-gen"
 version = "0.2.0"
 dependencies = [
@@ -2009,8 +1958,8 @@ name = "fob-graph"
 version = "0.2.0"
 dependencies = [
  "async-trait",
- "fob-core",
  "fob-gen",
+ "memchr",
  "oxc_allocator 0.97.0",
  "oxc_ast 0.97.0",
  "oxc_ast_visit 0.97.0",
@@ -2020,6 +1969,7 @@ dependencies = [
  "parking_lot",
  "path-clean",
  "proptest",
+ "regex",
  "rustc-hash",
  "serde",
  "serde_json",
@@ -2035,6 +1985,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "fob-bundler",
+ "fob-graph",
  "miette",
  "napi",
  "napi-build",
@@ -2052,9 +2003,8 @@ name = "fob-plugin-astro"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "fob",
- "fob-analysis",
  "fob-bundler",
+ "fob-graph",
  "tempfile",
  "thiserror 2.0.17",
  "tokio",
@@ -2080,9 +2030,8 @@ name = "fob-plugin-svelte"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "fob",
- "fob-analysis",
  "fob-bundler",
+ "fob-graph",
  "tempfile",
  "thiserror 2.0.17",
  "tokio",
@@ -2111,9 +2060,8 @@ name = "fob-plugin-vue"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "fob",
- "fob-analysis",
  "fob-bundler",
+ "fob-graph",
  "tempfile",
  "thiserror 2.0.17",
  "tokio",

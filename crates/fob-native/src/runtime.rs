@@ -1,7 +1,7 @@
 //! Native runtime implementation for Node.js
 
 use async_trait::async_trait;
-use fob_bundler::runtime::{FileMetadata, Runtime, RuntimeError, RuntimeResult};
+use fob_bundler::{FileMetadata, Runtime, RuntimeError, RuntimeResult};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 

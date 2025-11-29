@@ -3,7 +3,7 @@
 use super::super::external_dep::ExternalDependency;
 use super::super::{Module, ModuleId};
 use super::graph::ModuleGraph;
-use fob_core::{Error, Result};
+use crate::{Error, Result};
 
 /// Helper to escape labels for DOT format.
 fn escape_label(label: &str) -> String {

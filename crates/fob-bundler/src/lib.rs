@@ -36,7 +36,7 @@
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let analysis = fob_analysis::analyze(["./src/index.js"]).await?;
+//! let analysis = fob_graph::analyze(["./src/index.js"]).await?;
 //! for unused in analysis.graph.unused_exports()? {
 //!     println!("unused: {} from {}", unused.export.name, unused.module_id);
 //! }
@@ -44,7 +44,7 @@
 //! ```
 
 // Re-export everything from foundation crate
-pub use fob_core::*;
+pub use fob_graph::*;
 
 // Bundler-specific modules
 pub mod builders;
@@ -100,7 +100,7 @@ pub use analysis::AnalyzedBundle;
 // Test utilities (available in test builds for both unit and integration tests)
 // Re-export from fob foundation crate
 #[cfg(all(any(test, doctest), not(target_family = "wasm")))]
-pub use fob_core::test_utils;
+pub use fob_graph::test_utils;
 
 /// Error types for fob-bundler operations.
 #[derive(Debug, thiserror::Error)]
@@ -158,7 +158,7 @@ pub enum Error {
 
     /// Error from foundation crate.
     #[error("Foundation error: {0}")]
-    Foundation(#[from] fob_core::Error),
+    Foundation(#[from] fob_graph::Error),
 }
 
 /// Result type alias for fob-bundler operations.

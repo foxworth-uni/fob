@@ -22,7 +22,7 @@ pub(super) fn detect_unreachable_with_visitor(
     };
 
     // Visit the AST to find unreachable code
-    use fob_core::oxc::Visit;
+    use crate::oxc::Visit;
     visitor.visit_program(program);
 
     visitor.unreachable

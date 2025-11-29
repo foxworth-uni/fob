@@ -152,9 +152,9 @@ async fn execute_components_build(options: BuildOptions) -> Result<BuildResult> 
         bundles.insert(name, analyzed.bundle);
     }
 
-    let stats = fob_analysis::stats::compute_stats(&merged_graph)?;
+    let stats = fob_graph::analysis::stats::compute_stats(&merged_graph)?;
     let symbol_stats = merged_graph.symbol_statistics()?;
-    let analysis = fob_analysis::AnalysisResult {
+    let analysis = fob_graph::AnalysisResult {
         graph: merged_graph,
         entry_points: all_entry_points,
         warnings: all_warnings,

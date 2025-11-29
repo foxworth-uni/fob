@@ -1,9 +1,14 @@
 [package]
 name = "fob-browser-test"
-version = "0.1.0"
-edition = "2021"
-rust-version = "1.77"
-publish = false
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Headless Chrome testing library for browser automation and testing"
+keywords = ["browser", "testing", "chrome", "headless", "automation"]
+categories = ["development-tools::testing", "web-programming"]
 
 [dependencies]
 # Browser automation

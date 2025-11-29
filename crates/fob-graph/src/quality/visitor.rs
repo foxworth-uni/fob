@@ -1,6 +1,6 @@
 //! AST visitor implementations for code quality analysis.
 
-use fob_core::oxc::{ScopeFlags, Visit, ast::Function};
+use crate::oxc::{ScopeFlags, Visit, ast::Function};
 use oxc_ast_visit::walk;
 
 use super::QualityCalculator;
@@ -42,7 +42,7 @@ impl<'a, 'ast> Visit<'ast> for QualityCalculator<'a> {
     }
 
     /// Visit class declarations
-    fn visit_class(&mut self, class: &fob_core::oxc::ast::Class<'ast>) {
+    fn visit_class(&mut self, class: &crate::oxc::ast::Class<'ast>) {
         // Only process named classes
         if let Some(id) = &class.id {
             let name = id.name.as_str().to_string();

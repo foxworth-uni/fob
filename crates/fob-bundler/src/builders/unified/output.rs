@@ -10,13 +10,13 @@ pub struct BuildResult {
     pub output: BuildOutput,
 
     /// Module graph and dependency analysis.
-    pub analysis: fob_analysis::AnalysisResult,
+    pub analysis: fob_graph::AnalysisResult,
 
     /// Cache effectiveness metrics.
-    pub cache: fob_analysis::CacheAnalysis,
+    pub cache: fob_graph::CacheAnalysis,
 
     /// Transformation trace (when JOY_TRACE env var is set).
-    pub trace: Option<fob_analysis::TransformationTrace>,
+    pub trace: Option<fob_graph::TransformationTrace>,
 
     /// Asset registry containing discovered static assets.
     pub asset_registry: Option<std::sync::Arc<crate::builders::asset_registry::AssetRegistry>>,
@@ -33,7 +33,7 @@ pub enum BuildOutput {
 
 impl BuildResult {
     /// Access the module graph analysis.
-    pub fn analysis(&self) -> &fob_analysis::AnalysisResult {
+    pub fn analysis(&self) -> &fob_graph::AnalysisResult {
         &self.analysis
     }
 
@@ -48,12 +48,12 @@ impl BuildResult {
     }
 
     /// Access cache effectiveness metrics.
-    pub fn cache(&self) -> &fob_analysis::CacheAnalysis {
+    pub fn cache(&self) -> &fob_graph::CacheAnalysis {
         &self.cache
     }
 
     /// Access transformation trace (if enabled via JOY_TRACE).
-    pub fn trace(&self) -> Option<&fob_analysis::TransformationTrace> {
+    pub fn trace(&self) -> Option<&fob_graph::TransformationTrace> {
         self.trace.as_ref()
     }
 

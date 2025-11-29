@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use fob_analysis::{AnalysisResult, CacheAnalysis, TransformationTrace};
+use fob_graph::{AnalysisResult, CacheAnalysis, TransformationTrace};
 
 use crate::BundleOutput;
 use crate::builders::asset_registry::AssetRegistry;

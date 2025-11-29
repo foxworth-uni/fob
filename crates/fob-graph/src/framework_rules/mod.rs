@@ -13,7 +13,7 @@
 //! # Custom Rules
 //!
 //! ```rust,ignore
-//! use fob_core::graph::{FrameworkRule, ModuleGraph};
+//! use fob_graph::graph::{FrameworkRule, ModuleGraph};
 //! use async_trait::async_trait;
 //!
 //! struct MyRule;
@@ -48,7 +48,7 @@
 //! }
 //!
 //! // Apply custom rules via AnalyzeOptions
-//! use fob_core::analysis::{analyze_with_options, AnalyzeOptions};
+//! use fob_graph::analysis::{analyze_with_options, AnalyzeOptions};
 //!
 //! let options = AnalyzeOptions {
 //!     framework_rules: vec![Box::new(MyRule)],

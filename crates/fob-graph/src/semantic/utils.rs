@@ -2,7 +2,7 @@
 
 use super::super::SourceType;
 use super::super::symbol::SymbolKind;
-use fob_core::oxc::SourceType as OxcSourceType;
+use crate::oxc::SourceType as OxcSourceType;
 
 /// Convert Fob's SourceType to Oxc's SourceType.
 pub(super) fn convert_source_type(source_type: SourceType, filename: &str) -> OxcSourceType {

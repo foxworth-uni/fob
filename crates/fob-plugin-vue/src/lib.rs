@@ -40,10 +40,10 @@
 //! ```
 
 use anyhow::Context;
-use fob_analysis::extractors::{ExtractedScript, Extractor, VueExtractor};
 use fob_bundler::{
     HookLoadArgs, HookLoadOutput, HookLoadReturn, ModuleType, Plugin, PluginContext,
 };
+use fob_graph::analysis::extractors::{ExtractedScript, Extractor, VueExtractor};
 use std::borrow::Cow;
 
 /// Rolldown plugin that extracts JavaScript/TypeScript from Vue SFCs
@@ -213,7 +213,7 @@ impl Plugin for FobVuePlugin {
 /// → ("const x = 1\n\nexport default {}", ModuleType::Js)
 /// ```
 fn combine_scripts(scripts: &[ExtractedScript]) -> (String, ModuleType) {
-    use fob_analysis::extractors::ScriptContext;
+    use fob_graph::analysis::extractors::ScriptContext;
 
     // Single script case
     if scripts.len() == 1 {
@@ -335,7 +335,7 @@ mod tests {
 
     #[test]
     fn test_combine_single_script() {
-        use fob_analysis::extractors::ScriptContext;
+        use fob_graph::analysis::extractors::ScriptContext;
         let scripts = vec![ExtractedScript::new(
             "const x = 1;",
             100,
@@ -349,7 +349,7 @@ mod tests {
 
     #[test]
     fn test_combine_multiple_scripts() {
-        use fob_analysis::extractors::ScriptContext;
+        use fob_graph::analysis::extractors::ScriptContext;
         let scripts = vec![
             ExtractedScript::new("export default {}", 50, ScriptContext::VueRegular, "js"),
             ExtractedScript::new("const count = ref(0)", 150, ScriptContext::VueSetup, "ts"),

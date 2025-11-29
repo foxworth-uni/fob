@@ -11,7 +11,7 @@ mod visitor;
 
 use super::symbol::{SymbolTable, UnreachableCode};
 use super::{ModuleId, SourceType};
-use fob_core::Result;
+use crate::Result;
 
 use analysis::extract_symbols_from_program;
 use detection::detect_unreachable_with_visitor;
@@ -53,8 +53,8 @@ use detection::detect_unreachable_with_visitor;
 /// ## Basic usage
 ///
 /// ```rust,ignore
-/// use fob_core::graph::semantic::analyze_symbols;
-/// use fob_core::graph::SourceType;
+/// use fob_graph::graph::semantic::analyze_symbols;
+/// use fob_graph::graph::SourceType;
 ///
 /// let source = r#"
 ///     const unused = 42;
@@ -118,7 +118,7 @@ pub fn analyze_symbols(
     let oxc_source_type = convert_source_type(source_type, filename);
 
     // Create allocator for Oxc's arena-based allocation
-    use fob_core::oxc::{Allocator, Parser};
+    use crate::oxc::{Allocator, Parser};
     let allocator = Allocator::default();
 
     // Parse the source code
@@ -178,7 +178,7 @@ pub fn detect_unreachable_code(
     let oxc_source_type = convert_source_type(source_type, filename);
 
     // Create allocator for Oxc's arena-based allocation
-    use fob_core::oxc::{Allocator, Parser};
+    use crate::oxc::{Allocator, Parser};
     let allocator = Allocator::default();
 
     // Parse the source code

@@ -7,7 +7,7 @@ use super::super::package_json::{
     extract_package_name,
 };
 use super::graph::ModuleGraph;
-use fob_core::Result;
+use crate::Result;
 
 impl ModuleGraph {
     /// Detect unused npm dependencies by cross-referencing package.json with imports.

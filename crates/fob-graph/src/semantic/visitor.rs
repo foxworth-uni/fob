@@ -1,6 +1,6 @@
 //! AST visitor implementations for semantic analysis.
 
-use fob_core::oxc::{GetSpan, Visit, ast::Statement};
+use crate::oxc::{GetSpan, Visit, ast::Statement};
 use oxc_ast_visit::walk;
 
 use super::super::ModuleId;

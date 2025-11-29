@@ -157,7 +157,7 @@ impl Module {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use fob_core::graph::ModuleId;
+    /// use fob_graph::graph::ModuleId;
     ///
     /// let react_id = ModuleId::new("node_modules/react/index.js")?;
     /// let imports = module.imports_from(&react_id);

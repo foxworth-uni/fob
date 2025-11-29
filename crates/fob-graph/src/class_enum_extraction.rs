@@ -5,7 +5,7 @@
 //! JavaScript/TypeScript AST nodes.
 
 // Use re-exported OXC types from the fob crate for version consistency
-use fob_core::oxc::{
+use crate::oxc::{
     Visit,
     ast::{
         Class, ClassElement, Expression, MethodDefinition, MethodDefinitionKind,

@@ -1,6 +1,6 @@
 use crate::BundleOutput;
 use crate::analysis::AnalyzedBundle;
-use fob_analysis::{AnalysisResult, CacheAnalysis, TransformationTrace};
+use fob_graph::{AnalysisResult, CacheAnalysis, TransformationTrace};
 use fob_graph::{GraphStatistics, ModuleGraph, ModuleId};
 
 /// High-level wrapper around `AnalyzedBundle` with ergonomic accessors.

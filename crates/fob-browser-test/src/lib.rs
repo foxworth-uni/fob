@@ -119,4 +119,4 @@ pub use console::{ConsoleCapture, ConsoleLevel, ConsoleMessage};
 pub use error::{BrowserError, Result};
 pub use page::Page;
 pub use server::{DevServer, StaticUrlServer};
-pub use wait::{WaitConfig, DEFAULT_POLL_INTERVAL, DEFAULT_TIMEOUT};
+pub use wait::{DEFAULT_POLL_INTERVAL, DEFAULT_TIMEOUT, WaitConfig};

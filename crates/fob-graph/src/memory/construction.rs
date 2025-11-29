@@ -5,7 +5,7 @@ use rustc_hash::FxHashMap as HashMap;
 use super::super::external_dep::ExternalDependency;
 use super::super::{Module, ModuleId};
 use super::graph::{GraphInner, ModuleGraph};
-use fob_core::{Error, Result};
+use crate::{Error, Result};
 
 impl ModuleGraph {
     /// Create a new empty graph.

@@ -2,7 +2,7 @@
 
 use super::super::GraphStatistics;
 use super::graph::ModuleGraph;
-use fob_core::Result;
+use crate::Result;
 
 impl ModuleGraph {
     /// Compute statistics snapshot for dashboards.

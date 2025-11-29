@@ -6,7 +6,7 @@ use rustc_hash::FxHashSet as HashSet;
 
 use super::super::ModuleId;
 use super::graph::ModuleGraph;
-use fob_core::Result;
+use crate::Result;
 
 impl ModuleGraph {
     /// Returns true if `from` depends on `to` (directly or transitively).

@@ -362,7 +362,16 @@ release-dry level:
     set -euo pipefail
     command -v cargo-release >/dev/null || { echo "Install: cargo install cargo-release"; exit 1; }
     echo "Previewing {{level}} release..."
-    cargo release {{level}} --workspace
+    cargo release {{level}} --workspace --no-verify
+
+# Publish unpublished crates (safe to re-run after rate limit)
+# crates.io limits 5 new crates per publish - this auto-skips already published
+publish:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    command -v cargo-release >/dev/null || { echo "Install: cargo install cargo-release"; exit 1; }
+    echo "Publishing unpublished crates..."
+    cargo release publish --workspace --execute --no-verify
 
 # Release a new version (interactive)
 release:
@@ -378,13 +387,14 @@ release:
 
     # Preview
     echo "Previewing $LEVEL release..."
-    cargo release $LEVEL --workspace
+    cargo release $LEVEL --workspace --no-verify
 
     # Confirm
     gum confirm "Execute this release?" || exit 0
 
-    # Execute
-    cargo release $LEVEL --workspace --execute --no-confirm
+    # Step 1: Bump versions (no publish yet)
+    echo "Bumping versions..."
+    cargo release $LEVEL --workspace --execute --no-confirm --no-verify --no-publish
 
     # Sync npm version (read from workspace Cargo.toml)
     VERSION=$(grep -m1 '^version = ' Cargo.toml | cut -d '"' -f2)
@@ -400,7 +410,12 @@ release:
     # Push
     gum confirm "Push to origin?" && git push && git push --tags
 
-    echo "Done. CI will publish to crates.io and npm."
+    # Step 2: Publish (auto-skips already published, safe to re-run)
+    gum confirm "Publish to crates.io?" || exit 0
+    echo "Publishing to crates.io..."
+    cargo release publish --workspace --execute --no-verify
+
+    echo "Done! If rate-limited, run 'just publish' to continue."
 
 # =============================================================================
 # Development Tools

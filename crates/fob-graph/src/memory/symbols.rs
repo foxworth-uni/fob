@@ -8,7 +8,7 @@ use super::super::symbol::{
 };
 use super::graph::ModuleGraph;
 use super::types::{ClassMemberInfo, EnumMemberInfo};
-use fob_core::Result;
+use crate::Result;
 
 impl ModuleGraph {
     /// Get all unused symbols across the entire graph.
