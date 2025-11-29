@@ -1,6 +1,6 @@
 [package]
 name = "fob-cloudflare-worker-example"
-version = "0.1.0"
+version = "0.2.1"
 edition = "2021"
 description = "Example Cloudflare Worker using Fob bundler from Rust"
 publish = false

@@ -10,10 +10,10 @@ description = "Fob bundler - Rolldown-based bundling on top of fob foundation"
 
 [dependencies]
     # Foundation crates
-    fob-graph = { path = "../fob-graph", version = "0.2.0", features = ["test-utils"] }
+    fob-graph = { path = "../fob-graph", version = "0.2.1", features = ["test-utils"] }
 
 # Code generation and AST utilities
-fob-gen = { path = "../fob-gen", version = "0.2.0", features = ["parser", "query-api", "fob_internal"] }
+fob-gen = { path = "../fob-gen", version = "0.2.1", features = ["parser", "query-api", "fob_internal"] }
 
 # Rolldown bundler integration
 rolldown = { workspace = true }

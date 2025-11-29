@@ -1,6 +1,6 @@
 [package]
 name = "fob-cli"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 authors.workspace = true
 license = "MIT"
@@ -19,9 +19,9 @@ dts-generation = ["fob-bundler/dts-generation"]
 
 [dependencies]
 # Core dependencies
-fob-bundler = { path = "../fob-bundler", version = "0.2.0" }
-fob-config = { path = "../fob-config", version = "0.2.0" }
-fob-gen = { path = "../fob-gen", version = "0.2.0" }
+fob-bundler = { path = "../fob-bundler", version = "0.2.1" }
+fob-config = { path = "../fob-config", version = "0.2.1" }
+fob-gen = { path = "../fob-gen", version = "0.2.1" }
 
 # Async runtime
 tokio = { workspace = true, features = ["macros", "rt-multi-thread", "fs", "signal"] }
