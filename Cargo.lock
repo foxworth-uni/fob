@@ -19,7 +19,7 @@ checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
 
 [[package]]
 name = "advanced-bundler-example"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "fob-bundler",
@@ -523,7 +523,7 @@ dependencies = [
 
 [[package]]
 name = "basic-bundler-example"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "fob-bundler",
@@ -1272,7 +1272,7 @@ dependencies = [
 
 [[package]]
 name = "component-library-example"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "fob-bundler",
@@ -1830,7 +1830,7 @@ checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
 name = "fob-browser-test"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "async-trait",
  "chromiumoxide",
@@ -1847,7 +1847,7 @@ dependencies = [
 
 [[package]]
 name = "fob-bundler"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1881,7 +1881,7 @@ dependencies = [
 
 [[package]]
 name = "fob-cli"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -1917,7 +1917,7 @@ dependencies = [
 
 [[package]]
 name = "fob-cloudflare-worker-example"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "serde",
  "serde_json",
@@ -1926,7 +1926,7 @@ dependencies = [
 
 [[package]]
 name = "fob-config"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "figment",
  "indexmap",
@@ -1940,7 +1940,7 @@ dependencies = [
 
 [[package]]
 name = "fob-gen"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "oxc_allocator 0.97.0",
  "oxc_ast 0.97.0",
@@ -1955,7 +1955,7 @@ dependencies = [
 
 [[package]]
 name = "fob-graph"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "async-trait",
  "fob-gen",
@@ -1980,7 +1980,7 @@ dependencies = [
 
 [[package]]
 name = "fob-native"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2000,7 +2000,7 @@ dependencies = [
 
 [[package]]
 name = "fob-plugin-astro"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "fob-bundler",
@@ -2012,7 +2012,7 @@ dependencies = [
 
 [[package]]
 name = "fob-plugin-css"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "fob-bundler",
@@ -2027,7 +2027,7 @@ dependencies = [
 
 [[package]]
 name = "fob-plugin-svelte"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "fob-bundler",
@@ -2039,7 +2039,7 @@ dependencies = [
 
 [[package]]
 name = "fob-plugin-tailwind"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "fob-bundler",
@@ -2057,7 +2057,7 @@ dependencies = [
 
 [[package]]
 name = "fob-plugin-vue"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "fob-bundler",
@@ -2958,7 +2958,7 @@ checksum = "f52b00d39961fc5b2736ea853c9cc86238e165017a493d1d5c8eac6bdc4cc273"
 
 [[package]]
 name = "meta-framework-example"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "fob-bundler",
