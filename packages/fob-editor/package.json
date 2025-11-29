@@ -1,6 +1,7 @@
 {
   "name": "@fob/editor",
   "version": "0.0.1",
+  "author": "Taron Foxworth <fox@9generations.com>",
   "description": "Vanilla JavaScript editor built on CodeMirror",
   "type": "module",
   "main": "./dist/index.js",

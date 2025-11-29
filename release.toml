@@ -1,21 +1,7 @@
-[workspace]
-# All crates share the same version
 shared-version = true
-# Single commit for all version bumps
 consolidate-commits = true
-# Tag format
 tag-prefix = ""
 tag-name = "v{{version}}"
 tag-message = "Release v{{version}}"
-# Commit message
 pre-release-commit-message = "chore: release v{{version}}"
-# Don't push automatically (let CI handle after we verify)
 push = false
-# Hook to sync npm package.json
-pre-release-hook = ["./scripts/sync-npm-version.sh"]
-
-# Crates that should NOT be published to crates.io
-[[package]]
-name = "fob-browser-test"
-release = false
-publish = false

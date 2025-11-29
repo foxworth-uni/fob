@@ -1,11 +1,12 @@
 [package]
 name = "fob-plugin-css"
 version = "0.1.0"
-authors = ["Fob Contributors"]
+authors.workspace = true
 edition = "2021"
 rust-version = "1.75"
 license = "MIT OR Apache-2.0"
 description = "Rolldown bundler plugin for CSS - process, bundle, and minify CSS using lightningcss"
+repository = "https://github.com/foxworth-uni/fob"
 
 [dependencies]
 # Lightning CSS for parsing, bundling, and minification

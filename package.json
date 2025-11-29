@@ -1,6 +1,7 @@
 {
   "name": "fob-monorepo",
   "version": "0.1.0",
+  "author": "Taron Foxworth <fox@9generations.com>",
   "private": true,
   "workspaces": [
     "apps/*",

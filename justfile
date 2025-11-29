@@ -353,38 +353,54 @@ docs-open:
     @cargo doc --workspace --all-features --no-deps --open
 
 # =============================================================================
-# Release Management
+# Releasing
 # =============================================================================
 
-# Release a new version (dry-run by default)
-# Usage: just release patch|minor|major
-release level="patch":
-    @echo "Running cargo-release (dry-run)..."
-    @cargo release {{level}} --workspace
+# Preview a release (dry-run)
+release-dry level:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    command -v cargo-release >/dev/null || { echo "Install: cargo install cargo-release"; exit 1; }
+    echo "Previewing {{level}} release..."
+    cargo release {{level}} --workspace
 
-# Execute the release (actually commits, tags)
-# Usage: just release-execute patch|minor|major
-release-execute level="patch":
-    @echo "Executing release..."
-    @cargo release {{level}} --workspace --execute
+# Release a new version (interactive)
+release:
+    #!/usr/bin/env bash
+    set -euo pipefail
 
-# Push the release tag to trigger CI
-release-push:
-    @echo "Pushing to origin..."
-    @git push && git push --tags
+    # Check tools
+    command -v gum >/dev/null || { echo "Install gum: brew install gum"; exit 1; }
+    command -v cargo-release >/dev/null || { echo "Install: cargo install cargo-release"; exit 1; }
 
-# Full release workflow: release + push
-# Usage: just release-full patch|minor|major
-release-full level="patch": (release-execute level) release-push
-    @echo "✓ Release complete! CI will publish to crates.io and npm."
+    # Pick level
+    LEVEL=$(gum choose "patch" "minor" "major")
 
-# Build release artifacts for all targets (local build only)
-release-build: build-native-release build-napi-release
-    @echo "✓ Release build complete!"
+    # Preview
+    echo "Previewing $LEVEL release..."
+    cargo release $LEVEL --workspace
 
-# Prepare for release (clean + ci + build)
-release-prepare: clean ci release-build
-    @echo "✓ Pre-release checks complete!"
+    # Confirm
+    gum confirm "Execute this release?" || exit 0
+
+    # Execute
+    cargo release $LEVEL --workspace --execute --no-confirm
+
+    # Sync npm version (read from workspace Cargo.toml)
+    VERSION=$(grep -m1 '^version = ' Cargo.toml | cut -d '"' -f2)
+    node -e "
+      const fs = require('fs');
+      const pkg = JSON.parse(fs.readFileSync('crates/fob-native/package.json'));
+      pkg.version = '$VERSION';
+      fs.writeFileSync('crates/fob-native/package.json', JSON.stringify(pkg, null, 2) + '\n');
+    "
+    git add crates/fob-native/package.json
+    git commit --amend --no-edit
+
+    # Push
+    gum confirm "Push to origin?" && git push && git push --tags
+
+    echo "Done. CI will publish to crates.io and npm."
 
 # =============================================================================
 # Development Tools

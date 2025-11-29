@@ -2,6 +2,16 @@
 name = "fob-cli"
 version = "0.2.0"
 edition = "2021"
+authors.workspace = true
+license = "MIT"
+description = "Fob bundler CLI - fast JavaScript/TypeScript bundler"
+repository = "https://github.com/foxworth-uni/fob"
+keywords = ["bundler", "javascript", "typescript", "rolldown"]
+categories = ["development-tools::build-utils"]
+
+[[bin]]
+name = "fob"
+path = "src/main.rs"
 
 [features]
 default = []

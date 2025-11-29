@@ -7,6 +7,7 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Native Node.js bindings for Fob bundler core"
+publish = false
 
 [package.metadata.napi]
 name = "fob-native"

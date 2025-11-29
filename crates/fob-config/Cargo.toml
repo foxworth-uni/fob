@@ -9,6 +9,7 @@ repository.workspace = true
 homepage.workspace = true
 categories.workspace = true
 keywords.workspace = true
+description = "Configuration loading and validation for the Fob bundler"
 
 [dependencies]
 figment.workspace = true

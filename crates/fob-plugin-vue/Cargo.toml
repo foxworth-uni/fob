@@ -1,11 +1,12 @@
 [package]
 name = "fob-plugin-vue"
 version = "0.1.0"
-authors = ["Fob Contributors"]
+authors.workspace = true
 edition = "2021"
 rust-version = "1.77"
 license = "MIT OR Apache-2.0"
 description = "Rolldown bundler plugin for Vue - extract and process script blocks from Vue SFCs"
+repository = "https://github.com/foxworth-uni/fob"
 
 [dependencies]
 # Fob core extractors
