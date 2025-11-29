@@ -1,6 +1,6 @@
 {
   "name": "fob-native-build",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": "Taron Foxworth <fox@9generations.com>",
   "napi": {
     "binaryName": "fob-native",

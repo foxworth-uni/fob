@@ -1,6 +1,6 @@
 [package]
 name = "fob-plugin-svelte"
-version = "0.2.1"
+version = "0.2.2"
 authors.workspace = true
 edition = "2021"
 rust-version = "1.77"
@@ -10,10 +10,10 @@ repository = "https://github.com/foxworth-uni/fob"
 
 [dependencies]
 # Fob graph (includes analysis)
-fob-graph = { path = "../fob-graph", version = "0.2.1" }
+fob-graph = { path = "../fob-graph", version = "0.2.2" }
 
 # Fob bundler (re-exports rolldown types)
-fob-bundler = { path = "../fob-bundler", version = "0.2.1" }
+fob-bundler = { path = "../fob-bundler", version = "0.2.2" }
 
 # Error handling
 anyhow.workspace = true
