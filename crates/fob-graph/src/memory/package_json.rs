@@ -3,11 +3,11 @@
 use rustc_hash::FxHashSet as HashSet;
 
 use super::super::package_json::{
-    extract_package_name, DependencyCoverage, DependencyType, PackageJson, TypeCoverage,
-    UnusedDependency,
+    DependencyCoverage, DependencyType, PackageJson, TypeCoverage, UnusedDependency,
+    extract_package_name,
 };
 use super::graph::ModuleGraph;
-use fob::Result;
+use fob_core::Result;
 
 impl ModuleGraph {
     /// Detect unused npm dependencies by cross-referencing package.json with imports.

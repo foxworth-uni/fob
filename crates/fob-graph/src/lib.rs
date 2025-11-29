@@ -153,8 +153,8 @@ pub struct UnusedExport {
 }
 
 pub use collection::{
-    parse_module_structure, CollectedExport, CollectedImport, CollectedImportSpecifier,
-    CollectedModule, CollectionState,
+    CollectedExport, CollectedImport, CollectedImportSpecifier, CollectedModule, CollectionState,
+    parse_module_structure,
 };
 pub use dependency_chain::{ChainAnalysis, DependencyChain};
 pub use export::{Export, ExportKind};
@@ -165,8 +165,8 @@ pub use import::{Import, ImportKind, ImportSpecifier};
 pub use module::{Module, SourceType};
 pub use module_id::{ModuleId, ModuleIdError};
 pub use package_json::{
-    extract_package_name, DependencyCoverage, DependencyType, PackageJson, TypeCoverage,
-    UnusedDependency,
+    DependencyCoverage, DependencyType, PackageJson, TypeCoverage, UnusedDependency,
+    extract_package_name,
 };
 pub use span::SourceSpan;
 pub use statistics::GraphStatistics;

@@ -4,7 +4,7 @@ use rolldown_plugin::{
 };
 use std::sync::{Arc, Mutex};
 
-use fob_graph::collection::{parse_module_structure, CollectedModule, CollectionState};
+use fob_graph::collection::{CollectedModule, CollectionState, parse_module_structure};
 
 /// Plugin that collects module information during the bundling process
 #[derive(Debug)]

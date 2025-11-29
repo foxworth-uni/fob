@@ -2,7 +2,7 @@
 
 use super::graph::ModuleGraph;
 use super::types::{NamespaceImportInfo, SideEffectImport, TypeOnlyImport};
-use fob::Result;
+use fob_core::Result;
 
 impl ModuleGraph {
     /// Get all side-effect-only imports across the graph.

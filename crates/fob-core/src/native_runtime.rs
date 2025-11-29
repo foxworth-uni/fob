@@ -49,8 +49,8 @@ use crate::runtime::{FileMetadata, Runtime, RuntimeError, RuntimeResult};
 /// # Example
 ///
 /// ```rust,ignore
-/// use fob::native_runtime::NativeRuntime;
-/// use fob::runtime::Runtime;
+/// use fob_core::native_runtime::NativeRuntime;
+/// use fob_core::runtime::Runtime;
 ///
 /// let runtime = NativeRuntime;
 /// let content = runtime.read_file(Path::new("file.txt")).await?;

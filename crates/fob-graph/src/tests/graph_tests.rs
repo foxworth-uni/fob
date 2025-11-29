@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use super::super::{import::ImportKind, Module, ModuleGraph, ModuleId, SourceSpan, SourceType};
+use super::super::{Module, ModuleGraph, ModuleId, SourceSpan, SourceType, import::ImportKind};
 
 fn make_module(id: &str) -> Module {
     let module_id = ModuleId::new_virtual(id);

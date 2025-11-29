@@ -5,7 +5,7 @@
 use fob_analysis::Analyzer;
 
 #[tokio::main]
-async fn main() -> fob::Result<()> {
+async fn main() -> fob_core::Result<()> {
     // Create analyzer and configure entry point
     let analysis = Analyzer::new()
         .entry("src/index.ts") // Required: transitions to Configured state

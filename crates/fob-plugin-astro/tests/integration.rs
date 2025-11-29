@@ -3,8 +3,8 @@
 //! These tests verify the complete flow from Astro component files through the parser
 //! to the rolldown plugin integration.
 
+use fob_bundler::{HookLoadArgs, Plugin};
 use fob_plugin_astro::FobAstroPlugin;
-use rolldown_plugin::{HookLoadArgs, Plugin};
 use std::fs;
 use tempfile::TempDir;
 
@@ -37,7 +37,7 @@ const data = await fetch('/api/data').then(r => r.json())
     let file_path = create_astro_file(&dir, "Page.astro", astro_content);
 
     let plugin = FobAstroPlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -52,7 +52,7 @@ const data = await fetch('/api/data').then(r => r.json())
     // Should be TypeScript (frontmatter default)
     assert!(matches!(
         output.module_type,
-        Some(rolldown_common::ModuleType::Ts)
+        Some(fob_bundler::ModuleType::Ts)
     ));
 }
 
@@ -79,7 +79,7 @@ async fn test_script_tags_only() {
     let file_path = create_astro_file(&dir, "ClientSide.astro", astro_content);
 
     let plugin = FobAstroPlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -94,7 +94,7 @@ async fn test_script_tags_only() {
     // Should be JavaScript
     assert!(matches!(
         output.module_type,
-        Some(rolldown_common::ModuleType::Js)
+        Some(fob_bundler::ModuleType::Js)
     ));
 }
 
@@ -127,7 +127,7 @@ const items = await fetch(apiUrl).then(r => r.json())
     let file_path = create_astro_file(&dir, "Combined.astro", astro_content);
 
     let plugin = FobAstroPlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -152,7 +152,7 @@ const items = await fetch(apiUrl).then(r => r.json())
     // Should be TypeScript (frontmatter is TS)
     assert!(matches!(
         output.module_type,
-        Some(rolldown_common::ModuleType::Ts)
+        Some(fob_bundler::ModuleType::Ts)
     ));
 }
 
@@ -178,7 +178,7 @@ async fn test_multiple_script_tags() {
     let file_path = create_astro_file(&dir, "MultiScript.astro", astro_content);
 
     let plugin = FobAstroPlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -210,7 +210,7 @@ async fn test_no_frontmatter_or_scripts() {
     let file_path = create_astro_file(&dir, "Static.astro", astro_content);
 
     let plugin = FobAstroPlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -224,7 +224,7 @@ async fn test_no_frontmatter_or_scripts() {
     // Should be JavaScript
     assert!(matches!(
         output.module_type,
-        Some(rolldown_common::ModuleType::Js)
+        Some(fob_bundler::ModuleType::Js)
     ));
 }
 
@@ -242,7 +242,7 @@ const title = 'Whitespace Test'
     let file_path = create_astro_file(&dir, "Whitespace.astro", astro_content);
 
     let plugin = FobAstroPlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -261,7 +261,7 @@ async fn test_non_astro_file() {
     let file_path = create_astro_file(&dir, "test.js", js_content);
 
     let plugin = FobAstroPlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -282,7 +282,7 @@ const x = 1
     let file_path = create_astro_file(&dir, "BrokenFrontmatter.astro", astro_content);
 
     let plugin = FobAstroPlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await;
@@ -318,7 +318,7 @@ async fn test_malformed_unclosed_script() {
     let file_path = create_astro_file(&dir, "BrokenScript.astro", astro_content);
 
     let plugin = FobAstroPlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await;
@@ -353,7 +353,7 @@ async fn test_self_closing_script_tag() {
     let file_path = create_astro_file(&dir, "ExternalScript.astro", astro_content);
 
     let plugin = FobAstroPlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -384,7 +384,7 @@ const title = 'Blog'
     let file_path = create_astro_file(&dir, "Blog.astro", astro_content);
 
     let plugin = FobAstroPlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -425,7 +425,7 @@ async fn test_script_with_comments() {
     let file_path = create_astro_file(&dir, "Commented.astro", astro_content);
 
     let plugin = FobAstroPlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -462,7 +462,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site)
     let file_path = create_astro_file(&dir, "TypedComponent.astro", astro_content);
 
     let plugin = FobAstroPlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -478,6 +478,6 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site)
     // Should be TypeScript
     assert!(matches!(
         output.module_type,
-        Some(rolldown_common::ModuleType::Ts)
+        Some(fob_bundler::ModuleType::Ts)
     ));
 }

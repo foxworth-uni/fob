@@ -12,9 +12,9 @@ use std::sync::Arc;
 
 use rustc_hash::FxHashMap;
 
-use crate::{result::AnalysisResult, stats::compute_stats, AnalyzeOptions};
-use fob::runtime::Runtime;
-use fob::{Error, Result};
+use crate::{AnalyzeOptions, result::AnalysisResult, stats::compute_stats};
+use fob_core::runtime::Runtime;
+use fob_core::{Error, Result};
 use fob_graph::ModuleGraph;
 
 use super::config::AnalyzerConfig;
@@ -39,7 +39,7 @@ pub struct Configured;
 /// ```rust,no_run
 /// use fob_analysis::analyzer::Analyzer;
 ///
-/// # async fn example() -> fob::Result<()> {
+/// # async fn example() -> fob_core::Result<()> {
 /// let analysis = Analyzer::new()
 ///     .entry("src/index.ts")  // Transitions to Configured state
 ///     .external(vec!["react", "lodash"])
@@ -273,12 +273,12 @@ impl Analyzer<Configured> {
             // Try to use default runtime
             #[cfg(not(target_family = "wasm"))]
             {
-                use fob::NativeRuntime;
+                use fob_core::NativeRuntime;
                 Ok(Arc::new(NativeRuntime))
             }
             #[cfg(target_family = "wasm")]
             {
-                Err(fob::Error::InvalidConfig(
+                Err(fob_core::Error::InvalidConfig(
                     "Runtime is required in WASM environment".to_string(),
                 ))
             }

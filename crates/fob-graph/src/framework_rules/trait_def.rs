@@ -2,7 +2,7 @@
 
 use crate::ModuleGraph;
 use async_trait::async_trait;
-use fob::Result;
+use fob_core::Result;
 
 /// Framework-specific rule for marking exports as used by framework conventions.
 ///
@@ -12,7 +12,7 @@ use fob::Result;
 /// # Example
 ///
 /// ```rust,ignore
-/// use fob::graph::{ModuleGraph, FrameworkRule};
+/// use fob_core::graph::{ModuleGraph, FrameworkRule};
 /// use async_trait::async_trait;
 ///
 /// struct MyFrameworkRule;

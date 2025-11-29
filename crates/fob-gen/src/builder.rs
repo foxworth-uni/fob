@@ -1,12 +1,12 @@
 //! Core JavaScript code builder using OXC AST
 
-use crate::format::FormatOptions;
 use crate::Result;
+use crate::format::FormatOptions;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::*;
 use oxc_ast::{AstBuilder, NONE};
 use oxc_codegen::Codegen;
-use oxc_span::{Atom, SourceType, SPAN};
+use oxc_span::{Atom, SPAN, SourceType};
 
 /// Main JavaScript code builder
 ///
@@ -270,8 +270,7 @@ impl<'a> JsBuilder<'a> {
 
     /// Create an expression statement
     pub fn expr_stmt(&self, expr: Expression<'a>) -> Statement<'a> {
-        let expr_stmt = self.ast.statement_expression(SPAN, expr);
-        expr_stmt
+        self.ast.statement_expression(SPAN, expr)
     }
 
     /// Create an if statement: `if (test) { consequent } else { alternate }`

@@ -2,10 +2,10 @@
 
 use std::sync::Arc;
 
-use super::super::external_dep::ExternalDependency;
 use super::super::Module;
+use super::super::external_dep::ExternalDependency;
 use super::graph::ModuleGraph;
-use fob::Result;
+use fob_core::Result;
 
 impl ModuleGraph {
     /// Add a module into the graph.

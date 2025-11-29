@@ -6,7 +6,7 @@
 use fob_analysis::{AnalyzeOptions, Analyzer};
 
 #[tokio::main]
-async fn main() -> fob::Result<()> {
+async fn main() -> fob_core::Result<()> {
     // Analyze framework components
     // The analyzer automatically extracts JavaScript/TypeScript from:
     // - Astro components (.astro)

@@ -1,6 +1,6 @@
 # Fob Workspace Build Recipes
 # Requires: just (https://github.com/casey/just)
-# Rust version: 1.77+
+# Rust version: 1.91+
 
 # Variables
 export RUST_BACKTRACE := "1"
@@ -9,7 +9,6 @@ export CARGO_TERM_COLOR := "always"
 # Paths
 repo_root := justfile_directory()
 target_dir := repo_root + "/target"
-wasm_wasi_target := "wasm32-wasip1"
 
 # Default recipe (runs dev workflow)
 default: dev
@@ -36,8 +35,8 @@ compile:
 dev: format check
     @echo "✓ Development checks complete!"
 
-# Full CI pipeline (format check + lint + test + build + wasm checks)
-ci: format-check lint test build check-std-fs lint-wasm compile-wasm
+# Full CI pipeline (format check + lint + test + build)
+ci: format-check lint test build
     @echo "✓ All CI checks passed!"
 
 # =============================================================================
@@ -81,11 +80,6 @@ lint-fix:
     @echo "Fixing linting issues..."
     @cargo clippy --workspace --all-features --fix --allow-dirty || true
     @pnpm lint --fix || true
-
-# Lint WASM-specific code
-lint-wasm:
-    @echo "Linting WASM code..."
-    @cargo clippy --package fob --target {{wasm_wasi_target}} --all-features -- -D warnings
 
 # =============================================================================
 # Testing
@@ -139,15 +133,6 @@ build-native-release:
     @echo "Building native crates (release)..."
     @cargo build --workspace --release
 
-
-# Setup WASM tooling (wasm-tools, jco, target)
-setup-wasm:
-    @echo "Setting up WASM tooling..."
-    @command -v wasm-tools >/dev/null || cargo install wasm-tools
-    @command -v jco >/dev/null || npm install -g @bytecodealliance/jco@1.8.0
-    @rustup target add wasm32-wasip1
-    @echo "✓ WASM tooling ready"
-
 # Build N-API bindings
 build-napi:
     @echo "Building N-API bindings..."
@@ -169,9 +154,7 @@ build-napi-debug:
     @cd crates/fob-native && pnpm build:debug
 
 # Build N-API and sync to node_modules (for local development)
-build-napi-sync:
-    @echo "Building N-API and syncing to node_modules..."
-    @cd crates/fob-native && pnpm build:debug
+build-napi-sync: build-napi-debug
     @echo "✓ N-API binary built and synced!"
 
 # Run JavaScript integration tests for N-API bindings
@@ -201,21 +184,6 @@ verify-napi: build-napi-release
     @cd fixtures/napi-local-test && pnpm test
     @echo "✓ N-API verification passed!"
 
-# Build TypeScript bundler package
-build-bundler-ts: _copy-native
-    @echo "Building TypeScript bundler package..."
-    @cd packages/fob-bundler && pnpm install
-    @cd packages/fob-bundler && pnpm build
-    @echo "✓ TypeScript bundler built"
-
-# Full bundler build (development)
-build-bundler: build-napi build-bundler-ts
-    @echo "✓ Bundler development build complete!"
-
-# Full bundler build (release)
-build-bundler-release: build-napi-release build-bundler-ts
-    @echo "✓ Bundler release build complete!"
-
 # Build CLI
 build-cli:
     @cargo build --package fob-cli
@@ -224,89 +192,24 @@ build-cli:
 build-cli-release:
     @cargo build --package fob-cli --release
 
-# Build Gumbo CLI
-build-gumbo:
-    @cargo build --package gumbo-cli
-
-# Build Gumbo CLI (release)
-build-gumbo-release:
-    @cargo build --package gumbo-cli --release
-
 # =============================================================================
 # Compilation Checks
 # =============================================================================
-
-# Check WASM crate compiles
-compile-wasm:
-    @echo "Checking WASM compilation..."
-    @cargo check --package fob --target {{wasm_wasi_target}} --all-features
-
-# Check for accidental std::fs usage (WASM compatibility)
-check-std-fs:
-    @echo "Checking for disallowed std::fs usage..."
-    @! grep -r "std::fs" crates/fob/src \
-        --include="*.rs" \
-        --exclude-dir=target \
-        | grep -v "test_utils.rs" \
-        | grep -v "native_runtime.rs" \
-        | grep -v "#\[cfg(test)\]" \
-        | grep -v "//.*std::fs" \
-        || (echo "❌ Found disallowed std::fs usage! Use Runtime trait instead." && exit 1)
-    @echo "✓ No disallowed std::fs usage found"
 
 # Check specific package compiles
 compile-package package:
     @cargo check --package {{package}} --all-features
 
 # =============================================================================
-# WASM Utilities
-# =============================================================================
-
-# Run WASM-specific tests (native host, WASM target tests)
-test-wasm:
-    @echo "Running WASM tests..."
-    @cargo test --package fob --target {{wasm_wasi_target}}
-
-# Show WASM bundle sizes
-wasm-size:
-    @echo "📦 WASM Bundle Sizes:"
-    @echo "  (WASM build removed)"
-
-# Check WASM size against edge runtime limits
-wasm-size-check:
-    @echo "📦 Checking WASM size against edge runtime limits..."
-    @echo "  (WASM build removed)"
-
-# Test WASM binary with wasmtime runtime
-wasm-run:
-    @echo "Testing WASM with wasmtime..."
-    @echo "  (WASM build removed)"
-
-# Verify WASM builds work
-wasm-verify: compile-wasm
-    @echo "✓ WASM verification passed!"
-
-# Verify WASM compatibility enforcement
-wasm-verify-compat: check-std-fs lint-wasm compile-wasm
-    @echo "✓ WASM compatibility verification passed!"
-
-# Full WASM development workflow (setup + test)
-wasm-dev: setup-wasm test-wasm
-    @echo "✓ WASM development workflow complete!"
-
-# =============================================================================
 # Package-Specific Commands
 # =============================================================================
 
-# fob-core
+# fob
 compile-core:
     @cargo check --package fob --all-features
 
 test-core:
     @cargo test --package fob --all-features
-
-test-core-feature feature:
-    @cargo test --package fob --features {{feature}}
 
 docs-core:
     @cargo doc --package fob --all-features --no-deps --open
@@ -340,10 +243,10 @@ compile-browser:
     @cargo check --package fob-browser-test
 
 # Plugins
-test-plugins: test-plugin-css test-plugin-mdx test-plugin-tailwind
+test-plugins: test-plugin-css test-plugin-tailwind test-plugin-vue test-plugin-svelte test-plugin-astro
     @echo "✓ All plugin tests passed!"
 
-compile-plugins: compile-plugin-css compile-plugin-mdx compile-plugin-tailwind
+compile-plugins: compile-plugin-css compile-plugin-tailwind compile-plugin-vue compile-plugin-svelte compile-plugin-astro
     @echo "✓ All plugins compile!"
 
 test-plugin-css:
@@ -352,22 +255,29 @@ test-plugin-css:
 compile-plugin-css:
     @cargo check --package fob-plugin-css --all-features
 
-test-plugin-mdx:
-    @cargo test --package fob-plugin-mdx --all-features
-
-compile-plugin-mdx:
-    @cargo check --package fob-plugin-mdx --all-features
-
 test-plugin-tailwind:
     @cargo test --package fob-plugin-tailwind --all-features
 
 compile-plugin-tailwind:
     @cargo check --package fob-plugin-tailwind --all-features
 
-# Gumbo
-test-gumbo:
-    @cargo test --package gumbo-core
-    @cargo test --package gumbo-cli
+test-plugin-vue:
+    @cargo test --package fob-plugin-vue --all-features
+
+compile-plugin-vue:
+    @cargo check --package fob-plugin-vue --all-features
+
+test-plugin-svelte:
+    @cargo test --package fob-plugin-svelte --all-features
+
+compile-plugin-svelte:
+    @cargo check --package fob-plugin-svelte --all-features
+
+test-plugin-astro:
+    @cargo test --package fob-plugin-astro --all-features
+
+compile-plugin-astro:
+    @cargo check --package fob-plugin-astro --all-features
 
 # =============================================================================
 # Installation
@@ -377,23 +287,12 @@ test-gumbo:
 install-cli:
     @cargo install --path crates/fob-cli
 
-# Install Gumbo CLI
-install-gumbo:
-    @cargo install --path crates/gumbo-cli
-
-# Install Rust targets for WASM builds
-setup-targets:
-    @echo "Installing Rust WASM targets..."
-    @rustup target add {{wasm_wasi_target}}
-    @echo "✓ WASM targets installed"
-
-# Install build tools (wasm-pack, cargo-watch, etc.)
+# Install build tools (cargo-watch, cargo-release, etc.)
 setup-tools:
     @echo "Installing build tools..."
-    @command -v wasm-pack || cargo install wasm-pack
     @command -v cargo-watch || cargo install cargo-watch
     @command -v cargo-audit || cargo install cargo-audit
-    @command -v wasmtime || echo "Install wasmtime: curl https://wasmtime.dev/install.sh -sSf | bash"
+    @command -v cargo-release || cargo install cargo-release
     @echo "✓ Build tools installed"
 
 # =============================================================================
@@ -407,49 +306,12 @@ clean:
     @pnpm clean || true
     @echo "✓ Clean complete"
 
-# Clean WASM artifacts
-clean-wasm:
-    @rm -rf target/{{wasm_wasi_target}}
-    @echo "✓ WASM artifacts cleaned"
-
-# =============================================================================
-# Copy Utilities
-# =============================================================================
-
-# Copy native binary to TypeScript package (Internal)
-_copy-native:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "Copying native binary to fob-bundler package..."
-
-    # Detect platform and set extension
-    case "$(uname -s)" in
-        Darwin*) EXT="dylib" ;;
-        Linux*)  EXT="so" ;;
-        MINGW*|MSYS*|CYGWIN*) EXT="dll" ;;
-        *) echo "❌ Unknown platform"; exit 1 ;;
-    esac
-
-    # Copy from target/debug or target/release
-    if [ -f "target/release/libfob_native.$EXT" ]; then
-        echo "  Found release build"
-        cp "target/release/libfob_native.$EXT" packages/fob-bundler/index.node
-    elif [ -f "target/debug/libfob_native.$EXT" ]; then
-        echo "  Found debug build"
-        cp "target/debug/libfob_native.$EXT" packages/fob-bundler/index.node
-    else
-        echo "❌ Native library not found. Run 'just build:napi' or 'just build:napi:release' first"
-        exit 1
-    fi
-
-    echo "✓ Native binary copied to packages/fob-bundler/index.node"
-
 # =============================================================================
 # Verification & Quality
 # =============================================================================
 
 # Verify all builds work correctly
-verify: verify-native wasm-verify verify-tests
+verify: verify-native verify-tests
     @echo "✓ All verification checks passed!"
 
 # Verify native builds
@@ -477,19 +339,6 @@ outdated:
     @cargo outdated || (echo "Install cargo-outdated: cargo install cargo-outdated" && exit 1)
 
 # =============================================================================
-# Benchmarking & Performance
-# =============================================================================
-
-# Run benchmarks (if any exist)
-bench:
-    @echo "Running benchmarks..."
-    @cargo bench --workspace
-
-# Run benchmarks for specific package
-bench-package package:
-    @cargo bench --package {{package}}
-
-# =============================================================================
 # Documentation
 # =============================================================================
 
@@ -507,140 +356,34 @@ docs-open:
 # Release Management
 # =============================================================================
 
-# Interactive version bump and git tag (mirrors danny workflow)
-tag:
-    #!/usr/bin/env bash
-    set -euo pipefail
+# Release a new version (dry-run by default)
+# Usage: just release patch|minor|major
+release level="patch":
+    @echo "Running cargo-release (dry-run)..."
+    @cargo release {{level}} --workspace
 
-    # Require gum for interactive prompts
-    if ! command -v gum &> /dev/null; then
-        echo "❌ gum is required. Install with: brew install gum"
-        exit 1
-    fi
+# Execute the release (actually commits, tags)
+# Usage: just release-execute patch|minor|major
+release-execute level="patch":
+    @echo "Executing release..."
+    @cargo release {{level}} --workspace --execute
 
-    # Get current workspace version from root Cargo.toml
-    CURRENT_VERSION=$(grep -m1 '^version = ' Cargo.toml | cut -d '"' -f2)
-    echo "📦 Current version: $CURRENT_VERSION"
+# Push the release tag to trigger CI
+release-push:
+    @echo "Pushing to origin..."
+    @git push && git push --tags
 
-    # Check if repository has uncommitted changes
-    DIRTY_FILES=()
-    if ! git diff-index --quiet HEAD -- || [ -n "$(git ls-files --others --exclude-standard)" ]; then
-        echo ""
-        echo "⚠️  Repository has uncommitted changes:"
-        git status --short
-        echo ""
-        if gum confirm "Include uncommitted changes in version bump commit?"; then
-            # Get all modified, staged, and untracked files
-            while IFS= read -r line; do
-                # git status --porcelain format: XY filename
-                # Extract filename (everything after the status codes)
-                file=$(echo "$line" | sed 's/^.. //')
-                if [ -f "$file" ]; then
-                    DIRTY_FILES+=("$file")
-                fi
-            done < <(git status --porcelain)
-            
-            if [ ${#DIRTY_FILES[@]} -gt 0 ]; then
-                echo "✓ Will include ${#DIRTY_FILES[@]} uncommitted file(s) in commit:"
-                printf "  - %s\n" "${DIRTY_FILES[@]}"
-                echo ""
-            fi
-        else
-            echo "⚠️  Proceeding without uncommitted changes"
-        fi
-        echo ""
-    fi
+# Full release workflow: release + push
+# Usage: just release-full patch|minor|major
+release-full level="patch": (release-execute level) release-push
+    @echo "✓ Release complete! CI will publish to crates.io and npm."
 
-    # Choose version bump
-    BUMP=$(gum choose "patch" "minor" "major" "custom" --header "Select version increment")
-
-    if [ "$BUMP" = "custom" ]; then
-        NEW_VERSION=$(gum input --placeholder "e.g. 0.2.0" --value "$CURRENT_VERSION")
-    else
-        IFS='.' read -r -a PARTS <<< "$CURRENT_VERSION"
-        MAJOR="${PARTS[0]}"
-        MINOR="${PARTS[1]}"
-        PATCH="${PARTS[2]}"
-
-        case "$BUMP" in
-            patch) PATCH=$((PATCH + 1)) ;;
-            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
-            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
-        esac
-        NEW_VERSION="$MAJOR.$MINOR.$PATCH"
-    fi
-
-    echo "🚀 Preparing to bump: $CURRENT_VERSION -> $NEW_VERSION"
-    if ! gum confirm "Proceed?"; then
-        echo "Cancelled"
-        exit 0
-    fi
-
-    # Update workspace Cargo.toml
-    sed -i '' "s/^version = \"${CURRENT_VERSION}\"/version = \"${NEW_VERSION}\"/" Cargo.toml
-
-    # Find and update all crates with explicit versions matching current version
-    UPDATED_FILES=("Cargo.toml")
-    echo "🔍 Finding crates with explicit versions..."
-    while IFS= read -r file; do
-        if [ -f "$file" ]; then
-            # Update package version (start of line)
-            sed -i '' "s/^version = \"${CURRENT_VERSION}\"/version = \"${NEW_VERSION}\"/" "$file"
-            # Update dependency version specs (inline, e.g., fob = { path = "...", version = "X.Y.Z" })
-            sed -i '' "s/version = \"${CURRENT_VERSION}\"/version = \"${NEW_VERSION}\"/g" "$file"
-            UPDATED_FILES+=("$file")
-            echo "  ✓ Updated $(basename $(dirname "$file"))/Cargo.toml"
-        fi
-    done < <(find crates -name "Cargo.toml" -exec grep -l "version = \"${CURRENT_VERSION}\"" {} \; 2>/dev/null || true)
-
-    # Update npm package.json versions
-    NPM_PKG="crates/fob-native/package.json"
-    if [ -f "$NPM_PKG" ]; then
-        # Update main version field
-        sed -i '' "s/\"version\": \"${CURRENT_VERSION}\"/\"version\": \"${NEW_VERSION}\"/" "$NPM_PKG"
-
-        # Update optionalDependencies versions (platform-specific packages)
-        sed -i '' "s/\": \"${CURRENT_VERSION}\"/\": \"${NEW_VERSION}\"/g" "$NPM_PKG"
-
-        UPDATED_FILES+=("$NPM_PKG")
-        echo "  ✓ Updated crates/fob-native/package.json"
-    fi
-
-    echo "🔄 Updating lockfile..."
-    cargo check --workspace > /dev/null
-
-    # Show diff of all changed files
-    git diff "${UPDATED_FILES[@]}" Cargo.lock || true
-
-    if gum confirm "Commit and tag v${NEW_VERSION}?"; then
-        # Stage version files
-        git add "${UPDATED_FILES[@]}" Cargo.lock
-        
-        # Stage uncommitted changes if user chose to include them
-        if [ ${#DIRTY_FILES[@]} -gt 0 ]; then
-            echo "📝 Staging uncommitted changes..."
-            git add "${DIRTY_FILES[@]}"
-        fi
-        
-        git commit -m "chore: bump version to v${NEW_VERSION}"
-        git tag -a "v${NEW_VERSION}" -m "Release v${NEW_VERSION}"
-        echo "✨ Tagged v${NEW_VERSION}"
-
-        if gum confirm "Push to origin?"; then
-            git push && git push --tags
-        else
-            echo "💡 Run: git push && git push --tags"
-        fi
-    else
-        echo "⚠️  Changes applied to files but not committed."
-    fi
-
-# Build release artifacts for all targets
-release: build-native-release build-napi-release
+# Build release artifacts for all targets (local build only)
+release-build: build-native-release build-napi-release
     @echo "✓ Release build complete!"
 
-# Prepare for release (clean + ci + release)
-release-prepare: clean ci release
+# Prepare for release (clean + ci + build)
+release-prepare: clean ci release-build
     @echo "✓ Pre-release checks complete!"
 
 # =============================================================================
@@ -749,10 +492,6 @@ info:
     @echo ""
     @echo "Installed targets:"
     @rustup target list | grep installed
-    @echo ""
-    @echo "WASM tools:"
-    @command -v wasm-pack && echo "  wasm-pack: $(wasm-pack --version)" || echo "  wasm-pack: NOT INSTALLED"
-    @command -v wasmtime && echo "  wasmtime: $(wasmtime --version)" || echo "  wasmtime: NOT INSTALLED"
 
 # Count lines of code
 loc:
@@ -762,28 +501,4 @@ loc:
 # Show dependency tree for a package
 deps package:
     @cargo tree --package {{package}}
-
-# =============================================================================
-# Rolldown Publishing (fob_rolldown on crates.io)
-# =============================================================================
-
-# Reset to upstream + transform + build (for updating to new rolldown version)
-rolldown-update version tag="main":
-    @cargo run --package rolldown-vendor -- update --version {{version}} --tag {{tag}}
-
-# Transform + build (for re-running on already-reset repo)
-rolldown-build version:
-    @cargo run --package rolldown-vendor -- build --version {{version}}
-
-# Publish to crates.io
-rolldown-publish:
-    @cargo run --package rolldown-vendor -- publish
-
-# Dry-run publish (verify packaging)
-rolldown-publish-dry:
-    @cargo run --package rolldown-vendor -- publish --dry-run
-
-# Transform + build + publish-dry (verification without reset)
-rolldown-check version:
-    @cargo run --package rolldown-vendor -- check --version {{version}}
 

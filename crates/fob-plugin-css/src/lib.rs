@@ -25,12 +25,13 @@
 //! ```
 
 use anyhow::Context;
+use fob_bundler::{
+    HookLoadArgs, HookLoadOutput, HookLoadReturn, ModuleType, Plugin, PluginContext,
+};
 use lightningcss::{
     printer::PrinterOptions,
     stylesheet::{MinifyOptions, ParserOptions, StyleSheet},
 };
-use rolldown_common::ModuleType;
-use rolldown_plugin::{HookLoadArgs, HookLoadOutput, HookLoadReturn, Plugin, PluginContext};
 use std::borrow::Cow;
 use std::path::Path;
 
@@ -167,8 +168,8 @@ impl Plugin for FobCssPlugin {
     /// Declare which hooks this plugin uses
     ///
     /// This allows Rolldown to optimize by skipping unused hooks.
-    fn register_hook_usage(&self) -> rolldown_plugin::HookUsage {
-        use rolldown_plugin::HookUsage;
+    fn register_hook_usage(&self) -> fob_bundler::HookUsage {
+        use fob_bundler::HookUsage;
         // We only use the load hook
         HookUsage::Load
     }

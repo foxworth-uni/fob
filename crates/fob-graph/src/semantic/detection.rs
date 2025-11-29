@@ -1,7 +1,7 @@
 //! Unreachable code detection functions.
 
-use super::super::symbol::UnreachableCode;
 use super::super::ModuleId;
+use super::super::symbol::UnreachableCode;
 use super::visitor::UnreachableCodeVisitor as Visitor;
 
 // Note: Parsing is done inline in detect_unreachable_code to avoid
@@ -22,7 +22,7 @@ pub(super) fn detect_unreachable_with_visitor(
     };
 
     // Visit the AST to find unreachable code
-    use fob::oxc::Visit;
+    use fob_core::oxc::Visit;
     visitor.visit_program(program);
 
     visitor.unreachable

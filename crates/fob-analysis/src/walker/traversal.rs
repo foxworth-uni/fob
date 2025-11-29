@@ -9,12 +9,12 @@ use std::sync::Arc;
 
 use rustc_hash::FxHashSet;
 
-use fob::runtime::Runtime;
+use fob_core::runtime::Runtime;
 use fob_graph::collection::{CollectedImportKind, CollectionState};
 
+use super::WalkerError;
 use super::parser::ModuleParser;
 use super::validation::normalize_and_validate_path;
-use super::WalkerError;
 use crate::config::{AnalyzerConfig, ResolveResult};
 use crate::resolver::ModuleResolver;
 

@@ -50,8 +50,8 @@ use crate::runtime::{FileMetadata, Runtime, RuntimeError, RuntimeResult};
 /// # Example
 ///
 /// ```rust,ignore
-/// use fob::wasm_runtime::WasmRuntime;
-/// use fob::runtime::Runtime;
+/// use fob_core::wasm_runtime::WasmRuntime;
+/// use fob_core::runtime::Runtime;
 ///
 /// let runtime = WasmRuntime::new();
 /// let content = runtime.read_file(Path::new("file.txt")).await?;

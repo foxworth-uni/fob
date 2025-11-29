@@ -2,7 +2,7 @@
 
 use super::super::symbol::{Symbol, SymbolSpan, SymbolTable};
 use super::utils::{determine_symbol_kind, get_line_column};
-use fob::oxc::SemanticBuilder;
+use fob_core::oxc::SemanticBuilder;
 
 /// Extract symbols from parsed program using Oxc's semantic analysis.
 ///

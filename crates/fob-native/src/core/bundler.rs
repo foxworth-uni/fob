@@ -46,10 +46,7 @@ impl CoreBundler {
 
         let format = convert_format(self.config.format.clone());
         let cwd = self.runtime.get_cwd().map_err(|e| {
-            fob_bundler::Error::Io(io::Error::new(
-                io::ErrorKind::Other,
-                format!("Failed to get cwd: {}", e),
-            ))
+            fob_bundler::Error::Io(io::Error::other(format!("Failed to get cwd: {}", e)))
         })?;
 
         // Validate and normalize output directory

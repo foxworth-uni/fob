@@ -5,7 +5,7 @@
 
 use std::path::Path;
 
-use fob::runtime::{Runtime, RuntimeError};
+use fob_core::runtime::{Runtime, RuntimeError};
 use fob_graph::collection::{CollectedExport, CollectedImport};
 
 use super::WalkerError;

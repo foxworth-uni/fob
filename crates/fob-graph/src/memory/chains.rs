@@ -2,10 +2,10 @@
 
 use rustc_hash::FxHashMap as HashMap;
 
-use super::super::dependency_chain::{find_chains, ChainAnalysis, DependencyChain};
 use super::super::ModuleId;
+use super::super::dependency_chain::{ChainAnalysis, DependencyChain, find_chains};
 use super::graph::ModuleGraph;
-use fob::Result;
+use fob_core::Result;
 
 impl ModuleGraph {
     /// Find all dependency chains from entry points to a target module.

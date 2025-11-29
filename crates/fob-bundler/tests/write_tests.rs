@@ -15,8 +15,8 @@ use rolldown::BundleOutput;
 use rolldown_common::{Output, OutputAsset};
 use tempfile::TempDir;
 
-use fob_bundler::output::writer::write_bundle_to;
 use fob_bundler::Error;
+use fob_bundler::output::writer::write_bundle_to;
 
 /// Helper to create a mock BundleOutput for testing.
 fn create_mock_bundle(assets: Vec<(&str, &str)>) -> BundleOutput {

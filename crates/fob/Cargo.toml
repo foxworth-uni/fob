@@ -6,37 +6,21 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Fob foundation - Runtime abstraction and core types"
+description = "Fob - The unified API"
 
 [dependencies]
+# Core types (always available)
+fob-core = { path = "../fob-core", version = "0.2.0" }
 
-# MDX compilation support from Bunny (WASM-compatible)
-# bunny-mdx = { workspace = true }  # Moved to bunny repository
-# fob-plugin-mdx = { path = "../fob-plugin-mdx" }  # Moved to bunny repository
-
-# Core dependencies (all WASM-compatible)
-thiserror.workspace = true
-async-trait.workspace = true
-
-# OXC types for re-export (needed for oxc module)
-oxc_parser.workspace = true
-oxc_ast.workspace = true
-oxc_ast_visit.workspace = true
-oxc_allocator.workspace = true
-oxc_span.workspace = true
-oxc_semantic.workspace = true
+# Higher-level crates
+fob-graph = { path = "../fob-graph", version = "0.2.0" }
+fob-analysis = { path = "../fob-analysis", version = "0.2.0" }
+fob-bundler = { path = "../fob-bundler", version = "0.2.0" }
+fob-gen = { path = "../fob-gen", version = "0.2.0" }
+fob-config = { path = "../fob-config", version = "0.2.0" }
 
 [features]
 default = []
-
-# Test utilities (for integration tests)
-test-utils = []
-
-# Platform-specific dependencies for native runtime
-[target.'cfg(not(target_family = "wasm"))'.dependencies]
-tokio = { workspace = true, features = ["rt", "fs"] }
-fob-gen = { path = "../fob-gen" }
-fob-config = { path = "../fob-config" }
 
 [dev-dependencies]
 tempfile.workspace = true

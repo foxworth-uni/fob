@@ -5,7 +5,7 @@ use rustc_hash::FxHashMap as HashMap;
 use super::super::external_dep::ExternalDependency;
 use super::super::{Module, ModuleId};
 use super::graph::{GraphInner, ModuleGraph};
-use fob::{Error, Result};
+use fob_core::{Error, Result};
 
 impl ModuleGraph {
     /// Create a new empty graph.
@@ -32,8 +32,8 @@ impl ModuleGraph {
         collection: super::super::collection::CollectionState,
     ) -> Result<Self> {
         use super::super::from_collection::{
-            convert_collected_exports, convert_collected_imports, convert_collected_module_id,
-            has_star_export, infer_exports_kind, PendingImport,
+            PendingImport, convert_collected_exports, convert_collected_imports,
+            convert_collected_module_id, has_star_export, infer_exports_kind,
         };
         use super::super::module::ModuleFormat as FobModuleFormat;
         use super::super::semantic::analyze_symbols;

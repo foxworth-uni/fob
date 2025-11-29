@@ -55,7 +55,7 @@ pub struct FileMetadata {
 /// # Example
 ///
 /// ```rust,ignore
-/// use fob::runtime::{Runtime, RuntimeResult};
+/// use fob_core::runtime::{Runtime, RuntimeResult};
 /// use async_trait::async_trait;
 ///
 /// struct MyRuntime;

@@ -7,7 +7,7 @@
 mod query_impl {
     use oxc_allocator::Allocator;
     use oxc_ast::ast::*;
-    use oxc_ast_visit::{walk, Visit};
+    use oxc_ast_visit::{Visit, walk};
 
     /// Query builder for finding AST nodes
     pub struct QueryBuilder<'a> {

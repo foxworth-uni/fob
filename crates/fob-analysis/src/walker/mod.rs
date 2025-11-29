@@ -7,11 +7,11 @@ mod parser;
 mod traversal;
 mod validation;
 
-pub use validation::{normalize_and_validate_path, validate_path_within_cwd, PathTraversalError};
+pub use validation::{PathTraversalError, normalize_and_validate_path, validate_path_within_cwd};
 
 use std::sync::Arc;
 
-use fob::runtime::Runtime;
+use fob_core::runtime::Runtime;
 use fob_graph::collection::CollectionState;
 
 use crate::config::AnalyzerConfig;
@@ -24,7 +24,7 @@ pub enum WalkerError {
     ReadFile {
         path: std::path::PathBuf,
         #[source]
-        source: fob::runtime::RuntimeError,
+        source: fob_core::runtime::RuntimeError,
     },
 
     #[error("Maximum depth exceeded: {depth}")]

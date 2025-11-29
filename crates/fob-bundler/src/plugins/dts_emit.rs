@@ -127,7 +127,11 @@ impl Plugin for DtsEmitPlugin {
                             Ok(s) => s,
                             Err(e) => {
                                 // If we can't read the file, skip it but don't fail the whole build
-                                eprintln!("Warning: Failed to read TypeScript file for .d.ts generation: {} - {}", module_id.as_ref(), e);
+                                eprintln!(
+                                    "Warning: Failed to read TypeScript file for .d.ts generation: {} - {}",
+                                    module_id.as_ref(),
+                                    e
+                                );
                                 continue;
                             }
                         };

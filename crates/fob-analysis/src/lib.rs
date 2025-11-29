@@ -54,7 +54,7 @@
 //! ```rust,no_run
 //! use fob_analysis::Analyzer;
 //!
-//! # async fn example() -> fob::Result<()> {
+//! # async fn example() -> fob_core::Result<()> {
 //! // Create analyzer and configure entry points
 //! let analysis = Analyzer::new()
 //!     .entry("src/index.ts")  // Required: transitions to Configured state

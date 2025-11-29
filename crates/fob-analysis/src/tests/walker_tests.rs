@@ -3,7 +3,7 @@
 use super::test_helpers::*;
 use crate::config::AnalyzerConfig;
 use crate::walker::GraphWalker;
-use fob::test_utils::TestRuntime;
+use fob_core::test_utils::TestRuntime;
 use std::sync::Arc;
 use tempfile::TempDir;
 
@@ -573,10 +573,12 @@ export const clientHelper = () => 'client';
     assert!(astro_module.is_some());
     let astro = astro_module.unwrap();
     // Should have import from script tag
-    assert!(astro
-        .imports
-        .iter()
-        .any(|imp| imp.source == "./client-utils"));
+    assert!(
+        astro
+            .imports
+            .iter()
+            .any(|imp| imp.source == "./client-utils")
+    );
 }
 
 #[tokio::test]

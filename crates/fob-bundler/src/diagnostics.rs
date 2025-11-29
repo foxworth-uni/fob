@@ -7,8 +7,8 @@
 mod miette;
 
 pub use miette::{
-    calculate_enhanced_span, calculate_span_length, clear_source_cache, line_col_to_offset,
-    load_source, to_diagnostic_error, DiagnosticError,
+    DiagnosticError, calculate_enhanced_span, calculate_span_length, clear_source_cache,
+    line_col_to_offset, load_source, to_diagnostic_error,
 };
 
 use serde::{Deserialize, Serialize};

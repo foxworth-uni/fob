@@ -5,7 +5,7 @@ use std::{
 
 use path_clean::PathClean;
 use rolldown::{BundlerBuilder as RolldownBundlerBuilder, BundlerOptions, InputItem};
-use rolldown_plugin::{Plugin, __inner::SharedPluginable};
+use rolldown_plugin::{__inner::SharedPluginable, Plugin};
 use rustc_hash::FxHashMap;
 
 use crate::analysis::AnalyzedBundle;
@@ -13,7 +13,7 @@ use crate::builders::{asset_plugin::AssetDetectionPlugin, asset_registry::AssetR
 use crate::diagnostics;
 use crate::module_collection_plugin::ModuleCollectionPlugin;
 use crate::{Error, Result};
-use fob_analysis::{stats::compute_stats, AnalysisResult, CacheAnalysis, TransformationTrace};
+use fob_analysis::{AnalysisResult, CacheAnalysis, TransformationTrace, stats::compute_stats};
 
 /// Normalize an entry path by cleaning redundant `.` / `..` segments.
 pub(crate) fn normalize_entry_path(entry: impl AsRef<Path>) -> String {
@@ -120,7 +120,10 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
                         // On native, fall back to std::env::current_dir()
                         #[cfg(not(target_family = "wasm"))]
                         {
-                            eprintln!("[FOB_BUILD] Runtime get_cwd() failed: {}, falling back to std::env::current_dir()", e);
+                            eprintln!(
+                                "[FOB_BUILD] Runtime get_cwd() failed: {}, falling back to std::env::current_dir()",
+                                e
+                            );
                             std::env::current_dir()?
                         }
                     }

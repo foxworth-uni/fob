@@ -2,7 +2,7 @@
 
 use super::super::{Export, ModuleId};
 use super::graph::ModuleGraph;
-use fob::Result;
+use fob_core::Result;
 
 impl ModuleGraph {
     /// Apply a custom framework rule.
@@ -21,7 +21,7 @@ impl ModuleGraph {
     #[cfg(not(target_family = "wasm"))]
     pub fn apply_framework_rule(&self, rule: Box<dyn super::super::FrameworkRule>) -> Result<()> {
         let handle = tokio::runtime::Handle::try_current().map_err(|_| {
-            fob::Error::InvalidConfig(
+            fob_core::Error::InvalidConfig(
                 "FrameworkRule::apply requires a tokio runtime context".to_string(),
             )
         })?;

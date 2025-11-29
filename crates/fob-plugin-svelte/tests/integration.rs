@@ -3,8 +3,8 @@
 //! These tests verify the complete flow from Svelte component files through the parser
 //! to the rolldown plugin integration.
 
+use fob_bundler::{HookLoadArgs, Plugin};
 use fob_plugin_svelte::FobSveltePlugin;
-use rolldown_plugin::{HookLoadArgs, Plugin};
 use std::fs;
 use tempfile::TempDir;
 
@@ -41,7 +41,7 @@ button {
     let file_path = create_svelte_file(&dir, "Counter.svelte", svelte_content);
 
     let plugin = FobSveltePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -56,7 +56,7 @@ button {
     // Should be JavaScript
     assert!(matches!(
         output.module_type,
-        Some(rolldown_common::ModuleType::Js)
+        Some(fob_bundler::ModuleType::Js)
     ));
 }
 
@@ -91,7 +91,7 @@ onMount(async () => {
     let file_path = create_svelte_file(&dir, "DataLoader.svelte", svelte_content);
 
     let plugin = FobSveltePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -136,7 +136,7 @@ let user: User = {
     let file_path = create_svelte_file(&dir, "TypedComponent.svelte", svelte_content);
 
     let plugin = FobSveltePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -147,7 +147,7 @@ let user: User = {
     // Should be TypeScript
     assert!(matches!(
         output.module_type,
-        Some(rolldown_common::ModuleType::Ts)
+        Some(fob_bundler::ModuleType::Ts)
     ));
 
     // Should contain TypeScript-specific code
@@ -180,7 +180,7 @@ onMount(() => {
     let file_path = create_svelte_file(&dir, "ModuleTS.svelte", svelte_content);
 
     let plugin = FobSveltePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -204,7 +204,7 @@ onMount(() => {
     // Should be TypeScript
     assert!(matches!(
         output.module_type,
-        Some(rolldown_common::ModuleType::Ts)
+        Some(fob_bundler::ModuleType::Ts)
     ));
 }
 
@@ -225,7 +225,7 @@ h1 { color: blue; }
     let file_path = create_svelte_file(&dir, "NoScript.svelte", svelte_content);
 
     let plugin = FobSveltePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -239,7 +239,7 @@ h1 { color: blue; }
     // Should be JavaScript
     assert!(matches!(
         output.module_type,
-        Some(rolldown_common::ModuleType::Js)
+        Some(fob_bundler::ModuleType::Js)
     ));
 }
 
@@ -250,7 +250,7 @@ async fn test_non_svelte_file() {
     let file_path = create_svelte_file(&dir, "test.js", js_content);
 
     let plugin = FobSveltePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -273,7 +273,7 @@ let count = 0
     let file_path = create_svelte_file(&dir, "Broken.svelte", svelte_content);
 
     let plugin = FobSveltePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await;
@@ -307,7 +307,7 @@ async fn test_self_closing_script_tag() {
     let file_path = create_svelte_file(&dir, "ExternalScript.svelte", svelte_content);
 
     let plugin = FobSveltePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -340,7 +340,7 @@ function increment() {
     let file_path = create_svelte_file(&dir, "Commented.svelte", svelte_content);
 
     let plugin = FobSveltePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -373,7 +373,7 @@ $: {
     let file_path = create_svelte_file(&dir, "Reactive.svelte", svelte_content);
 
     let plugin = FobSveltePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();

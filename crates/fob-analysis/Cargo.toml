@@ -12,10 +12,10 @@ categories = ["development-tools", "parser-implementations"]
 
 [dependencies]
 # Runtime abstraction
-fob = { path = "../fob", features = ["test-utils"] }
+fob-core = { path = "../fob-core", version = "0.2.0", features = ["test-utils"] }
 
 # Graph data structures
-fob-graph = { path = "../fob-graph" }
+fob-graph = { path = "../fob-graph", version = "0.2.0" }
 
 # Core dependencies (all WASM-compatible)
 thiserror.workspace = true

@@ -1,5 +1,5 @@
-use crate::analysis::AnalyzedBundle;
 use crate::BundleOutput;
+use crate::analysis::AnalyzedBundle;
 use fob_analysis::{AnalysisResult, CacheAnalysis, TransformationTrace};
 use fob_graph::{GraphStatistics, ModuleGraph, ModuleId};
 

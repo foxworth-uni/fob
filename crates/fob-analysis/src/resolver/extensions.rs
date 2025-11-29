@@ -5,7 +5,7 @@
 
 use std::path::{Path, PathBuf};
 
-use fob::runtime::{Runtime, RuntimeError};
+use fob_core::runtime::{Runtime, RuntimeError};
 
 use crate::config::ResolveResult;
 

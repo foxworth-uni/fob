@@ -1,0 +1,6 @@
+# Rust toolchain configuration for fob monorepo
+# See https://rust-lang.github.io/rustup/overrides.html
+
+[toolchain]
+channel = "stable"
+components = ["rustfmt", "clippy"]

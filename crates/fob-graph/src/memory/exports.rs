@@ -7,7 +7,7 @@ use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
 use super::super::import::{ImportKind, ImportSpecifier};
 use super::super::{ExportKind, Module, ModuleId};
 use super::graph::{GraphInner, ModuleGraph};
-use fob::{Error, Result};
+use fob_core::{Error, Result};
 
 impl ModuleGraph {
     /// Discover unused exports, respecting framework markers and namespace imports.

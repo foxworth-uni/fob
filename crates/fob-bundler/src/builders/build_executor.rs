@@ -8,10 +8,10 @@ use rolldown::{BundlerOptions, GlobalsOutputOption, IsExternal, RawMinifyOptions
 use rustc_hash::FxHashMap;
 use std::path::{Path, PathBuf};
 
-use crate::analysis::AnalyzedBundle;
-use crate::builders::common::{execute_bundle, BundlePlan, EntrySpec};
-use crate::builders::unified::{BuildOptions, BuildOutput, BuildResult, EntryPoints};
 use crate::Result;
+use crate::analysis::AnalyzedBundle;
+use crate::builders::common::{BundlePlan, EntrySpec, execute_bundle};
+use crate::builders::unified::{BuildOptions, BuildOutput, BuildResult, EntryPoints};
 
 #[cfg(feature = "dts-generation")]
 use std::sync::Arc;

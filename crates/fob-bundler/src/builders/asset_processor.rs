@@ -571,9 +571,11 @@ mod tests {
         assert_eq!(report.replacements, 1);
         assert_eq!(report.rewritten_specifiers.len(), 1);
         assert_eq!(report.unused_specifiers.len(), 1);
-        assert!(report
-            .unused_specifiers
-            .contains(&"./unused.png".to_string()));
+        assert!(
+            report
+                .unused_specifiers
+                .contains(&"./unused.png".to_string())
+        );
     }
 
     #[test]

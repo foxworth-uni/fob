@@ -11,10 +11,8 @@ description = "Rolldown bundler plugin for CSS - process, bundle, and minify CSS
 # Lightning CSS for parsing, bundling, and minification
 lightningcss.workspace = true
 
-# Rolldown bundler integration (must match fob-core versions)
-rolldown = { workspace = true }
-rolldown_plugin = { workspace = true }
-rolldown_common = { workspace = true }
+# Fob bundler (re-exports rolldown types)
+fob-bundler = { path = "../fob-bundler", version = "0.2.0" }
 
 # Workspace dependencies
 anyhow.workspace = true

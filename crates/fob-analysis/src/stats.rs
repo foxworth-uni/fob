@@ -1,4 +1,4 @@
-use fob::Result;
+use fob_core::Result;
 use fob_graph::{GraphStatistics, ModuleGraph};
 
 pub fn compute_stats(graph: &ModuleGraph) -> Result<GraphStatistics> {

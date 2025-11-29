@@ -5,7 +5,7 @@
 use fob_analysis::Analyzer;
 
 #[tokio::main]
-async fn main() -> fob::Result<()> {
+async fn main() -> fob_core::Result<()> {
     // Configure path aliases
     // Common patterns:
     // - "@" → "./src" (TypeScript/JavaScript convention)

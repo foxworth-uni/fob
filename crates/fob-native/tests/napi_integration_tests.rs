@@ -3,7 +3,7 @@
 //! These tests verify the actual NAPI bindings work correctly.
 
 use fob_native::types::{OutputFormat, SourceMapMode};
-use fob_native::{bundle_single, version, BundleConfig, Fob};
+use fob_native::{BundleConfig, Fob, bundle_single, version};
 use tempfile::TempDir;
 
 /// Test helper to create a temporary project directory

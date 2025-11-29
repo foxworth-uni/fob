@@ -1,8 +1,8 @@
 //! Utility functions for semantic analysis.
 
-use super::super::symbol::SymbolKind;
 use super::super::SourceType;
-use fob::oxc::SourceType as OxcSourceType;
+use super::super::symbol::SymbolKind;
+use fob_core::oxc::SourceType as OxcSourceType;
 
 /// Convert Fob's SourceType to Oxc's SourceType.
 pub(super) fn convert_source_type(source_type: SourceType, filename: &str) -> OxcSourceType {

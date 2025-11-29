@@ -2,7 +2,7 @@
 
 use super::test_helpers::*;
 use crate::analyzer::Analyzer;
-use fob::test_utils::TestRuntime;
+use fob_core::test_utils::TestRuntime;
 use std::sync::Arc;
 use tempfile::TempDir;
 

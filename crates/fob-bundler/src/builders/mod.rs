@@ -41,7 +41,7 @@ pub mod asset_registry;
 pub mod asset_resolver;
 
 // Re-export public API
-pub use unified::{build, BuildOptions, BuildOutput, BuildResult, EntryPoints};
+pub use unified::{BuildOptions, BuildOutput, BuildResult, EntryPoints, build};
 
 #[cfg(feature = "dts-generation")]
 pub use unified::DtsOptions;

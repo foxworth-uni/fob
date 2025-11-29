@@ -3,10 +3,10 @@
 use crate::error::Result;
 use crate::format::FormatOptions;
 use oxc_allocator::Allocator;
-use oxc_ast::ast::*;
 use oxc_ast::AstBuilder;
+use oxc_ast::ast::*;
 use oxc_codegen::Codegen;
-use oxc_span::{SourceType, SPAN};
+use oxc_span::{SPAN, SourceType};
 use std::io::Write;
 
 /// Incremental program builder for streaming code generation

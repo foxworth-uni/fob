@@ -3,8 +3,8 @@
 //! These tests verify the complete flow from Vue SFC files through the parser
 //! to the rolldown plugin integration.
 
+use fob_bundler::{HookLoadArgs, Plugin};
 use fob_plugin_vue::FobVuePlugin;
-use rolldown_plugin::{HookLoadArgs, Plugin};
 use std::fs;
 use tempfile::TempDir;
 
@@ -44,7 +44,7 @@ div {
     let file_path = create_vue_file(&dir, "HelloWorld.vue", vue_content);
 
     let plugin = FobVuePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -60,7 +60,7 @@ div {
     // Should be JavaScript
     assert!(matches!(
         output.module_type,
-        Some(rolldown_common::ModuleType::Js)
+        Some(fob_bundler::ModuleType::Js)
     ));
 }
 
@@ -83,7 +83,7 @@ const increment = () => count.value++
     let file_path = create_vue_file(&dir, "Counter.vue", vue_content);
 
     let plugin = FobVuePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -121,7 +121,7 @@ export default defineComponent({
     let file_path = create_vue_file(&dir, "TypedComponent.vue", vue_content);
 
     let plugin = FobVuePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -132,7 +132,7 @@ export default defineComponent({
     // Should be TypeScript
     assert!(matches!(
         output.module_type,
-        Some(rolldown_common::ModuleType::Ts)
+        Some(fob_bundler::ModuleType::Ts)
     ));
 
     // Should contain TypeScript-specific code
@@ -163,7 +163,7 @@ const count = ref<number>(0)
     let file_path = create_vue_file(&dir, "MultiScript.vue", vue_content);
 
     let plugin = FobVuePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -187,7 +187,7 @@ const count = ref<number>(0)
     // Should upgrade to TypeScript (from setup script)
     assert!(matches!(
         output.module_type,
-        Some(rolldown_common::ModuleType::Ts)
+        Some(fob_bundler::ModuleType::Ts)
     ));
 }
 
@@ -207,7 +207,7 @@ div { color: red; }
     let file_path = create_vue_file(&dir, "NoScript.vue", vue_content);
 
     let plugin = FobVuePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -221,7 +221,7 @@ div { color: red; }
     // Should be JavaScript
     assert!(matches!(
         output.module_type,
-        Some(rolldown_common::ModuleType::Js)
+        Some(fob_bundler::ModuleType::Js)
     ));
 }
 
@@ -232,7 +232,7 @@ async fn test_non_vue_file() {
     let file_path = create_vue_file(&dir, "test.js", js_content);
 
     let plugin = FobVuePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -259,7 +259,7 @@ export default {
     let file_path = create_vue_file(&dir, "Broken.vue", vue_content);
 
     let plugin = FobVuePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await;
@@ -297,7 +297,7 @@ export default {
     let file_path = create_vue_file(&dir, "JsxComponent.vue", vue_content);
 
     let plugin = FobVuePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -308,7 +308,7 @@ export default {
     // Should be JSX module type
     assert!(matches!(
         output.module_type,
-        Some(rolldown_common::ModuleType::Jsx)
+        Some(fob_bundler::ModuleType::Jsx)
     ));
 
     // Should contain JSX syntax
@@ -331,7 +331,7 @@ const render = () => <div>Count: {count.value}</div>
     let file_path = create_vue_file(&dir, "TsxComponent.vue", vue_content);
 
     let plugin = FobVuePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -342,7 +342,7 @@ const render = () => <div>Count: {count.value}</div>
     // Should be TSX module type
     assert!(matches!(
         output.module_type,
-        Some(rolldown_common::ModuleType::Tsx)
+        Some(fob_bundler::ModuleType::Tsx)
     ));
 
     // Should contain TypeScript and JSX
@@ -364,7 +364,7 @@ async fn test_self_closing_script_tag() {
     let file_path = create_vue_file(&dir, "ExternalScript.vue", vue_content);
 
     let plugin = FobVuePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();
@@ -397,7 +397,7 @@ export default {
     let file_path = create_vue_file(&dir, "Commented.vue", vue_content);
 
     let plugin = FobVuePlugin::new();
-    let ctx = rolldown_plugin::PluginContext::new_napi_context();
+    let ctx = fob_bundler::PluginContext::new_napi_context();
     let args = HookLoadArgs { id: &file_path };
 
     let result = plugin.load(&ctx, &args).await.unwrap();

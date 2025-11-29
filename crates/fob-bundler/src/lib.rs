@@ -44,7 +44,7 @@
 //! ```
 
 // Re-export everything from foundation crate
-pub use fob::*;
+pub use fob_core::*;
 
 // Bundler-specific modules
 pub mod builders;
@@ -63,19 +63,26 @@ pub mod diagnostics;
 
 // Re-export core Rolldown types for library users
 pub use rolldown::{
-    BundleOutput, Bundler, BundlerOptions, InputItem, OutputFormat, Platform, SourceMapType,
+    BundleOutput, Bundler, BundlerBuilder, BundlerOptions, GlobalsOutputOption, InputItem,
+    IsExternal, OutputFormat, Platform, RawMinifyOptions, ResolveOptions, SourceMapType,
 };
 
-// Re-export output types for detailed bundle inspection
-pub use rolldown_common::{Output, OutputAsset, OutputChunk};
-
-// Re-export TypeScript-related types from rolldown_common
+// Re-export common types (CRITICAL: ModuleType for plugins)
 pub use rolldown_common::{
-    BundlerTransformOptions, DecoratorOptions, IsolatedDeclarationsOptions, TypeScriptOptions,
+    BundlerTransformOptions, DecoratorOptions, EmittedAsset, IsolatedDeclarationsOptions,
+    LogWithoutPlugin, ModuleType, Output, OutputAsset, OutputChunk, TypeScriptOptions,
+};
+
+// Re-export plugin types (CRITICAL for plugin authors)
+pub use rolldown_plugin::{
+    __inner::SharedPluginable, HookGenerateBundleArgs, HookLoadArgs, HookLoadOutput,
+    HookLoadReturn, HookNoopReturn, HookResolveIdArgs, HookResolveIdOutput, HookResolveIdReturn,
+    HookTransformArgs, HookTransformOutput, HookTransformReturn, HookUsage, Plugin, PluginContext,
+    SharedTransformPluginContext,
 };
 
 // Re-export bundler APIs
-pub use builders::{build, plugin, BuildOptions, BuildOutput, BuildResult, EntryPoints};
+pub use builders::{BuildOptions, BuildOutput, BuildResult, EntryPoints, build, plugin};
 
 #[cfg(feature = "dts-generation")]
 pub use builders::DtsOptions;
@@ -87,15 +94,13 @@ pub use plugins::DtsEmitPlugin;
 
 pub use output::{AppBuild, Bundle as JoyBundle, ComponentBuild, ImportMap};
 
-pub use rolldown_plugin::{Plugin, __inner::SharedPluginable};
-
 // Re-export AnalyzedBundle (bundler-specific analysis result)
 pub use analysis::AnalyzedBundle;
 
 // Test utilities (available in test builds for both unit and integration tests)
 // Re-export from fob foundation crate
 #[cfg(all(any(test, doctest), not(target_family = "wasm")))]
-pub use fob::test_utils;
+pub use fob_core::test_utils;
 
 /// Error types for fob-bundler operations.
 #[derive(Debug, thiserror::Error)]
@@ -153,7 +158,7 @@ pub enum Error {
 
     /// Error from foundation crate.
     #[error("Foundation error: {0}")]
-    Foundation(#[from] fob::Error),
+    Foundation(#[from] fob_core::Error),
 }
 
 /// Result type alias for fob-bundler operations.
@@ -245,7 +250,10 @@ impl miette::Diagnostic for Error {
                 "Output file already exists: {}\nUse --overwrite flag to replace existing files.",
                 msg
             ))),
-            Error::AssetNotFound { specifier, searched_from } => Some(Box::new(format!(
+            Error::AssetNotFound {
+                specifier,
+                searched_from,
+            } => Some(Box::new(format!(
                 "Could not find asset '{}'.\nSearched from: {}\nCheck that the file exists and the path is correct.",
                 specifier, searched_from
             ))),
@@ -253,15 +261,24 @@ impl miette::Diagnostic for Error {
                 "Security violation detected for path '{}': {}\nPaths must be within the project directory.",
                 path, reason
             ))),
-            Error::AssetTooLarge { path, size, max_size } => Some(Box::new(format!(
+            Error::AssetTooLarge {
+                path,
+                size,
+                max_size,
+            } => Some(Box::new(format!(
                 "Asset '{}' is too large: {} bytes (max: {} bytes).\nConsider splitting large assets or increasing the size limit.",
                 path, size, max_size
             ))),
             Error::Bundler(diagnostics) => {
                 if diagnostics.len() == 1 {
-                    diagnostics[0].help.as_ref().map(|h| Box::new(h.clone()) as Box<dyn std::fmt::Display>)
+                    diagnostics[0]
+                        .help
+                        .as_ref()
+                        .map(|h| Box::new(h.clone()) as Box<dyn std::fmt::Display>)
                 } else {
-                    Some(Box::new(format!("Multiple bundler errors occurred. See details below.")))
+                    Some(Box::new(
+                        "Multiple bundler errors occurred. See details below.".to_string(),
+                    ))
                 }
             }
             _ => None,

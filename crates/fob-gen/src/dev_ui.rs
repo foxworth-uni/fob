@@ -1,7 +1,7 @@
 //! Development UI generators for dev server HTML/JS
 
-use crate::error::Result;
 use crate::JsBuilder;
+use crate::error::Result;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Statement;
 

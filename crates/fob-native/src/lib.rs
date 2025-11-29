@@ -12,6 +12,6 @@ pub mod runtime;
 pub mod types;
 
 // Re-export public API
-pub use api::{bundle_single, version, BundleConfig, Fob};
+pub use api::{BundleConfig, Fob, bundle_single, version};
 pub use bundle_result::BundleResult;
 pub use types::{OutputFormat, SourceMapMode};

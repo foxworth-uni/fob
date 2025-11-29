@@ -21,7 +21,7 @@
 // Test utilities are allowed to use std::fs since they only run on native platforms
 #![allow(clippy::disallowed_methods)]
 
-use crate::{FileMetadata, Runtime, RuntimeError, RuntimeResult};
+use crate::runtime::{FileMetadata, Runtime, RuntimeError, RuntimeResult};
 use async_trait::async_trait;
 use std::path::{Path, PathBuf};
 
@@ -48,7 +48,7 @@ use std::path::{Path, PathBuf};
 ///
 /// ```rust
 /// use tempfile::TempDir;
-/// use fob::test_utils::TestRuntime;
+/// use fob_core::test_utils::TestRuntime;
 /// use std::fs;
 ///
 /// # #[tokio::test]
@@ -83,7 +83,7 @@ impl TestRuntime {
     ///
     /// ```rust
     /// use tempfile::TempDir;
-    /// use fob::test_utils::TestRuntime;
+    /// use fob_core::test_utils::TestRuntime;
     ///
     /// let temp = TempDir::new().unwrap();
     /// let runtime = TestRuntime::new(temp.path().to_path_buf());

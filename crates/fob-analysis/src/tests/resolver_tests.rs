@@ -3,7 +3,7 @@
 use super::test_helpers::*;
 use crate::resolver::ModuleResolver;
 use crate::{config::AnalyzerConfig, config::ResolveResult};
-use fob::test_utils::TestRuntime;
+use fob_core::test_utils::TestRuntime;
 use tempfile::TempDir;
 
 #[tokio::test]

@@ -8,7 +8,7 @@ mod metrics;
 mod visitor;
 
 // Use re-exported OXC types from the fob crate for version consistency
-use fob::oxc::ast::Program;
+use fob_core::oxc::ast::Program;
 use std::collections::HashMap;
 
 use crate::symbol::{SymbolMetadata, SymbolTable};
@@ -25,7 +25,7 @@ pub fn calculate_quality_metrics(program: &Program, source_text: &str, table: &m
         metrics: HashMap::new(),
     };
 
-    use fob::oxc::Visit;
+    use fob_core::oxc::Visit;
     calculator.visit_program(program);
 
     // Attach calculated metrics to matching symbols in the table
@@ -39,8 +39,8 @@ pub fn calculate_quality_metrics(program: &Program, source_text: &str, table: &m
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::semantic::analyze_symbols;
     use crate::SourceType;
+    use crate::semantic::analyze_symbols;
 
     #[test]
     fn test_calculate_function_line_count() {

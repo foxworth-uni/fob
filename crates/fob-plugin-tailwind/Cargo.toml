@@ -6,16 +6,15 @@ edition = "2021"
 rust-version = "1.75"
 license = "MIT OR Apache-2.0"
 description = "Rolldown bundler plugin for Tailwind CSS - process Tailwind CSS in Rolldown builds"
+publish = false
 
 [dependencies]
 # Tailwind Oxide from GitHub (not published to crates.io)
 # Note: This is experimental and not officially supported by TailwindLabs
 tailwindcss-oxide = { workspace = true }
 
-# Rolldown bundler integration (must match fob-core versions)
-rolldown = { workspace = true }
-rolldown_plugin = { workspace = true }
-rolldown_common = { workspace = true }
+# Fob bundler (re-exports rolldown types)
+fob-bundler = { path = "../fob-bundler", version = "0.2.0" }
 
 # Workspace dependencies
 anyhow.workspace = true

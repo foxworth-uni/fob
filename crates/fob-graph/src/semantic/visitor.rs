@@ -1,10 +1,10 @@
 //! AST visitor implementations for semantic analysis.
 
-use fob::oxc::{ast::Statement, GetSpan, Visit};
+use fob_core::oxc::{GetSpan, Visit, ast::Statement};
 use oxc_ast_visit::walk;
 
-use super::super::symbol::{SymbolSpan, UnreachableCode};
 use super::super::ModuleId;
+use super::super::symbol::{SymbolSpan, UnreachableCode};
 use super::utils::get_line_column;
 
 /// AST visitor that detects unreachable code.

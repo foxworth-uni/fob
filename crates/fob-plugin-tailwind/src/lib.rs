@@ -29,11 +29,11 @@
 //! ```
 
 use anyhow::{Context, Result};
-use parking_lot::Mutex;
-use rolldown_plugin::{
+use fob_bundler::{
     HookTransformArgs, HookTransformOutput, HookTransformReturn, Plugin,
     SharedTransformPluginContext,
 };
+use parking_lot::Mutex;
 use rustc_hash::FxHashSet;
 use std::borrow::Cow;
 use std::sync::Arc;
@@ -107,7 +107,7 @@ fn matches_content_patterns(id: &str, patterns: &[String]) -> bool {
     for pattern in patterns {
         // Normalize pattern: remove leading "./" and handle **
         let normalized_pattern = pattern.trim_start_matches("./");
-        
+
         // Simple matching: check if the file path contains the base directory
         // For patterns like "src/**/*.{js,jsx}", check if path starts with "src/"
         if normalized_pattern.contains("**") {
@@ -119,7 +119,7 @@ fn matches_content_patterns(id: &str, patterns: &[String]) -> bool {
             return true;
         }
     }
-    
+
     false
 }
 
@@ -132,13 +132,60 @@ fn is_valid_css_class(class: &str) -> bool {
 
     // Reject JavaScript keywords and common identifiers
     let js_keywords = [
-        "class", "function", "const", "let", "var", "if", "else", "for", "while",
-        "return", "import", "export", "default", "async", "await", "try", "catch",
-        "throw", "new", "this", "super", "extends", "implements", "interface",
-        "type", "enum", "namespace", "module", "declare", "abstract", "static",
-        "public", "private", "protected", "readonly", "get", "set", "of", "in",
-        "instanceof", "typeof", "void", "null", "undefined", "true", "false",
-        "break", "continue", "switch", "case", "do", "with", "debugger", "yield",
+        "class",
+        "function",
+        "const",
+        "let",
+        "var",
+        "if",
+        "else",
+        "for",
+        "while",
+        "return",
+        "import",
+        "export",
+        "default",
+        "async",
+        "await",
+        "try",
+        "catch",
+        "throw",
+        "new",
+        "this",
+        "super",
+        "extends",
+        "implements",
+        "interface",
+        "type",
+        "enum",
+        "namespace",
+        "module",
+        "declare",
+        "abstract",
+        "static",
+        "public",
+        "private",
+        "protected",
+        "readonly",
+        "get",
+        "set",
+        "of",
+        "in",
+        "instanceof",
+        "typeof",
+        "void",
+        "null",
+        "undefined",
+        "true",
+        "false",
+        "break",
+        "continue",
+        "switch",
+        "case",
+        "do",
+        "with",
+        "debugger",
+        "yield",
     ];
 
     // Check if it's a JS keyword (case-insensitive)
@@ -150,7 +197,11 @@ fn is_valid_css_class(class: &str) -> bool {
     // But allow valid Tailwind classes that might be camelCase
     // A simple heuristic: reject if it's purely alphanumeric and starts with uppercase
     // (likely a class name like "Component" or "React")
-    if class.chars().next().map(|c| c.is_uppercase()).unwrap_or(false)
+    if class
+        .chars()
+        .next()
+        .map(|c| c.is_uppercase())
+        .unwrap_or(false)
         && class.chars().all(|c| c.is_alphanumeric() || c == '_')
         && class.len() > 1
         && !class.contains('-')
@@ -317,8 +368,8 @@ impl Plugin for FobTailwindPlugin {
     /// Declare which hooks this plugin uses
     ///
     /// This allows Rolldown to optimize by skipping unused hooks.
-    fn register_hook_usage(&self) -> rolldown_plugin::HookUsage {
-        use rolldown_plugin::HookUsage;
+    fn register_hook_usage(&self) -> fob_bundler::HookUsage {
+        use fob_bundler::HookUsage;
         // We only use transform for both CSS processing and class scanning
         HookUsage::Transform
     }
@@ -420,7 +471,10 @@ impl Plugin for FobTailwindPlugin {
 
             // Check content patterns from config
             if !matches_content_patterns(&id, &config.content) {
-                debug!("[fob-tailwind] File does not match content patterns: {}", id);
+                debug!(
+                    "[fob-tailwind] File does not match content patterns: {}",
+                    id
+                );
                 return Ok(None);
             }
 

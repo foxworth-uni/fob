@@ -1,4 +1,4 @@
-use fob_graph::collection::{parse_module_structure, CollectedImportKind};
+use fob_graph::collection::{CollectedImportKind, parse_module_structure};
 
 #[test]
 fn test_regular_import() {

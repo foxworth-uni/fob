@@ -5,7 +5,7 @@ use std::path::Path;
 use super::super::external_dep::ExternalDependency;
 use super::super::{Import, Module, ModuleId};
 use super::graph::ModuleGraph;
-use fob::Result;
+use fob_core::Result;
 
 impl ModuleGraph {
     /// Retrieve a module by ID.
@@ -16,7 +16,7 @@ impl ModuleGraph {
     /// # Example
     /// ```
     /// # use fob_graph::ModuleGraph;
-    /// # fn example(graph: &ModuleGraph, module_id: &fob_graph::ModuleId) -> fob::Result<()> {
+    /// # fn example(graph: &ModuleGraph, module_id: &fob_graph::ModuleId) -> fob_core::Result<()> {
     /// let module = graph.module(module_id)?.unwrap();
     /// println!("Path: {}", module.path.display());
     /// # Ok(())

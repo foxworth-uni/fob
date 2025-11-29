@@ -1,8 +1,8 @@
 use std::fmt;
 
 use fob_graph::{
-    dependency_chain::DependencyChain, symbol::SymbolStatistics, ExternalDependency,
-    GraphStatistics, ModuleGraph, ModuleId, UnusedExport,
+    ExternalDependency, GraphStatistics, ModuleGraph, ModuleId, UnusedExport,
+    dependency_chain::DependencyChain, symbol::SymbolStatistics,
 };
 
 #[derive(Debug)]
@@ -18,12 +18,12 @@ pub struct AnalysisResult {
 
 impl AnalysisResult {
     /// Get all unused exports in the module graph.
-    pub fn unused_exports(&self) -> fob::Result<Vec<UnusedExport>> {
+    pub fn unused_exports(&self) -> fob_core::Result<Vec<UnusedExport>> {
         self.graph.unused_exports()
     }
 
     /// Get all external dependencies.
-    pub fn external_dependencies(&self) -> fob::Result<Vec<ExternalDependency>> {
+    pub fn external_dependencies(&self) -> fob_core::Result<Vec<ExternalDependency>> {
         self.graph.external_dependencies()
     }
 
@@ -40,14 +40,17 @@ impl AnalysisResult {
     /// Get all dependency chains to a target module.
     ///
     /// Useful for understanding why a module is included or finding circular dependencies.
-    pub fn dependency_chains_to(&self, target: &ModuleId) -> fob::Result<Vec<DependencyChain>> {
+    pub fn dependency_chains_to(
+        &self,
+        target: &ModuleId,
+    ) -> fob_core::Result<Vec<DependencyChain>> {
         self.graph.dependency_chains_to(target)
     }
 
     /// Find circular dependencies in the module graph.
     ///
     /// Returns chains that contain cycles (same module appears multiple times).
-    pub fn find_circular_dependencies(&self) -> fob::Result<Vec<DependencyChain>> {
+    pub fn find_circular_dependencies(&self) -> fob_core::Result<Vec<DependencyChain>> {
         let modules = self.graph.modules()?;
         let mut circular = Vec::new();
 

@@ -9,11 +9,11 @@ mod extensions;
 
 pub use algorithm::{is_external, resolve_local, resolve_with_alias};
 pub use aliases::resolve_path_alias;
-pub use extensions::{resolve_with_extensions, EXTENSIONS};
+pub use extensions::{EXTENSIONS, resolve_with_extensions};
 
 use std::path::{Path, PathBuf};
 
-use fob::runtime::{Runtime, RuntimeError};
+use fob_core::runtime::{Runtime, RuntimeError};
 
 use crate::config::{AnalyzerConfig, ResolveResult};
 
@@ -85,7 +85,7 @@ impl ModuleResolver {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fob::runtime::RuntimeError;
+    use fob_core::runtime::RuntimeError;
     use std::path::PathBuf;
 
     // Mock runtime for testing
@@ -109,9 +109,12 @@ mod tests {
             Ok(())
         }
 
-        async fn metadata(&self, path: &Path) -> Result<fob::runtime::FileMetadata, RuntimeError> {
+        async fn metadata(
+            &self,
+            path: &Path,
+        ) -> Result<fob_core::runtime::FileMetadata, RuntimeError> {
             if self.files.iter().any(|f| f == path) {
-                Ok(fob::runtime::FileMetadata {
+                Ok(fob_core::runtime::FileMetadata {
                     is_file: true,
                     is_dir: false,
                     size: 0,

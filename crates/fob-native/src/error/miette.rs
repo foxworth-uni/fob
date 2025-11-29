@@ -62,7 +62,10 @@ impl Diagnostic for FobErrorDiagnostic {
 
     fn help(&self) -> Option<Box<dyn std::fmt::Display + '_>> {
         match &self.error {
-            FobErrorDetails::MdxSyntax(e) => e.suggestion.as_ref().map(|s| Box::new(s.clone()) as Box<dyn std::fmt::Display>),
+            FobErrorDetails::MdxSyntax(e) => e
+                .suggestion
+                .as_ref()
+                .map(|s| Box::new(s.clone()) as Box<dyn std::fmt::Display>),
             FobErrorDetails::MissingExport(e) => {
                 if !e.available_exports.is_empty() {
                     Some(Box::new(format!(
@@ -71,33 +74,33 @@ impl Diagnostic for FobErrorDiagnostic {
                         e.suggestion.as_deref().unwrap_or("")
                     )) as Box<dyn std::fmt::Display>)
                 } else {
-                    e.suggestion.as_ref().map(|s| Box::new(s.clone()) as Box<dyn std::fmt::Display>)
+                    e.suggestion
+                        .as_ref()
+                        .map(|s| Box::new(s.clone()) as Box<dyn std::fmt::Display>)
                 }
             }
-            FobErrorDetails::CircularDependency(e) => {
-                Some(Box::new(format!(
-                    "Circular dependency detected:\n{}\n\nHint: Refactor to remove circular imports by extracting shared code into a separate module.",
-                    e.cycle_path.join(" -> ")
-                )) as Box<dyn std::fmt::Display>)
-            }
-            FobErrorDetails::InvalidEntry(e) => {
-                Some(Box::new(format!(
-                    "The entry point '{}' is invalid.\nHint: Check that the file exists and the path is correct.",
-                    e.path
-                )) as Box<dyn std::fmt::Display>)
-            }
-            FobErrorDetails::NoEntries(_) => {
-                Some(Box::new("At least one entry point is required.\nHint: Specify entry points in your config or use --entry flag.") as Box<dyn std::fmt::Display>)
-            }
-            FobErrorDetails::Plugin(e) => {
-                Some(Box::new(format!(
-                    "Plugin '{}' encountered an error.\nHint: Check the plugin configuration and ensure all dependencies are installed.",
-                    e.name
-                )) as Box<dyn std::fmt::Display>)
-            }
+            FobErrorDetails::CircularDependency(e) => Some(Box::new(format!(
+                "Circular dependency detected:\n{}\n\nHint: Refactor to remove circular imports by extracting shared code into a separate module.",
+                e.cycle_path.join(" -> ")
+            ))
+                as Box<dyn std::fmt::Display>),
+            FobErrorDetails::InvalidEntry(e) => Some(Box::new(format!(
+                "The entry point '{}' is invalid.\nHint: Check that the file exists and the path is correct.",
+                e.path
+            )) as Box<dyn std::fmt::Display>),
+            FobErrorDetails::NoEntries(_) => Some(Box::new(
+                "At least one entry point is required.\nHint: Specify entry points in your config or use --entry flag.",
+            ) as Box<dyn std::fmt::Display>),
+            FobErrorDetails::Plugin(e) => Some(Box::new(format!(
+                "Plugin '{}' encountered an error.\nHint: Check the plugin configuration and ensure all dependencies are installed.",
+                e.name
+            )) as Box<dyn std::fmt::Display>),
             FobErrorDetails::Transform(e) => {
                 if let Some(first) = e.diagnostics.first() {
-                    first.help.as_ref().map(|h| Box::new(h.clone()) as Box<dyn std::fmt::Display>)
+                    first
+                        .help
+                        .as_ref()
+                        .map(|h| Box::new(h.clone()) as Box<dyn std::fmt::Display>)
                 } else {
                     None
                 }
@@ -113,7 +116,7 @@ impl Diagnostic for FobErrorDiagnostic {
                     if let Some(source) = load_source(file) {
                         if let Some(offset) = line_col_to_offset(&source, line, column) {
                             let length = calculate_span_length(&source, offset);
-                            let span = SourceSpan::new(offset.into(), length.into());
+                            let span = SourceSpan::new(offset.into(), length);
                             return Some(Box::new(std::iter::once(LabeledSpan::new(
                                 Some("MDX syntax error".to_string()),
                                 span.offset(),
@@ -130,7 +133,7 @@ impl Diagnostic for FobErrorDiagnostic {
                         if let Some(offset) = line_col_to_offset(&source, first.line, first.column)
                         {
                             let length = calculate_span_length(&source, offset);
-                            let span = SourceSpan::new(offset.into(), length.into());
+                            let span = SourceSpan::new(offset.into(), length);
                             return Some(Box::new(std::iter::once(LabeledSpan::new(
                                 Some(first.message.clone()),
                                 span.offset(),

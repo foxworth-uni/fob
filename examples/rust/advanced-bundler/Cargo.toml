@@ -2,6 +2,7 @@
 name = "advanced-bundler-example"
 version = "0.1.0"
 edition = "2021"
+publish = false
 
 [[bin]]
 name = "advanced-bundler"

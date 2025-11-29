@@ -3,10 +3,10 @@ use std::sync::Arc;
 use std::path::PathBuf;
 
 use super::super::{
-    export::ExportKind,
-    import::{ImportKind, ImportSpecifier},
     Export, ExternalDependency, GraphStatistics, Import, Module, ModuleGraph, ModuleId, SourceSpan,
     SourceType,
+    export::ExportKind,
+    import::{ImportKind, ImportSpecifier},
 };
 
 fn module_with_exports(id: &str, export_names: &[&str]) -> Module {

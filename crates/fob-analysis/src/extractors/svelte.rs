@@ -6,7 +6,7 @@
 use memchr::memmem;
 
 use super::common::{
-    ExtractedScript, Extractor, ExtractorError, ScriptContext, MAX_FILE_SIZE, MAX_SCRIPT_TAGS,
+    ExtractedScript, Extractor, ExtractorError, MAX_FILE_SIZE, MAX_SCRIPT_TAGS, ScriptContext,
 };
 
 /// Svelte component script extractor
@@ -80,7 +80,7 @@ fn parse_script<'a>(
         None => {
             return Err(ExtractorError::UnclosedScriptTag {
                 position: script_start,
-            })
+            });
         }
     };
 
@@ -118,7 +118,7 @@ fn parse_script<'a>(
         None => {
             return Err(ExtractorError::UnclosedScriptTag {
                 position: script_start,
-            })
+            });
         }
     };
 

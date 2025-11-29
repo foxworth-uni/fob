@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use fob::runtime::Runtime;
-use fob::Result;
+use fob_core::Result;
+use fob_core::runtime::Runtime;
 
 /// Maximum allowed size for package.json files (10MB)
 const MAX_PACKAGE_JSON_SIZE: u64 = 10 * 1024 * 1024;
@@ -53,9 +53,9 @@ impl PackageJson {
     ///
     /// ```no_run
     /// # use fob_graph::PackageJson;
-    /// # use fob::runtime::Runtime;
+    /// # use fob_core::runtime::Runtime;
     /// # use std::path::PathBuf;
-    /// # async fn example<R: Runtime>(runtime: &R) -> fob::Result<()> {
+    /// # async fn example<R: Runtime>(runtime: &R) -> fob_core::Result<()> {
     /// let pkg = PackageJson::from_path(runtime, &PathBuf::from("./package.json")).await?;
     /// println!("Package: {:?}", pkg.name);
     /// # Ok(())
@@ -67,28 +67,28 @@ impl PackageJson {
 
         // Check file size before reading
         let metadata = runtime.metadata(path).await.map_err(|e| {
-            fob::Error::InvalidConfig(format!("Cannot read package.json metadata: {e}"))
+            fob_core::Error::InvalidConfig(format!("Cannot read package.json metadata: {e}"))
         })?;
 
         if metadata.size > MAX_PACKAGE_JSON_SIZE {
-            return Err(fob::Error::InvalidConfig(format!(
+            return Err(fob_core::Error::InvalidConfig(format!(
                 "package.json exceeds maximum size of {}MB",
                 MAX_PACKAGE_JSON_SIZE / 1024 / 1024
             )));
         }
 
         // Read and parse the file
-        let content_bytes = runtime
-            .read_file(path)
-            .await
-            .map_err(|e| fob::Error::InvalidConfig(format!("Failed to read package.json: {e}")))?;
-
-        let content = String::from_utf8(content_bytes).map_err(|e| {
-            fob::Error::InvalidConfig(format!("package.json contains invalid UTF-8: {e}"))
+        let content_bytes = runtime.read_file(path).await.map_err(|e| {
+            fob_core::Error::InvalidConfig(format!("Failed to read package.json: {e}"))
         })?;
 
-        let mut pkg: PackageJson = serde_json::from_str(&content)
-            .map_err(|e| fob::Error::InvalidConfig(format!("Invalid package.json format: {e}")))?;
+        let content = String::from_utf8(content_bytes).map_err(|e| {
+            fob_core::Error::InvalidConfig(format!("package.json contains invalid UTF-8: {e}"))
+        })?;
+
+        let mut pkg: PackageJson = serde_json::from_str(&content).map_err(|e| {
+            fob_core::Error::InvalidConfig(format!("Invalid package.json format: {e}"))
+        })?;
 
         pkg.path = path.to_path_buf();
         Ok(pkg)
@@ -106,7 +106,7 @@ impl PackageJson {
     /// ```no_run
     /// # use fob_graph::PackageJson;
     /// # use std::path::PathBuf;
-    /// # async fn example() -> fob::Result<()> {
+    /// # async fn example() -> fob_core::Result<()> {
     /// let pkg = PackageJson::from_path_native(&PathBuf::from("./package.json")).await?;
     /// println!("Package: {:?}", pkg.name);
     /// # Ok(())
@@ -117,7 +117,7 @@ impl PackageJson {
         note = "Use from_path with explicit runtime parameter for better platform compatibility"
     )]
     pub async fn from_path_native(path: &Path) -> Result<Self> {
-        use fob::NativeRuntime;
+        use fob_core::NativeRuntime;
         let runtime = NativeRuntime::new();
         Self::from_path(&runtime, path).await
     }
@@ -131,9 +131,9 @@ impl PackageJson {
     ///
     /// ```no_run
     /// # use fob_graph::PackageJson;
-    /// # use fob::runtime::Runtime;
+    /// # use fob_core::runtime::Runtime;
     /// # use std::path::PathBuf;
-    /// # async fn example<R: Runtime>(runtime: &R) -> fob::Result<()> {
+    /// # async fn example<R: Runtime>(runtime: &R) -> fob_core::Result<()> {
     /// let pkg = PackageJson::find_from_dir(runtime, &PathBuf::from("./src")).await?;
     /// println!("Package: {:?}", pkg.name);
     /// # Ok(())
@@ -153,7 +153,7 @@ impl PackageJson {
             if let Some(parent) = current.parent() {
                 current = parent.to_path_buf();
             } else {
-                return Err(fob::Error::InvalidConfig(
+                return Err(fob_core::Error::InvalidConfig(
                     "No package.json found in directory tree".to_string(),
                 ));
             }
@@ -172,7 +172,7 @@ impl PackageJson {
     /// ```no_run
     /// # use fob_graph::PackageJson;
     /// # use std::path::PathBuf;
-    /// # async fn example() -> fob::Result<()> {
+    /// # async fn example() -> fob_core::Result<()> {
     /// let pkg = PackageJson::find_from_dir_native(&PathBuf::from("./src")).await?;
     /// println!("Package: {:?}", pkg.name);
     /// # Ok(())
@@ -183,7 +183,7 @@ impl PackageJson {
         note = "Use find_from_dir with explicit runtime parameter for better platform compatibility"
     )]
     pub async fn find_from_dir_native(start_dir: &Path) -> Result<Self> {
-        use fob::NativeRuntime;
+        use fob_core::NativeRuntime;
         let runtime = NativeRuntime::new();
         Self::find_from_dir(&runtime, start_dir).await
     }
@@ -226,7 +226,7 @@ impl PackageJson {
 
         // Reject paths with suspicious patterns
         if path_str.contains("..") {
-            return Err(fob::Error::InvalidConfig(
+            return Err(fob_core::Error::InvalidConfig(
                 "Path contains '..' (potential directory traversal)".to_string(),
             ));
         }

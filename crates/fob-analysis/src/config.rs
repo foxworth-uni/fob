@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use rustc_hash::FxHashMap;
 
-use fob::runtime::Runtime;
+use fob_core::runtime::Runtime;
 
 /// Default maximum depth for graph traversal (DoS protection).
 ///

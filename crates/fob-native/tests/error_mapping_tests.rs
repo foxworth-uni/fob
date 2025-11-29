@@ -2,10 +2,10 @@
 //!
 //! Tests conversion from fob-bundler errors to FobErrorDetails.
 
+use fob_bundler::Error as BundlerError;
 use fob_bundler::diagnostics::{
     DiagnosticContext, DiagnosticKind, DiagnosticSeverity, ExtractedDiagnostic,
 };
-use fob_bundler::Error as BundlerError;
 use fob_native::error::FobErrorDetails;
 use fob_native::error_mapper::map_bundler_error;
 

@@ -25,6 +25,7 @@ pub struct Module {
     pub original_size: usize,
     pub bundled_size: Option<usize>,
     /// Symbol table from semantic analysis (intra-file dead code detection)
+    #[serde(with = "arc_symbol_table_serde")]
     pub symbol_table: Arc<SymbolTable>,
     /// Module format (ESM vs CJS) from rolldown analysis
     pub module_format: ModuleFormat,
@@ -56,6 +57,27 @@ mod arc_vec_serde {
         T: Deserialize<'de>,
     {
         Vec::deserialize(deserializer).map(Arc::new)
+    }
+}
+
+// Serde helper for Arc<SymbolTable>
+mod arc_symbol_table_serde {
+    use super::*;
+    use serde::de::Deserializer;
+    use serde::ser::Serializer;
+
+    pub fn serialize<S>(value: &Arc<SymbolTable>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        value.as_ref().serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Arc<SymbolTable>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        SymbolTable::deserialize(deserializer).map(Arc::new)
     }
 }
 
@@ -135,7 +157,7 @@ impl Module {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use fob::graph::ModuleId;
+    /// use fob_core::graph::ModuleId;
     ///
     /// let react_id = ModuleId::new("node_modules/react/index.js")?;
     /// let imports = module.imports_from(&react_id);

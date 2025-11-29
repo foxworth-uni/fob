@@ -1,6 +1,6 @@
 //! Metric calculation logic for code quality analysis.
 
-use fob::oxc::ast::{Class, ClassElement, Function, Statement};
+use fob_core::oxc::ast::{Class, ClassElement, Function, Statement};
 use std::collections::HashMap;
 
 use crate::symbol::CodeQualityMetadata;

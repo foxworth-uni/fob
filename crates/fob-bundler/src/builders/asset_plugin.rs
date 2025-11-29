@@ -405,7 +405,7 @@ impl AssetDetectionPlugin {
             };
 
             // Emit asset through Rolldown
-            let reference_id = ctx.emit_file(
+            let reference_id = match ctx.emit_file(
                 EmittedAsset {
                     name: resolved_path
                         .file_name()
@@ -417,7 +417,16 @@ impl AssetDetectionPlugin {
                 },
                 None,
                 None,
-            );
+            ) {
+                Ok(id) => id,
+                Err(e) => {
+                    ctx.warn(rolldown_common::LogWithoutPlugin {
+                        message: format!("Failed to emit asset {:?}: {}", resolved_path, e),
+                        ..Default::default()
+                    });
+                    continue;
+                }
+            };
 
             // Get final filename from Rolldown
             let final_filename = match ctx.get_file_name(&reference_id) {
@@ -514,8 +523,8 @@ async fn detect_assets(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::TestRuntime;
     use crate::Runtime;
+    use crate::test_utils::TestRuntime;
     use std::fs;
     use tempfile::TempDir;
 

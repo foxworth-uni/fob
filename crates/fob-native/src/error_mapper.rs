@@ -1,6 +1,6 @@
 use crate::error::{MdxSyntaxError, PluginError, *};
-use fob_bundler::diagnostics::{DiagnosticContext, DiagnosticKind, ExtractedDiagnostic};
 use fob_bundler::Error as BundlerError;
+use fob_bundler::diagnostics::{DiagnosticContext, DiagnosticKind, ExtractedDiagnostic};
 
 /// Map fob-bundler errors to structured FobErrorDetails
 pub fn map_bundler_error(error: &BundlerError) -> FobErrorDetails {

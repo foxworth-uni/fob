@@ -2,13 +2,13 @@
 
 use rustc_hash::FxHashMap as HashMap;
 
+use super::super::ModuleId;
 use super::super::symbol::{
     Symbol, SymbolMetadata, SymbolStatistics, UnreachableCode, UnusedSymbol,
 };
-use super::super::ModuleId;
 use super::graph::ModuleGraph;
 use super::types::{ClassMemberInfo, EnumMemberInfo};
-use fob::Result;
+use fob_core::Result;
 
 impl ModuleGraph {
     /// Get all unused symbols across the entire graph.

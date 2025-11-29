@@ -154,7 +154,7 @@ impl CollectionState {
 pub fn parse_module_structure(
     code: &str,
 ) -> Result<(Vec<CollectedImport>, Vec<CollectedExport>, bool), CollectionError> {
-    use fob_gen::{parse, ParseOptions, QueryBuilder};
+    use fob_gen::{ParseOptions, QueryBuilder, parse};
     use oxc_allocator::Allocator;
     use oxc_ast::ast::{Declaration, ModuleDeclaration};
 

@@ -2,9 +2,9 @@
 //!
 //! Tests path validation and directory traversal protection.
 
-use fob_native::types::OutputFormat;
 use fob_native::BundleConfig;
 use fob_native::Fob;
+use fob_native::types::OutputFormat;
 use tempfile::TempDir;
 
 #[tokio::test]

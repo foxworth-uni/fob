@@ -53,8 +53,8 @@ pub fn line_col_to_offset(source: &str, line: u32, column: u32) -> Option<usize>
     let mut offset = 0;
 
     // Sum up bytes for all lines before the target line
-    for i in 0..line_idx {
-        offset += lines[i].len() + 1; // +1 for newline
+    for line in lines.iter().take(line_idx) {
+        offset += line.len() + 1; // +1 for newline
     }
 
     // Add column offset (handle UTF-8 by using byte position)
@@ -182,7 +182,7 @@ impl Diagnostic for DiagnosticError {
             if let Some((_, source)) = &self.source_code {
                 if let Some(offset) = line_col_to_offset(source, line, column) {
                     let length = calculate_enhanced_span(source, offset, &self.diag.kind);
-                    let span = SourceSpan::new(offset.into(), length.into());
+                    let span = SourceSpan::new(offset.into(), length);
 
                     let label = match &self.diag.kind {
                         DiagnosticKind::MissingExport => "Missing export",

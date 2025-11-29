@@ -28,10 +28,9 @@
 
 use anyhow::Context;
 use bunny_mdx::{compile, MdxCompileOptions};
-use rolldown_common::ModuleType;
-use rolldown_plugin::{
+use fob_bundler::{
     HookLoadArgs, HookLoadOutput, HookLoadReturn, HookResolveIdArgs, HookResolveIdOutput,
-    HookResolveIdReturn, Plugin, PluginContext,
+    HookResolveIdReturn, ModuleType, Plugin, PluginContext,
 };
 use std::borrow::Cow;
 use std::path::PathBuf;
@@ -131,8 +130,8 @@ impl Plugin for BunnyMdxPlugin {
     /// Declare which hooks this plugin uses
     ///
     /// This allows Rolldown to optimize by skipping unused hooks.
-    fn register_hook_usage(&self) -> rolldown_plugin::HookUsage {
-        use rolldown_plugin::HookUsage;
+    fn register_hook_usage(&self) -> fob_bundler::HookUsage {
+        use fob_bundler::HookUsage;
         // We use resolve_id to intercept MDX imports before Rolldown normalizes paths,
         // and load to compile MDX files to JSX
         HookUsage::ResolveId | HookUsage::Load

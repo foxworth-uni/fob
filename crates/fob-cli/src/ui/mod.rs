@@ -127,37 +127,51 @@ mod tests {
     fn test_is_ci_with_ci_var() {
         std::env::set_var("CI", "true");
         assert!(is_ci());
-        unsafe { std::env::remove_var("CI"); }
+        unsafe {
+            std::env::remove_var("CI");
+        }
     }
 
     #[test]
     fn test_is_ci_with_github_actions() {
         std::env::set_var("GITHUB_ACTIONS", "true");
         assert!(is_ci());
-        unsafe { std::env::remove_var("GITHUB_ACTIONS"); }
+        unsafe {
+            std::env::remove_var("GITHUB_ACTIONS");
+        }
     }
 
     #[test]
     fn test_is_ci_with_gitlab() {
         std::env::set_var("GITLAB_CI", "true");
         assert!(is_ci());
-        unsafe { std::env::remove_var("GITLAB_CI"); }
+        unsafe {
+            std::env::remove_var("GITLAB_CI");
+        }
     }
 
     #[test]
     fn test_should_use_color_no_color() {
         std::env::set_var("NO_COLOR", "1");
-        unsafe { std::env::remove_var("FORCE_COLOR"); }
+        unsafe {
+            std::env::remove_var("FORCE_COLOR");
+        }
         assert!(!should_use_color());
-        unsafe { std::env::remove_var("NO_COLOR"); }
+        unsafe {
+            std::env::remove_var("NO_COLOR");
+        }
     }
 
     #[test]
     fn test_should_use_color_force_color() {
-        unsafe { std::env::remove_var("NO_COLOR"); }
+        unsafe {
+            std::env::remove_var("NO_COLOR");
+        }
         std::env::set_var("FORCE_COLOR", "1");
         assert!(should_use_color());
-        unsafe { std::env::remove_var("FORCE_COLOR"); }
+        unsafe {
+            std::env::remove_var("FORCE_COLOR");
+        }
     }
 
     #[test]

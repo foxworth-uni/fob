@@ -6,7 +6,7 @@
 use memchr::memmem;
 
 use super::common::{
-    ExtractedScript, Extractor, ExtractorError, ScriptContext, MAX_FILE_SIZE, MAX_SCRIPT_TAGS,
+    ExtractedScript, Extractor, ExtractorError, MAX_FILE_SIZE, MAX_SCRIPT_TAGS, ScriptContext,
 };
 
 /// Astro component script extractor
@@ -90,7 +90,7 @@ fn parse_frontmatter<'a>(
         None => {
             return Err(ExtractorError::UnclosedFrontmatter {
                 position: frontmatter_start,
-            })
+            });
         }
     };
 
@@ -148,7 +148,7 @@ fn parse_script<'a>(
         None => {
             return Err(ExtractorError::UnclosedScriptTag {
                 position: script_start,
-            })
+            });
         }
     };
 
@@ -174,7 +174,7 @@ fn parse_script<'a>(
         None => {
             return Err(ExtractorError::UnclosedScriptTag {
                 position: script_start,
-            })
+            });
         }
     };
 

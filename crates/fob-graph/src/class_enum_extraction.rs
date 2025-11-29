@@ -5,12 +5,12 @@
 //! JavaScript/TypeScript AST nodes.
 
 // Use re-exported OXC types from the fob crate for version consistency
-use fob::oxc::{
+use fob_core::oxc::{
+    Visit,
     ast::{
         Class, ClassElement, Expression, MethodDefinition, MethodDefinitionKind,
         PropertyDefinition, PropertyKey, TSAccessibility, TSEnumDeclaration, TSEnumMemberName,
     },
-    Visit,
 };
 use oxc_ast_visit::walk;
 

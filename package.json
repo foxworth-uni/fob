@@ -24,7 +24,7 @@
     "test:napi:advanced": "cd fixtures/napi-local-test && pnpm test:advanced",
     "test:napi:errors": "cd fixtures/napi-local-test && pnpm test:errors",
     "dev:napi": "pnpm build:napi:sync && pnpm test:napi",
-    "lint": "oxlint --ignore-pattern 'node_modules/**' --ignore-pattern '**/dist/**' --ignore-pattern '**/build/**' --ignore-pattern 'target/**' --ignore-pattern '**/pkg/**' --ignore-pattern '.turbo/**' --ignore-pattern '**/wasm/**/*.js' --ignore-pattern 'packages/playground/dist-tests/**' .",
+    "lint": "oxlint --ignore-pattern 'node_modules/**' --ignore-pattern '**/dist/**' --ignore-pattern '**/build/**' --ignore-pattern 'target/**' --ignore-pattern '**/pkg/**' --ignore-pattern '.turbo/**' --ignore-pattern '**/wasm/**/*.js' --ignore-pattern 'packages/playground/dist-tests/**' --ignore-pattern 'fixtures/**' --ignore-pattern '**/fixtures/**' .",
     "clean": "turbo run clean && cargo clean",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",

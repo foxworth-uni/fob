@@ -109,7 +109,7 @@ pub use jsx::JsxBuilder;
 pub use program_builder::ProgramBuilder;
 
 #[cfg(feature = "parser")]
-pub use parser::{parse, ParseDiagnostic, ParseOptions, ParsedProgram};
+pub use parser::{ParseDiagnostic, ParseOptions, ParsedProgram, parse};
 
 #[cfg(feature = "query-api")]
 pub use query::{CallQuery, ExportQuery, ImportQuery, JsxQuery, QueryBuilder};

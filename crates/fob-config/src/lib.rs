@@ -14,5 +14,5 @@ pub use error::*;
 pub use settings::*;
 
 // Re-export discovery and validation
-pub use discovery::{discover, discover_with_profile, ConfigDiscovery};
-pub use validation::{validate_fs, validate_schema, ConfigValidator, FsValidator, SchemaValidator};
+pub use discovery::{ConfigDiscovery, discover, discover_with_profile};
+pub use validation::{ConfigValidator, FsValidator, SchemaValidator, validate_fs, validate_schema};

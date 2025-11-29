@@ -4,8 +4,8 @@ use std::sync::Arc;
 
 use fob_analysis::{AnalysisResult, CacheAnalysis, TransformationTrace};
 
-use crate::builders::asset_registry::AssetRegistry;
 use crate::BundleOutput;
+use crate::builders::asset_registry::AssetRegistry;
 
 /// Analysis result combined with bundle output.
 pub struct AnalyzedBundle {
