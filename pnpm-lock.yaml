@@ -86,9 +86,9 @@ importers:
 
   fixtures/napi-local-test:
     dependencies:
-      fob-native-build:
+      '@fox-uni/fob':
         specifier: file:../../crates/fob-native
-        version: file:crates/fob-native
+        version: fob-native-build@file:crates/fob-native
 
   packages/fob-editor:
     dependencies:
