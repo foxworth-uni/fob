@@ -5,29 +5,15 @@ authors.workspace = true
 edition = "2021"
 rust-version = "1.75"
 license = "MIT OR Apache-2.0"
-description = "Rolldown bundler plugin for Tailwind CSS - process Tailwind CSS in Rolldown builds"
+description = "Rolldown bundler plugin for Tailwind CSS v4"
 publish = false
 
 [dependencies]
-# Tailwind Oxide from GitHub (not published to crates.io)
-# Note: This is experimental and not officially supported by TailwindLabs
-tailwindcss-oxide = { workspace = true }
-
-# Fob bundler (re-exports rolldown types)
 fob-bundler = { path = "../fob-bundler", version = "0.3.0" }
 
-# Workspace dependencies
 anyhow.workspace = true
 thiserror.workspace = true
-rustc-hash.workspace = true
-parking_lot.workspace = true
-regex.workspace = true
-lightningcss.workspace = true
-serde.workspace = true
 serde_json.workspace = true
-
-# Async runtime for CLI process spawning
-tokio = { workspace = true, features = ["process", "io-util", "time"] }
-
-# Logging
 tracing.workspace = true
+
+tokio = { workspace = true, features = ["process", "io-util", "time", "sync", "rt"] }

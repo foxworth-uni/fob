@@ -7,13 +7,13 @@ members = [
     "crates/fob-native",
     "crates/fob-cli",
     "crates/fob-plugin-css",
-    # "crates/fob-plugin-mdx",  # Moved to bunny repository
     "crates/fob-plugin-tailwind",
-    "crates/fob-plugin-vue",
-    "crates/fob-plugin-svelte",
-    "crates/fob-plugin-astro",
+    "crates/fob-plugin-mdx",
     "crates/fob-gen",
     "crates/fob-browser-test",
+    "crates/fob-mdx",
+    "crates/fob-mdx-wasm",
+    "crates/fob-mdx-runtime",
     "examples/rust/*",
 ]
 # Exclude WASM crate from default build (requires --target wasm32-wasip1)
@@ -24,13 +24,12 @@ default-members = [
     "crates/fob-native",
     "crates/fob-cli",
     "crates/fob-plugin-css",
-    # "crates/fob-plugin-mdx",  # Moved to bunny repository
     "crates/fob-plugin-tailwind",
-    "crates/fob-plugin-vue",
-    "crates/fob-plugin-svelte",
-    "crates/fob-plugin-astro",
+    "crates/fob-plugin-mdx",
     "crates/fob-gen",
     "crates/fob-browser-test",
+    "crates/fob-mdx",
+    "crates/fob-mdx-runtime",
     "examples/rust/*",
 ]
 
@@ -162,8 +161,19 @@ getrandom = { version = "0.3.4", features = ["wasm_js"] }
 # fob crates declare uuid as a direct dependency (inheriting workspace features)
 # This triggers feature unification, forcing rolldown's transitive uuid to use js feature
 
+# Internal crates
+fob-bundler = { path = "crates/fob-bundler", version = "0.3.0" }
+fob-native = { path = "crates/fob-native", version = "0.3.0" }
+fob-mdx = { path = "crates/fob-mdx", version = "0.3.0" }
+fob-mdx-wasm = { path = "crates/fob-mdx-wasm", version = "0.3.0" }
+fob-mdx-runtime = { path = "crates/fob-mdx-runtime", version = "0.3.0" }
+
+# MDX dependencies
+serde_yaml = "0.9"
+bon = "3.8.1"
+wasm-bindgen-test = "0.3.42"
+
 # External Workspace Dependencies
-# bunny-mdx = { git = "https://github.com/foxworth-uni/bunny", package = "bunny-mdx", branch = "main" }  # Moved to bunny repository
 tailwindcss-oxide = { git = "https://github.com/tailwindlabs/tailwindcss", package = "tailwindcss-oxide" }
 
 # Native Bindings

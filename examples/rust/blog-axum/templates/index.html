@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bunny Blog - Powered by Axum & MDX</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🐰 Bunny Blog</h1>
+            <p class="subtitle">A blazing-fast blog powered by Rust, Axum, and MDX</p>
+        </header>
+
+        <main>
+            {% if posts.is_empty() %}
+                <div class="empty-state">
+                    <h2>No posts yet</h2>
+                    <p>Create your first blog post in <code>examples/blog-axum/posts/</code></p>
+                </div>
+            {% else %}
+                <div class="posts-grid">
+                    {% for post in posts %}
+                        <article class="post-card">
+                            <h2><a href="/post/{{ post.slug }}">{{ post.title }}</a></h2>
+                            
+                            {% if let Some(description) = &post.description %}
+                                <p class="description">{{ description }}</p>
+                            {% endif %}
+                            
+                            <div class="meta">
+                                {% if let Some(author) = &post.author %}
+                                    <span class="author">By {{ author }}</span>
+                                {% endif %}
+                                
+                                {% if let Some(date) = &post.date %}
+                                    <span class="date">{{ date.format("%B %d, %Y") }}</span>
+                                {% endif %}
+                            </div>
+                            
+                            {% if !post.tags.is_empty() %}
+                                <div class="tags">
+                                    {% for tag in &post.tags %}
+                                        <span class="tag">{{ tag }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </article>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </main>
+
+        <footer>
+            <p>Built with <a href="https://github.com/nine-gen/bunny">Bunny</a> & <a href="https://github.com/tokio-rs/axum">Axum</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

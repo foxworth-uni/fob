@@ -1,19 +1,21 @@
 //! Core bundler implementation (no NAPI dependencies)
 
-use crate::api::config::BundleConfig;
+use crate::api::config::{BundleConfig, MdxOptions};
 use crate::conversion::format::convert_format;
 use crate::conversion::sourcemap::convert_sourcemap_mode;
 use crate::core::validator::validate_path;
 use crate::runtime::NativeRuntime;
 use fob_bundler::{BuildOptions, Runtime};
+use fob_plugin_mdx::FobMdxPlugin;
 use std::io;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 /// Core bundler (no NAPI dependencies)
 pub struct CoreBundler {
     config: BundleConfig,
     runtime: Arc<dyn Runtime>,
+    cwd: PathBuf,
 }
 
 impl CoreBundler {
@@ -27,10 +29,50 @@ impl CoreBundler {
             .ok_or_else(|| "Failed to determine working directory".to_string())?;
 
         let runtime: Arc<dyn Runtime> = Arc::new(
-            NativeRuntime::new(cwd).map_err(|e| format!("Failed to create runtime: {}", e))?,
+            NativeRuntime::new(cwd.clone())
+                .map_err(|e| format!("Failed to create runtime: {}", e))?,
         );
 
-        Ok(Self { config, runtime })
+        Ok(Self {
+            config,
+            runtime,
+            cwd,
+        })
+    }
+
+    /// Check if MDX should be enabled (explicit config or auto-detect from entries)
+    fn should_enable_mdx(config: &BundleConfig) -> bool {
+        // Explicitly configured
+        if config.mdx.is_some() {
+            return true;
+        }
+        // Auto-detect: any entry ends with .mdx
+        config.entries.iter().any(|e| e.ends_with(".mdx"))
+    }
+
+    /// Create MDX plugin from config options
+    fn create_mdx_plugin(mdx_opts: Option<&MdxOptions>, cwd: &Path) -> FobMdxPlugin {
+        let mut plugin = FobMdxPlugin::new(cwd.to_path_buf());
+
+        if let Some(opts) = mdx_opts {
+            if let Some(gfm) = opts.gfm {
+                plugin.gfm = gfm;
+            }
+            if let Some(footnotes) = opts.footnotes {
+                plugin.footnotes = footnotes;
+            }
+            if let Some(math) = opts.math {
+                plugin.math = math;
+            }
+            if let Some(ref jsx_runtime) = opts.jsx_runtime {
+                plugin.jsx_runtime = jsx_runtime.clone();
+            }
+            if let Some(use_default) = opts.use_default_plugins {
+                plugin.use_default_plugins = use_default;
+            }
+        }
+
+        plugin
     }
 
     /// Bundle the configured entries
@@ -120,6 +162,12 @@ impl CoreBundler {
             // Set minify
             if let Some(minify) = self.config.minify {
                 options = options.minify(minify);
+            }
+
+            // Auto-inject MDX plugin if needed
+            if Self::should_enable_mdx(&self.config) {
+                let mdx_plugin = Self::create_mdx_plugin(self.config.mdx.as_ref(), &self.cwd);
+                options = options.plugin(Arc::new(mdx_plugin));
             }
 
             options.build().await?

@@ -44,7 +44,7 @@
 //! - **Type-safe API**: Typestate pattern ensures analysis can only be performed
 //!   after configuration is complete
 //! - **Security**: Path traversal protection and DoS limits (max depth, max modules, file size)
-//! - **Framework Support**: Extracts JavaScript/TypeScript from Astro, Svelte, and Vue components
+//! - **Framework Support**: Extracts JavaScript/TypeScript from framework components
 //! - **Path Aliases**: Supports path alias resolution (e.g., `@` → `./src`)
 //! - **External Packages**: Mark npm packages as external to skip analysis
 //! - **Usage Analysis**: Compute export usage counts across the module graph

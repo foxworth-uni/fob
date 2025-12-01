@@ -165,7 +165,7 @@ fn test_framework_extraction_malformed(
     use std::path::Path;
 
     // Test that extraction doesn't panic on malformed input
-    let path = Path::new("test.astro");
+    let path = Path::new("test.js");
     let _result = extract_scripts(path, &content);
     // Should return Ok or Err, but never panic
 }

@@ -9,5 +9,7 @@
     "build:minified": "node bundler-minified.js",
     "build:watch": "node bundler-watch.js"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@fox-uni/fob": "workspace:*"
+  }
 }

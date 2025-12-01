@@ -92,6 +92,15 @@ pub use builders::DtsOptions;
 #[cfg_attr(docsrs, doc(cfg(feature = "dts-generation")))]
 pub use plugins::DtsEmitPlugin;
 
+// Logging utilities (optional, enabled with "logging" feature)
+#[cfg(feature = "logging")]
+#[cfg_attr(docsrs, doc(cfg(feature = "logging")))]
+pub mod logging;
+
+#[cfg(feature = "logging")]
+#[cfg_attr(docsrs, doc(cfg(feature = "logging")))]
+pub use logging::{LogLevel, init_logging, init_logging_from_env};
+
 pub use output::{AppBuild, Bundle as JoyBundle, ComponentBuild, ImportMap};
 
 // Re-export AnalyzedBundle (bundler-specific analysis result)

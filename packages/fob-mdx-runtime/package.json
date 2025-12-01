@@ -1,0 +1,64 @@
+{
+  "name": "@fob/mdx-runtime",
+  "version": "0.1.0",
+  "description": "MDX v3-compatible runtime for fob with React 19 support",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./mdx": {
+      "types": "./dist/mdx.d.ts"
+    },
+    "./styles/*": "./styles/*"
+  },
+  "scripts": {
+    "build": "tsc && cp src/mdx.d.ts dist/mdx.d.ts && echo '/// <reference types=\"./mdx.d.ts\" />' | cat - dist/index.d.ts > /tmp/index.d.ts && mv /tmp/index.d.ts dist/index.d.ts",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "mdx",
+    "markdown",
+    "react",
+    "jsx",
+    "fob",
+    "documentation"
+  ],
+  "author": "Taron Foxworth <fox@9generations.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/foxworth-uni/fob.git"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.0.0",
+    "typescript": "^5.9.0"
+  },
+  "files": [
+    "dist",
+    "styles",
+    "README.md",
+    "src/mdx.d.ts"
+  ],
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./dist/index.d.ts"
+      ],
+      "mdx": [
+        "./src/mdx.d.ts"
+      ]
+    }
+  }
+}

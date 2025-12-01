@@ -31,12 +31,27 @@ export interface BundleConfig {
   entries: Array<string>;
   /** Output directory (defaults to "dist" if not provided) */
   outputDir?: string;
-  /** Output format */
+  /** Output format ("esm" | "cjs" | "iife") */
   format?: OutputFormat;
-  /** Source map generation mode */
-  sourcemap?: SourceMapMode;
+  /**
+   * Source map generation mode
+   * Can be a boolean string ("true" = external, "false" = disabled) or a mode string ("inline" | "hidden" | "external")
+   * In JavaScript/TypeScript, pass as string: "true", "false", "inline", "hidden", or "external"
+   */
+  sourcemap?: string;
+  /** Packages to externalize (not bundled) */
+  external?: Array<string>;
+  /** Target platform ("browser" | "node", default: "browser") */
+  platform?: string;
+  /** Enable minification (default: false) */
+  minify?: boolean;
   /** Working directory for resolution */
   cwd?: string;
+  /**
+   * MDX compilation options
+   * If None, MDX is auto-enabled when .mdx entries are detected
+   */
+  mdx?: MdxOptions;
 }
 
 /** Result of a bundle operation */
@@ -90,6 +105,57 @@ export interface ChunkMetadata {
   css: Array<string>;
 }
 
+/**
+ * Initialize fob logging with specified level
+ *
+ * Call this once at application startup before any fob operations.
+ * It is safe to call multiple times - only the first call takes effect.
+ *
+ * @example
+ * ```typescript
+ * import { initLogging } from '@fob/native';
+ *
+ * initLogging('info');
+ * // or
+ * initLogging('debug');
+ * ```
+ */
+export declare function initLogging(level?: LogLevel | undefined | null): void;
+
+/**
+ * Initialize logging from RUST_LOG environment variable
+ *
+ * Falls back to Info level if RUST_LOG is not set or invalid.
+ * Call this once at application startup before any fob operations.
+ *
+ * @example
+ * ```typescript
+ * import { initLoggingFromEnv } from '@fob/native';
+ *
+ * // Set RUST_LOG=fob=debug before running
+ * initLoggingFromEnv();
+ * ```
+ */
+export declare function initLoggingFromEnv(): void;
+
+/**
+ * Log level for fob output
+ *
+ * Controls the verbosity of logging during bundling operations.
+ */
+export declare const enum LogLevel {
+  /** No logging output */
+  Silent = 'Silent',
+  /** Only errors */
+  Error = 'Error',
+  /** Errors and warnings */
+  Warn = 'Warn',
+  /** Errors, warnings, and info (default) */
+  Info = 'Info',
+  /** All logs including debug */
+  Debug = 'Debug',
+}
+
 /** Bundle manifest */
 export interface ManifestInfo {
   /** Entry mappings */
@@ -98,6 +164,40 @@ export interface ManifestInfo {
   chunks: Record<string, ChunkMetadata>;
   /** Version */
   version: string;
+}
+
+/**
+ * MDX compilation options
+ *
+ * Configure how MDX files are compiled to JSX. All options are optional
+ * and have sensible defaults. MDX is auto-enabled when .mdx entries are detected.
+ */
+export interface MdxOptions {
+  /**
+   * Enable GitHub Flavored Markdown (tables, strikethrough, task lists)
+   * Default: true
+   */
+  gfm?: boolean;
+  /**
+   * Enable footnotes
+   * Default: true
+   */
+  footnotes?: boolean;
+  /**
+   * Enable math support ($inline$ and $$block$$)
+   * Default: true
+   */
+  math?: boolean;
+  /**
+   * JSX runtime module path
+   * Default: "react/jsx-runtime"
+   */
+  jsxRuntime?: string;
+  /**
+   * Use default plugins (heading IDs, image optimization)
+   * Default: true
+   */
+  useDefaultPlugins?: boolean;
 }
 
 /** Module information */
@@ -118,18 +218,6 @@ export declare const enum OutputFormat {
   Cjs = 'Cjs',
   /** Immediately Invoked Function Expression format */
   Iife = 'Iife',
-}
-
-/** Source map generation mode */
-export declare const enum SourceMapMode {
-  /** Generate external source map file (.map) */
-  External = 'External',
-  /** Generate inline source map (data URI in bundle) */
-  Inline = 'Inline',
-  /** Generate source map but don't reference it in bundle */
-  Hidden = 'Hidden',
-  /** Disable source map generation */
-  Disabled = 'Disabled',
 }
 
 /** Get the bundler version */

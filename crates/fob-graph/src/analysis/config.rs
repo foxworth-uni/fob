@@ -106,7 +106,7 @@ pub const MAX_FILE_SIZE: usize = 10 * 1024 * 1024;
 
 /// Maximum number of script tags to process in framework files.
 ///
-/// Framework files (Astro, Svelte, Vue) can contain multiple script blocks.
+/// Framework files can contain multiple script blocks.
 /// This limit prevents processing files with excessive script tags.
 pub const MAX_SCRIPT_TAGS: usize = 100;
 

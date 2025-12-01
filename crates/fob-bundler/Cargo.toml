@@ -49,11 +49,18 @@ regex.workspace = true
 # UUID for WASM compatibility
 uuid.workspace = true
 
+# Logging (optional, enabled with "logging" feature)
+tracing-subscriber = { workspace = true, optional = true }
+
 [features]
 default = []
 
 # TypeScript declaration file generation (requires native target)
 dts-generation = ["dep:oxc_isolated_declarations", "dep:oxc_codegen"]
+
+# Logging utilities - provides init_logging() convenience functions
+# Without this feature, fob only emits tracing events (library pattern)
+logging = ["dep:tracing-subscriber"]
 
 # Test utilities (for integration tests)
 test-utils = []

@@ -34,6 +34,7 @@ async fn test_fob_constructor_with_valid_config() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let result = Fob::new(config);
@@ -53,6 +54,7 @@ async fn test_fob_constructor_rejects_empty_entries() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = Fob::new(config);
@@ -88,6 +90,7 @@ async fn test_fob_bundle_success() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -125,6 +128,7 @@ async fn test_fob_bundle_with_all_formats() {
             external: None,
             minify: None,
             platform: None,
+            mdx: None,
         };
 
         let bundler = Fob::new(config).unwrap();
@@ -156,6 +160,7 @@ async fn test_fob_bundle_with_all_sourcemap_modes() {
             external: None,
             minify: None,
             platform: None,
+            mdx: None,
         };
 
         let bundler = Fob::new(config).unwrap();
@@ -180,6 +185,7 @@ async fn test_fob_bundle_multiple_entries() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -257,6 +263,7 @@ async fn test_fob_bundle_error_serialization() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -305,6 +312,7 @@ async fn test_fob_bundle_with_defaults() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = Fob::new(config).unwrap();

@@ -9,11 +9,7 @@ publish = false
 description = "Rolldown bundler plugin for MDX - compile MDX files in Rolldown builds"
 
 [dependencies]
-# Cross-workspace dependency to bunny-mdx
-bunny-mdx = { workspace = true }
-
-# Fob bundler (re-exports rolldown types)
-fob-bundler = { path = "../fob-bundler", version = "0.2.0" }
-
-# Workspace dependencies
+fob-mdx = { workspace = true }
+fob-bundler = { workspace = true }
 anyhow.workspace = true
+tracing.workspace = true

@@ -1,0 +1,46 @@
+{
+  "name": "@fob/mdx-highlight",
+  "version": "0.1.0",
+  "description": "Shiki-based syntax highlighting for fob MDX",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "mdx",
+    "syntax-highlighting",
+    "shiki",
+    "code",
+    "fob"
+  ],
+  "author": "Taron Foxworth <fox@9generations.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/foxworth-uni/fob.git"
+  },
+  "dependencies": {
+    "shiki": "^1.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.19",
+    "typescript": "^5.9.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}

@@ -1,7 +1,7 @@
 //! Common types and traits for framework extractors.
 //!
 //! This module defines the unified interface for extracting JavaScript/TypeScript
-//! from framework-specific file formats (Astro, Svelte, Vue).
+//! from framework-specific file formats.
 
 /// Represents JavaScript/TypeScript source code extracted from a framework file.
 ///
@@ -43,24 +43,10 @@ impl<'a> ExtractedScript<'a> {
 
 /// Context information about an extracted script block.
 ///
-/// Different frameworks use different contexts to distinguish script blocks:
-/// - Astro: Frontmatter vs script tags
-/// - Svelte: Module context vs component instance
-/// - Vue: Setup script vs regular script
+/// Different frameworks use different contexts to distinguish script blocks.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ScriptContext {
-    /// Astro frontmatter block (runs on server during build/SSR)
-    AstroFrontmatter,
-    /// Astro script tag (runs in browser)
-    AstroScript,
-    /// Svelte module context block (runs once when module is imported)
-    SvelteModule,
-    /// Svelte component instance script (runs for each component instance)
-    SvelteComponent,
-    /// Vue setup script (Composition API with compile-time sugar)
-    VueSetup,
-    /// Vue regular script (Options API or general setup)
-    VueRegular,
+    // Framework-specific contexts can be added here as needed
 }
 
 /// Unified error type for all extractors.
@@ -91,13 +77,6 @@ pub enum ExtractorError {
         position: usize,
     },
 
-    /// Frontmatter opened but never closed (Astro-specific)
-    #[error("Unclosed frontmatter starting at byte position {position}")]
-    UnclosedFrontmatter {
-        /// Byte position where the unclosed frontmatter begins
-        position: usize,
-    },
-
     /// File contains invalid UTF-8
     #[error("Invalid UTF-8 encoding in file")]
     InvalidUtf8,
@@ -109,8 +88,7 @@ pub enum ExtractorError {
 
 /// Trait for framework-specific extractors.
 ///
-/// Each framework (Astro, Svelte, Vue) implements this trait to provide
-/// script extraction capabilities.
+/// Frameworks can implement this trait to provide script extraction capabilities.
 pub trait Extractor {
     /// Extract JavaScript/TypeScript scripts from the given source code.
     ///
@@ -123,7 +101,7 @@ pub trait Extractor {
     /// A vector of extracted scripts, or an error if extraction fails.
     fn extract<'a>(&self, source: &'a str) -> Result<Vec<ExtractedScript<'a>>, ExtractorError>;
 
-    /// Get the file extension this extractor handles (e.g., ".astro", ".svelte", ".vue").
+    /// Get the file extension this extractor handles (e.g., ".js", ".ts").
     fn file_extension(&self) -> &'static str;
 }
 

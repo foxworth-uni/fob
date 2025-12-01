@@ -1,0 +1,47 @@
+[package]
+name = "fob-mdx-wasm"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "WASM bindings for fob-mdx - compile MDX to JSX in the browser"
+
+[lib]
+name = "fob_mdx_wasm"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+console_error_panic_hook = ["dep:console_error_panic_hook"]
+
+[dependencies]
+fob-mdx = { workspace = true }
+
+# WASM bindings
+wasm-bindgen = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
+js-sys = { workspace = true }
+
+# Serialization for options and results
+serde = { workspace = true }
+serde_json = { workspace = true }  # Used for frontmatter data
+
+# Optional features
+console_error_panic_hook = { workspace = true, optional = true }
+
+[dev-dependencies]
+wasm-bindgen-test = { workspace = true }
+
+[package.metadata.wasm-pack.profile.release]
+# wasm-opt optimizations for production builds
+wasm-opt = [
+    "-Oz",                                  # Aggressive size optimization
+    "--enable-bulk-memory",                 # Enable bulk memory operations
+    "--enable-nontrapping-float-to-int",    # Enable non-trapping conversions
+    "--enable-sign-ext",                    # Enable sign extension
+    "--enable-mutable-globals",             # Enable mutable globals
+]
+

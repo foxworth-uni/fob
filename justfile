@@ -243,10 +243,10 @@ compile-browser:
     @cargo check --package fob-browser-test
 
 # Plugins
-test-plugins: test-plugin-css test-plugin-tailwind test-plugin-vue test-plugin-svelte test-plugin-astro
+test-plugins: test-plugin-css test-plugin-tailwind
     @echo "✓ All plugin tests passed!"
 
-compile-plugins: compile-plugin-css compile-plugin-tailwind compile-plugin-vue compile-plugin-svelte compile-plugin-astro
+compile-plugins: compile-plugin-css compile-plugin-tailwind
     @echo "✓ All plugins compile!"
 
 test-plugin-css:
@@ -261,23 +261,6 @@ test-plugin-tailwind:
 compile-plugin-tailwind:
     @cargo check --package fob-plugin-tailwind --all-features
 
-test-plugin-vue:
-    @cargo test --package fob-plugin-vue --all-features
-
-compile-plugin-vue:
-    @cargo check --package fob-plugin-vue --all-features
-
-test-plugin-svelte:
-    @cargo test --package fob-plugin-svelte --all-features
-
-compile-plugin-svelte:
-    @cargo check --package fob-plugin-svelte --all-features
-
-test-plugin-astro:
-    @cargo test --package fob-plugin-astro --all-features
-
-compile-plugin-astro:
-    @cargo check --package fob-plugin-astro --all-features
 
 # =============================================================================
 # Installation

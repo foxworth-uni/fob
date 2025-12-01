@@ -1,6 +1,6 @@
-//! Rolldown plugin implementation for bunny-mdx
+//! Rolldown plugin implementation for fob-mdx
 //!
-//! This module provides a real Rolldown plugin that integrates bunny-mdx MDX compilation
+//! This module provides a real Rolldown plugin that integrates fob-mdx MDX compilation
 //! into the Rolldown bundler pipeline. It uses the `load` hook to intercept `.mdx` files
 //! and transform them to JSX before Rolldown processes them.
 //!
@@ -15,49 +15,57 @@
 //! ## Example Usage
 //!
 //! ```rust,no_run
-//! use fob_plugin_mdx::BunnyMdxPlugin;
+//! use fob_plugin_mdx::FobMdxPlugin;
 //! use std::sync::Arc;
 //! use std::path::PathBuf;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Use with your Rolldown bundler configuration
-//! let plugin = Arc::new(BunnyMdxPlugin::new(PathBuf::from(".")));
+//! let plugin = Arc::new(FobMdxPlugin::new(PathBuf::from(".")));
 //! # Ok(())
 //! # }
 //! ```
 
 use anyhow::Context;
-use bunny_mdx::{compile, MdxCompileOptions};
 use fob_bundler::{
     HookLoadArgs, HookLoadOutput, HookLoadReturn, HookResolveIdArgs, HookResolveIdOutput,
     HookResolveIdReturn, ModuleType, Plugin, PluginContext,
 };
+use fob_mdx::{compile, MdxCompileOptions};
 use std::borrow::Cow;
 use std::path::PathBuf;
 
 /// Rolldown plugin that compiles MDX files to JSX
 ///
-/// This plugin intercepts `.mdx` file loading and compiles them to JSX using bunny-mdx,
+/// This plugin intercepts `.mdx` file loading and compiles them to JSX using fob-mdx,
 /// then returns the JSX to Rolldown for normal bundling.
 ///
 /// # Architecture
 ///
 /// ```text
-/// .mdx file → load() hook → bunny_mdx::compile() → JSX → Rolldown parser → Bundle
+/// .mdx file → load() hook → fob_mdx::compile() → JSX → Rolldown parser → Bundle
 /// ```
 ///
 /// The plugin is async-compatible (required by Rolldown) but performs synchronous
 /// compilation internally, which is acceptable for build-time transforms.
 #[derive(Debug, Clone)]
-pub struct BunnyMdxPlugin {
-    /// Configuration options for MDX compilation
-    options: MdxCompileOptions,
+pub struct FobMdxPlugin {
+    /// Enable GFM (tables, strikethrough, task lists)
+    pub gfm: bool,
+    /// Enable footnotes
+    pub footnotes: bool,
+    /// Enable math support
+    pub math: bool,
+    /// JSX runtime module
+    pub jsx_runtime: String,
+    /// Use default plugins (heading IDs, image optimization)
+    pub use_default_plugins: bool,
     /// Project root for resolving relative file paths
     project_root: PathBuf,
 }
 
-impl BunnyMdxPlugin {
-    /// Create a new BunnyMdxPlugin with default options
+impl FobMdxPlugin {
+    /// Create a new FobMdxPlugin with default options
     ///
     /// Default configuration includes:
     /// - All MDX features enabled (GFM, footnotes, math)
@@ -71,60 +79,47 @@ impl BunnyMdxPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use fob_plugin_mdx::BunnyMdxPlugin;
+    /// use fob_plugin_mdx::FobMdxPlugin;
     /// use std::path::PathBuf;
     ///
-    /// let plugin = BunnyMdxPlugin::new(PathBuf::from("/path/to/project"));
+    /// let plugin = FobMdxPlugin::new(PathBuf::from("/path/to/project"));
     /// ```
     pub fn new(project_root: PathBuf) -> Self {
         Self {
-            options: MdxCompileOptions::new()
-                .with_all_features()
-                .with_default_plugins(),
+            gfm: true,
+            footnotes: true,
+            math: true,
+            jsx_runtime: "react/jsx-runtime".to_string(),
+            use_default_plugins: true,
             project_root,
         }
     }
 
-    /// Create a new BunnyMdxPlugin with custom options
-    ///
-    /// Use this when you need fine-grained control over MDX compilation,
-    /// such as disabling certain features or adding custom plugins.
-    ///
-    /// # Arguments
-    ///
-    /// * `options` - Custom MDX compilation options
-    /// * `project_root` - The root directory of the project, used to resolve relative file paths
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use fob_plugin_mdx::BunnyMdxPlugin;
-    /// use bunny_mdx::MdxCompileOptions;
-    /// use std::path::PathBuf;
-    ///
-    /// let mut opts = MdxCompileOptions::new();
-    /// opts.gfm = true;
-    /// opts.math = false;
-    /// let plugin = BunnyMdxPlugin::with_options(opts, PathBuf::from("/path/to/project"));
-    /// ```
-    pub fn with_options(options: MdxCompileOptions, project_root: PathBuf) -> Self {
-        Self {
-            options,
-            project_root,
-        }
+    /// Create MdxCompileOptions from plugin config
+    fn create_options(&self, filepath: Option<String>) -> MdxCompileOptions {
+        let mut opts = MdxCompileOptions::builder()
+            .gfm(self.gfm)
+            .footnotes(self.footnotes)
+            .math(self.math)
+            .jsx_runtime(self.jsx_runtime.clone())
+            .use_default_plugins(self.use_default_plugins)
+            .build();
+
+        opts.filepath = filepath;
+        opts
     }
 }
 
-impl Default for BunnyMdxPlugin {
+impl Default for FobMdxPlugin {
     fn default() -> Self {
         Self::new(PathBuf::from("."))
     }
 }
 
-impl Plugin for BunnyMdxPlugin {
+impl Plugin for FobMdxPlugin {
     /// Returns the plugin name for debugging and logging
     fn name(&self) -> Cow<'static, str> {
-        "bunny-mdx".into()
+        "fob-mdx".into()
     }
 
     /// Declare which hooks this plugin uses
@@ -216,7 +211,7 @@ impl Plugin for BunnyMdxPlugin {
     /// This is the core of the plugin. It:
     /// 1. Checks if the file is a `.mdx` file
     /// 2. Reads the file from disk
-    /// 3. Compiles MDX → JSX using bunny-mdx
+    /// 3. Compiles MDX → JSX using fob-mdx
     /// 4. Returns JSX with `ModuleType::Jsx` for Rolldown to process
     ///
     /// # Returns
@@ -242,7 +237,7 @@ impl Plugin for BunnyMdxPlugin {
     ) -> impl std::future::Future<Output = HookLoadReturn> + Send {
         // Capture data needed for async block to avoid lifetime issues
         let id = args.id.to_string();
-        let options = self.options.clone();
+        let options = self.create_options(Some(id.clone()));
         let project_root = self.project_root.clone();
 
         async move {
@@ -262,12 +257,8 @@ impl Plugin for BunnyMdxPlugin {
             let source = std::fs::read_to_string(&file_path)
                 .with_context(|| format!("Failed to read MDX file: {}", file_path.display()))?;
 
-            // Configure compilation with file path for better error messages
-            let mut opts = options;
-            opts.filepath = Some(id.clone());
-
             // Compile MDX to JSX
-            let result = compile(&source, opts)
+            let result = compile(&source, options)
                 .with_context(|| format!("Failed to compile MDX file: {}", id))?;
 
             // Debug logging to diagnose MDX import issues
@@ -300,21 +291,21 @@ mod tests {
 
     #[test]
     fn test_plugin_creation() {
-        let plugin = BunnyMdxPlugin::new(PathBuf::from("."));
-        assert_eq!(plugin.name(), "bunny-mdx");
+        let plugin = FobMdxPlugin::new(PathBuf::from("."));
+        assert_eq!(plugin.name(), "fob-mdx");
     }
 
     #[test]
     fn test_plugin_with_custom_options() {
-        let mut opts = MdxCompileOptions::new();
-        opts.gfm = true;
-        let plugin = BunnyMdxPlugin::with_options(opts, PathBuf::from("."));
-        assert_eq!(plugin.name(), "bunny-mdx");
+        let mut plugin = FobMdxPlugin::new(PathBuf::from("."));
+        plugin.gfm = true;
+        plugin.math = false;
+        assert_eq!(plugin.name(), "fob-mdx");
     }
 
     #[test]
     fn test_plugin_default() {
-        let plugin = BunnyMdxPlugin::default();
-        assert_eq!(plugin.name(), "bunny-mdx");
+        let plugin = FobMdxPlugin::default();
+        assert_eq!(plugin.name(), "fob-mdx");
     }
 }

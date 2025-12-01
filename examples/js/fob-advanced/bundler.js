@@ -1,26 +1,15 @@
-/**
- * Basic example of using @fob/bundler programmatically
- *
- * This demonstrates:
- * - Simple bundling with the bundle() function
- * - Basic configuration options
- * - Reading bundle results
- */
-
-import { bundle, installNodeRuntime } from '@fob/bundler';
+import pkg from '@fox-uni/fob';
+const { Fob } = pkg;
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Install the Node.js runtime for filesystem access
-installNodeRuntime();
-
 console.log('🔨 Building with @fob/bundler...\n');
 
 try {
-  const result = await bundle({
+  const bundler = new Fob({
     // Entry points to bundle
     entries: [join(__dirname, 'src/index.js')],
 
@@ -28,17 +17,15 @@ try {
     outputDir: join(__dirname, 'dist'),
 
     // Output format (esm or preserve-modules)
-    format: 'esm',
+    format: 'Esm',
 
     // Target platform
     platform: 'node',
 
     // Generate external source maps
-    sourceMaps: 'external',
-
-    // Enable code splitting for dynamic imports
-    codeSplitting: true,
+    sourcemap: 'external',
   });
+  const result = await bundler.bundle();
 
   console.log('✅ Build complete!\n');
 

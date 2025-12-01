@@ -1,15 +1,17 @@
-import { bundle } from '@fob/bundler';
+import pkg from '@fox-uni/fob';
+const { Fob } = pkg;
 
 async function main() {
   console.log('🚀 Building with Fob...\n');
 
   try {
-    const result = await bundle({
+    const bundler = new Fob({
       entries: ['src/index.js'],
       outputDir: 'dist',
-      format: 'esm',
-      sourceMaps: 'external',
+      format: 'Esm',
+      sourcemap: 'external',
     });
+    const result = await bundler.bundle();
 
     // Show build results
     console.log('✅ Build complete!\n');

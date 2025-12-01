@@ -1,0 +1,167 @@
+---
+title: A Comprehensive Guide to MDX
+description: Everything you need to know about MDX - Markdown for the component era
+author: Content Creator
+date: 2025-11-22T00:00:00Z
+tags:
+  - mdx
+  - markdown
+  - documentation
+  - guide
+---
+
+# A Comprehensive Guide to MDX
+
+**MDX** is a format that lets you use JSX in your Markdown content. It's perfect for documentation, blogs, and content-driven sites.
+
+## What is MDX?
+
+MDX combines:
+
+- **Markdown** - Simple, readable text formatting
+- **JSX** - JavaScript XML for components
+- **JavaScript** - Full programming capabilities
+
+## Basic Syntax
+
+### Markdown Features
+
+You can use all standard Markdown:
+
+- **Bold text**
+- *Italic text*
+- ~~Strikethrough~~
+- `Inline code`
+
+### Lists
+
+Unordered lists:
+
+- Item 1
+- Item 2
+  - Nested item
+  - Another nested item
+- Item 3
+
+Ordered lists:
+
+1. First step
+2. Second step
+3. Third step
+
+### Links and Images
+
+[Visit the MDX website](https://mdxjs.com)
+
+Images work too (if you have them):
+
+```markdown
+![Alt text](path/to/image.png)
+```
+
+### Code Blocks
+
+Code blocks with syntax highlighting:
+
+```javascript
+function greet(name) {
+  return `Hello, ${name}!`;
+}
+
+console.log(greet("World"));
+```
+
+```rust
+fn main() {
+    println!("Hello, Rust!");
+}
+```
+
+### Blockquotes
+
+> "MDX is the future of content authoring."
+> 
+> — Someone, probably
+
+### Tables
+
+| Feature    | Markdown | MDX |
+|------------|----------|-----|
+| Text       | ✅       | ✅  |
+| Tables     | ✅       | ✅  |
+| Components | ❌       | ✅  |
+| Interactive| ❌       | ✅  |
+
+## Frontmatter
+
+MDX supports YAML frontmatter for metadata:
+
+```yaml
+---
+title: My Post
+date: 2025-11-24
+tags:
+  - tag1
+  - tag2
+---
+```
+
+## Why Use MDX?
+
+### 1. Write Content Naturally
+
+MDX lets you focus on writing while having the power of components when you need them.
+
+### 2. Reusable Components
+
+Create components once, use them everywhere:
+
+```jsx
+<Callout type="info">
+  This is an informational callout!
+</Callout>
+```
+
+### 3. Interactive Content
+
+Add interactive elements to your documentation:
+
+```jsx
+<InteractiveDemo code={`
+  console.log("Hello!");
+`} />
+```
+
+### 4. Type Safety (with TypeScript)
+
+Get type checking for your component props.
+
+## Best Practices
+
+1. **Keep it Simple** - Use components sparingly
+2. **Semantic HTML** - Use proper heading hierarchy
+3. **Accessibility** - Add alt text to images
+4. **Performance** - Lazy load heavy components
+5. **Consistency** - Maintain a style guide
+
+## MDX in the Wild
+
+MDX is used by:
+
+- [Next.js](https://nextjs.org) - React framework
+- [Docusaurus](https://docusaurus.io) - Documentation sites
+- [Gatsby](https://www.gatsbyjs.com) - Static site generator
+- [Storybook](https://storybook.js.org) - Component development
+
+## Conclusion
+
+MDX brings the best of both worlds - the simplicity of Markdown and the power of components. It's perfect for:
+
+- Documentation sites
+- Blogs
+- Landing pages
+- Course materials
+- Technical writing
+
+Give it a try! 🚀
+

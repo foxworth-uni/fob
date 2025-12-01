@@ -1,6 +1,7 @@
 packages:
   - apps/*
   - packages/*
+  - crates/fob-native
   - examples/*
   - examples/js/*
   - fixtures/*

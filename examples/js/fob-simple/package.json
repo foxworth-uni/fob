@@ -8,5 +8,7 @@
     "build": "node bundler.js",
     "start": "node bundler.js"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@fox-uni/fob": "workspace:*"
+  }
 }

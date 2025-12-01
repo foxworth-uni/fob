@@ -13,9 +13,6 @@ const MAX_OUTPUT_SIZE: usize = 50 * 1024 * 1024;
 /// Default timeout for CLI operations (30 seconds)
 const DEFAULT_TIMEOUT_SECS: u64 = 30;
 
-/// Maximum candidate length for security validation
-const MAX_CANDIDATE_LENGTH: usize = 256;
-
 /// Supported package managers for running Tailwind CLI
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PackageManager {
@@ -32,33 +29,27 @@ pub enum PackageManager {
 impl PackageManager {
     /// Detect package manager from package.json and lockfiles
     ///
-    /// Detection priority:
-    /// 1. `packageManager` field in package.json (Node.js/Corepack standard)
-    /// 2. Lockfiles in current directory
-    /// 3. Lockfiles in parent directories (for monorepos)
-    /// 4. Default to npm if package.json exists
-    #[allow(clippy::disallowed_methods)] // Need filesystem access for lockfile detection
+    /// Priority: packageManager field > lockfiles > default to npm
+    #[allow(clippy::disallowed_methods)]
     fn detect(project_root: &Path) -> Option<Self> {
-        // PRIORITY 1: Check package.json's packageManager field (Corepack standard)
-        // This is the most reliable indicator in modern Node.js projects
         let package_json_path = project_root.join("package.json");
+
+        // Check packageManager field in package.json (Corepack standard)
         if let Ok(content) = std::fs::read_to_string(&package_json_path) {
             if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&content) {
-                if let Some(pm_field) = parsed.get("packageManager").and_then(|v| v.as_str()) {
-                    // packageManager field format: "pnpm@8.0.0", "npm@9.0.0", etc.
-                    if pm_field.starts_with("pnpm") {
+                if let Some(pm) = parsed.get("packageManager").and_then(|v| v.as_str()) {
+                    if pm.starts_with("pnpm") {
                         return Some(Self::Pnpm);
-                    } else if pm_field.starts_with("npm") {
-                        return Some(Self::Npm);
-                    } else if pm_field.starts_with("bun") {
+                    } else if pm.starts_with("bun") {
                         return Some(Self::Bun);
+                    } else if pm.starts_with("npm") {
+                        return Some(Self::Npm);
                     }
-                    // Note: Deno doesn't use package.json packageManager field
                 }
             }
         }
 
-        // PRIORITY 2: Check for lockfiles in current directory
+        // Check lockfiles
         if project_root.join("pnpm-lock.yaml").exists() {
             return Some(Self::Pnpm);
         }
@@ -72,33 +63,7 @@ impl PackageManager {
             return Some(Self::Npm);
         }
 
-        // PRIORITY 3: Walk up directory tree to find workspace lockfiles
-        // This handles monorepo cases where lockfile is at workspace root
-        let mut current = project_root.parent();
-        while let Some(parent) = current {
-            if parent.join("pnpm-lock.yaml").exists() && parent.join("pnpm-workspace.yaml").exists()
-            {
-                return Some(Self::Pnpm);
-            }
-            if parent.join("pnpm-lock.yaml").exists() {
-                return Some(Self::Pnpm);
-            }
-            // Only check parent directories up to a reasonable depth
-            if parent.join("package-lock.json").exists() {
-                return Some(Self::Npm);
-            }
-            if parent.join("bun.lockb").exists() {
-                return Some(Self::Bun);
-            }
-
-            // Stop at filesystem root or after checking a few levels
-            current = parent.parent();
-            if current.is_none() {
-                break;
-            }
-        }
-
-        // PRIORITY 4: Default to npm if package.json exists but no lockfile found
+        // Default to npm if package.json exists
         if package_json_path.exists() {
             return Some(Self::Npm);
         }
@@ -107,12 +72,13 @@ impl PackageManager {
     }
 
     /// Build the command to execute Tailwind CLI via this package manager
+    /// Note: Tailwind v4 moved CLI to @tailwindcss/cli package
     fn build_command(&self) -> Vec<&'static str> {
         match self {
-            Self::Pnpm => vec!["pnpm", "exec", "tailwindcss"],
-            Self::Npm => vec!["npx", "--no-install", "tailwindcss"],
-            Self::Bun => vec!["bunx", "tailwindcss"],
-            Self::Deno => vec!["deno", "run", "--allow-all", "npm:tailwindcss"],
+            Self::Pnpm => vec!["pnpm", "exec", "@tailwindcss/cli"],
+            Self::Npm => vec!["npx", "--no-install", "@tailwindcss/cli"],
+            Self::Bun => vec!["bunx", "@tailwindcss/cli"],
+            Self::Deno => vec!["deno", "run", "--allow-all", "npm:@tailwindcss/cli"],
         }
     }
 
@@ -124,6 +90,38 @@ impl PackageManager {
             Self::Bun => "bun",
             Self::Deno => "deno",
         }
+    }
+
+    /// Check if this package manager binary is available on the system
+    pub async fn validate_binary(&self) -> Result<(), GeneratorError> {
+        let binary_name = match self {
+            Self::Pnpm => "pnpm",
+            Self::Npm => "npx",
+            Self::Bun => "bunx",
+            Self::Deno => "deno",
+        };
+
+        #[cfg(unix)]
+        let check_cmd = "which";
+        #[cfg(windows)]
+        let check_cmd = "where";
+
+        let output = Command::new(check_cmd)
+            .arg(binary_name)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .await
+            .map_err(GeneratorError::spawn_failed)?;
+
+        if !output.success() {
+            return Err(GeneratorError::PackageManagerNotFound {
+                package_manager: self.name().to_string(),
+                binary_name: binary_name.to_string(),
+            });
+        }
+
+        Ok(())
     }
 }
 
@@ -169,6 +167,9 @@ impl TailwindGenerator {
             ])
         })?;
 
+        // Validate binary exists before proceeding
+        package_manager.validate_binary().await?;
+
         Ok(Self {
             package_manager,
             project_root,
@@ -180,20 +181,20 @@ impl TailwindGenerator {
 
     /// Create a generator with an explicit package manager
     ///
-    /// Skips package manager detection and uses the specified one.
-    ///
-    /// # Arguments
-    ///
-    /// * `package_manager` - The package manager to use
-    /// * `project_root` - Root directory of the project
-    pub fn with_package_manager(package_manager: PackageManager, project_root: PathBuf) -> Self {
-        Self {
+    /// Validates that the package manager binary exists before creating.
+    pub async fn with_package_manager(
+        package_manager: PackageManager,
+        project_root: PathBuf,
+    ) -> Result<Self, GeneratorError> {
+        package_manager.validate_binary().await?;
+
+        Ok(Self {
             package_manager,
             project_root,
             config_file: None,
             minify: false,
             timeout_secs: DEFAULT_TIMEOUT_SECS,
-        }
+        })
     }
 
     /// Set the Tailwind config file path
@@ -208,63 +209,11 @@ impl TailwindGenerator {
         self
     }
 
-    /// Set custom timeout in seconds
-    pub fn with_timeout(mut self, timeout_secs: u64) -> Self {
-        self.timeout_secs = timeout_secs;
-        self
-    }
-
-    /// Validate a CSS class candidate for security
-    ///
-    /// Rejects candidates that:
-    /// - Exceed maximum length
-    /// - Contain path traversal sequences
-    /// - Contain shell metacharacters
-    /// - Contain null bytes
-    fn validate_candidate(candidate: &str) -> Result<(), GeneratorError> {
-        // Check length
-        if candidate.len() > MAX_CANDIDATE_LENGTH {
-            return Err(GeneratorError::invalid_candidate(
-                candidate,
-                format!("exceeds maximum length of {}", MAX_CANDIDATE_LENGTH),
-            ));
-        }
-
-        // Check for path traversal (.. sequences)
-        // Note: We allow forward slashes as they can appear in arbitrary Tailwind values
-        // like content-['path/to/file'] or bg-[url('/image.jpg')]
-        if candidate.contains("..") {
-            return Err(GeneratorError::invalid_candidate(
-                candidate,
-                "contains path traversal sequence",
-            ));
-        }
-
-        // Check for null bytes
-        if candidate.contains('\0') {
-            return Err(GeneratorError::invalid_candidate(
-                candidate,
-                "contains null byte",
-            ));
-        }
-
-        // Check for shell metacharacters
-        let forbidden_chars = ['$', '`', '!', '&', '|', ';', '<', '>', '(', ')', '{', '}'];
-        if candidate.chars().any(|c| forbidden_chars.contains(&c)) {
-            return Err(GeneratorError::invalid_candidate(
-                candidate,
-                "contains shell metacharacters",
-            ));
-        }
-
-        Ok(())
-    }
-
-    /// Generate CSS for the given class candidates
+    /// Generate CSS from the given input CSS content
     ///
     /// # Arguments
     ///
-    /// * `candidates` - List of CSS class candidates to generate
+    /// * `input_css` - CSS content to process, containing `@tailwind` directives
     ///
     /// # Returns
     ///
@@ -273,17 +222,11 @@ impl TailwindGenerator {
     /// # Implementation
     ///
     /// This method:
-    /// 1. Validates all candidates for security
-    /// 2. Builds a command using the detected package manager
-    /// 3. Spawns the package manager to execute Tailwind CLI
-    /// 4. Writes candidates to stdin (one per line)
-    /// 5. Reads generated CSS from stdout
-    pub async fn generate(&self, candidates: &[String]) -> Result<String, GeneratorError> {
-        // Validate all candidates first
-        for candidate in candidates {
-            Self::validate_candidate(candidate)?;
-        }
-
+    /// 1. Builds a command using the detected package manager
+    /// 2. Spawns the package manager to execute Tailwind CLI
+    /// 3. Writes the input CSS to stdin
+    /// 4. Reads generated CSS from stdout
+    pub async fn generate_from_input(&self, input_css: &str) -> Result<String, GeneratorError> {
         // Build command using package manager
         let cmd_parts = self.package_manager.build_command();
         let mut cmd = Command::new(cmd_parts[0]);
@@ -302,6 +245,9 @@ impl TailwindGenerator {
         if self.minify {
             cmd.arg("--minify");
         }
+
+        // v4 CLI: -i - reads from stdin
+        cmd.arg("-i").arg("-");
 
         // Use stdin/stdout for communication
         cmd.stdin(Stdio::piped())
@@ -322,10 +268,9 @@ impl TailwindGenerator {
             ))
         })?;
 
-        // Write candidates to stdin (one per line)
-        let input = candidates.join("\n");
+        // Write input CSS to stdin
         stdin
-            .write_all(input.as_bytes())
+            .write_all(input_css.as_bytes())
             .await
             .map_err(GeneratorError::spawn_failed)?;
         drop(stdin); // Close stdin to signal EOF
@@ -356,53 +301,5 @@ impl TailwindGenerator {
 
         // Parse output as UTF-8
         String::from_utf8(output.stdout).map_err(GeneratorError::parse_error)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_validate_candidate_valid() {
-        assert!(TailwindGenerator::validate_candidate("text-blue-500").is_ok());
-        assert!(TailwindGenerator::validate_candidate("hover:bg-red-200").is_ok());
-        assert!(TailwindGenerator::validate_candidate("sm:flex").is_ok());
-    }
-
-    #[test]
-    fn test_validate_candidate_too_long() {
-        let long_candidate = "a".repeat(300);
-        let result = TailwindGenerator::validate_candidate(&long_candidate);
-        assert!(result.is_err());
-        assert!(matches!(
-            result.unwrap_err(),
-            GeneratorError::InvalidCandidate { .. }
-        ));
-    }
-
-    #[test]
-    fn test_validate_candidate_path_traversal() {
-        // Path traversal with .. should fail
-        assert!(TailwindGenerator::validate_candidate("../etc/passwd").is_err());
-
-        // Forward slashes are allowed (for Tailwind arbitrary values like bg-[url('/image.jpg')])
-        assert!(TailwindGenerator::validate_candidate("foo/bar").is_ok());
-
-        // Backslashes are also allowed (Windows paths in arbitrary values)
-        assert!(TailwindGenerator::validate_candidate("foo\\bar").is_ok());
-    }
-
-    #[test]
-    fn test_validate_candidate_null_byte() {
-        assert!(TailwindGenerator::validate_candidate("foo\0bar").is_err());
-    }
-
-    #[test]
-    fn test_validate_candidate_shell_metacharacters() {
-        assert!(TailwindGenerator::validate_candidate("foo$bar").is_err());
-        assert!(TailwindGenerator::validate_candidate("foo`bar").is_err());
-        assert!(TailwindGenerator::validate_candidate("foo;bar").is_err());
-        assert!(TailwindGenerator::validate_candidate("foo|bar").is_err());
     }
 }

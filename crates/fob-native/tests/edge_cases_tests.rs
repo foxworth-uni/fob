@@ -24,6 +24,7 @@ async fn test_bundle_with_missing_file() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -65,6 +66,7 @@ async fn test_bundle_with_syntax_error() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -111,6 +113,7 @@ async fn test_bundle_with_circular_import() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -141,6 +144,7 @@ async fn test_bundle_with_unresolved_import() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -176,6 +180,7 @@ async fn test_bundle_with_empty_file() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -212,6 +217,7 @@ async fn test_bundle_with_very_long_path() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -240,6 +246,7 @@ async fn test_bundle_with_special_characters_in_path() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -266,6 +273,7 @@ async fn test_bundle_output_dir_creation() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = Fob::new(config).unwrap();

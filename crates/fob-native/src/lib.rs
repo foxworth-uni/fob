@@ -12,6 +12,6 @@ pub mod runtime;
 pub mod types;
 
 // Re-export public API
-pub use api::{BundleConfig, Fob, bundle_single, version};
+pub use api::{BundleConfig, Fob, bundle_single, init_logging, init_logging_from_env, version};
 pub use bundle_result::BundleResult;
-pub use types::OutputFormat;
+pub use types::{LogLevel, OutputFormat};

@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bunny WASM Browser Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #f5f5f5;
+    }
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .subtitle { opacity: 0.8; font-size: 0.9rem; }
+    main {
+      flex: 1;
+      display: flex;
+      gap: 1rem;
+      padding: 1rem;
+      min-height: 0;
+    }
+    .panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .panel-header {
+      background: #34495e;
+      color: white;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .controls {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.85rem;
+    }
+    .controls label {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      cursor: pointer;
+    }
+    .controls input[type="checkbox"] {
+      cursor: pointer;
+    }
+    .controls button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .controls button:hover {
+      background: #2980b9;
+    }
+    .panel-content {
+      flex: 1;
+      overflow: auto;
+    }
+    textarea {
+      width: 100%;
+      height: 100%;
+      border: none;
+      padding: 1rem;
+      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+      font-size: 14px;
+      resize: none;
+      line-height: 1.5;
+    }
+    textarea:focus {
+      outline: 2px solid #3498db;
+      outline-offset: -2px;
+    }
+    pre {
+      margin: 0;
+      padding: 1rem;
+      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      overflow-x: auto;
+    }
+    .output-section {
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .output-section:last-child {
+      border-bottom: none;
+    }
+    .output-header {
+      background: #ecf0f1;
+      padding: 0.5rem 1rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #2c3e50;
+    }
+    .error-panel {
+      background: #fee;
+      border-left: 4px solid #e74c3c;
+      padding: 1rem;
+      margin: 1rem;
+      border-radius: 4px;
+    }
+    .error-kind {
+      display: inline-block;
+      background: #e74c3c;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .error-message {
+      font-weight: 600;
+      color: #c0392b;
+      margin-bottom: 0.5rem;
+    }
+    .error-location {
+      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+      font-size: 0.85rem;
+      color: #7f8c8d;
+      margin-bottom: 0.5rem;
+    }
+    .error-context {
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+      font-size: 0.85rem;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .error-suggestion {
+      background: #d4edda;
+      border-left: 3px solid #28a745;
+      padding: 0.5rem;
+      margin-top: 0.5rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    .error-suggestion strong {
+      color: #155724;
+    }
+    .success {
+      color: #27ae60;
+      font-weight: 600;
+    }
+    .metadata {
+      background: #f8f9fa;
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      color: #495057;
+    }
+    .output-toggle {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.85rem;
+    }
+    .output-toggle label {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      cursor: pointer;
+    }
+    .output-toggle input[type="radio"] {
+      cursor: pointer;
+    }
+    .rendered-content {
+      padding: 1rem;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #2c3e50;
+    }
+    .rendered-content h1 {
+      font-size: 2rem;
+      margin: 1rem 0;
+      border-bottom: 2px solid #ecf0f1;
+      padding-bottom: 0.5rem;
+    }
+    .rendered-content h2 {
+      font-size: 1.5rem;
+      margin: 0.75rem 0;
+    }
+    .rendered-content h3 {
+      font-size: 1.25rem;
+      margin: 0.5rem 0;
+    }
+    .rendered-content p {
+      margin: 0.5rem 0;
+    }
+    .rendered-content strong {
+      font-weight: 700;
+    }
+    .rendered-content em {
+      font-style: italic;
+    }
+    .rendered-content code {
+      background: #f4f4f4;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+      font-size: 0.9em;
+    }
+    .rendered-content pre {
+      background: #f4f4f4;
+      padding: 1rem;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .rendered-content ul, .rendered-content ol {
+      margin: 0.5rem 0;
+      padding-left: 2rem;
+    }
+    .rendered-content table {
+      border-collapse: collapse;
+      margin: 0.5rem 0;
+      width: 100%;
+    }
+    .rendered-content th, .rendered-content td {
+      border: 1px solid #ddd;
+      padding: 0.5rem;
+      text-align: left;
+    }
+    .rendered-content th {
+      background: #f4f4f4;
+      font-weight: 600;
+    }
+    .rendered-content del {
+      text-decoration: line-through;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🐰 Bunny WASM Browser Demo</h1>
+    <p class="subtitle">Compile MDX to JSX directly in your browser using WebAssembly</p>
+  </header>
+
+  <main>
+    <div class="panel">
+      <div class="panel-header">
+        <span>MDX Input</span>
+        <div class="controls">
+          <button id="compile-btn">Compile</button>
+          <label><input type="checkbox" id="live" checked> Live</label>
+          <label><input type="checkbox" id="gfm"> GFM</label>
+          <label><input type="checkbox" id="math"> Math</label>
+          <label><input type="checkbox" id="footnotes"> Footnotes</label>
+        </div>
+      </div>
+      <div class="panel-content">
+        <textarea id="input" spellcheck="false">---
+title: Bunny WASM Demo
+author: Demo
+---
+
+# {frontmatter.title}
+
+Compile **MDX** to JSX in the browser with **WebAssembly**!
+
+## Live Chart Demo
+
+export const data = [
+  { name: 'Jan', value: 400 },
+  { name: 'Feb', value: 300 },
+  { name: 'Mar', value: 600 },
+  { name: 'Apr', value: 800 },
+  { name: 'May', value: 500 }
+];
+
+<LineChart width={500} height={200} data={data}>
+  <CartesianGrid strokeDasharray="3 3" />
+  <XAxis dataKey="name" />
+  <YAxis />
+  <Tooltip />
+  <Line type="monotone" dataKey="value" stroke="#8884d8" />
+</LineChart>
+
+## Features
+
+- **Real-time compilation** with WASM
+- **React components** rendered live
+- **Recharts** for data visualization
+
+Switch to the **Rendered** view to see the chart!</textarea>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span>Output</span>
+        <div class="output-toggle">
+          <label><input type="radio" name="output-mode" value="jsx" checked> JSX Code</label>
+          <label><input type="radio" name="output-mode" value="rendered"> Rendered</label>
+        </div>
+      </div>
+      <div class="panel-content" id="output">
+        <div id="jsx-view">
+          <div class="output-section">
+            <div class="output-header">Compiled JSX</div>
+            <pre id="jsx-output"></pre>
+          </div>
+        </div>
+        <div id="rendered-view" style="display:none;">
+          <div class="output-section">
+            <div class="output-header">Rendered Output</div>
+            <div id="rendered-output" class="rendered-content"></div>
+          </div>
+        </div>
+        <div class="output-section" id="frontmatter-section" style="display:none;">
+          <div class="output-header">Frontmatter</div>
+          <pre id="frontmatter-output"></pre>
+        </div>
+        <div class="output-section" id="metadata-section" style="display:none;">
+          <div class="metadata" id="metadata-output"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import init, { compile_mdx, WasmMdxOptions } from './pkg/bunny_wasm.js';
+    import React from 'https://esm.sh/react@19';
+    import ReactDOM from 'https://esm.sh/react-dom@19/client';
+    import * as jsxRuntime from 'https://esm.sh/react@19/jsx-runtime';
+    import * as Recharts from 'https://esm.sh/recharts@2?deps=react@19,react-dom@19';
+
+    let isInitialized = false;
+    let compileTimeout;
+    let currentFrontmatter = {};
+    let reactRoot = null;
+
+    // Component registry for MDX rendering
+    const components = {
+      // Recharts components
+      LineChart: Recharts.LineChart,
+      BarChart: Recharts.BarChart,
+      AreaChart: Recharts.AreaChart,
+      PieChart: Recharts.PieChart,
+      Line: Recharts.Line,
+      Bar: Recharts.Bar,
+      Area: Recharts.Area,
+      Pie: Recharts.Pie,
+      Cell: Recharts.Cell,
+      XAxis: Recharts.XAxis,
+      YAxis: Recharts.YAxis,
+      CartesianGrid: Recharts.CartesianGrid,
+      Tooltip: Recharts.Tooltip,
+      Legend: Recharts.Legend,
+      ResponsiveContainer: Recharts.ResponsiveContainer,
+    };
+
+    async function initialize() {
+      console.log('🚀 Starting WASM initialization...');
+      try {
+        await init();
+        console.log('✅ WASM module loaded successfully');
+        isInitialized = true;
+        console.log('📝 Calling initial compile()...');
+        compile(); // Initial compilation
+      } catch (error) {
+        console.error('❌ WASM initialization failed:', error);
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          type: typeof error
+        });
+        showError({
+          kind: 'internalError',
+          message: 'Failed to initialize WASM module',
+          details: error.toString()
+        });
+      }
+    }
+
+    function compile() {
+      console.log('▶️ compile() called, isInitialized:', isInitialized);
+      if (!isInitialized) {
+        console.warn('⚠️ Compilation skipped - WASM not initialized');
+        return;
+      }
+
+      const input = document.getElementById('input').value;
+      console.log('📄 Input length:', input.length, 'chars');
+      const outputEl = document.getElementById('output');
+
+      // Clear previous output
+      document.getElementById('jsx-output').textContent = '';
+      document.getElementById('frontmatter-output').textContent = '';
+      document.getElementById('metadata-output').textContent = '';
+      outputEl.querySelector('.error-panel')?.remove();
+
+      try {
+        // Create options
+        const options = new WasmMdxOptions();
+        const optionsConfig = {
+          gfm: document.getElementById('gfm').checked,
+          math: document.getElementById('math').checked,
+          footnotes: document.getElementById('footnotes').checked
+        };
+        console.log('⚙️ Options:', optionsConfig);
+        options.set_gfm(optionsConfig.gfm);
+        options.set_math(optionsConfig.math);
+        options.set_footnotes(optionsConfig.footnotes);
+        options.set_output_format('function-body');
+
+        // Compile MDX
+        console.log('🔄 Calling compile_mdx...');
+        const result = compile_mdx(input, options);
+        console.log('✅ Compilation result:', result);
+        console.log('📦 Result structure:', Object.keys(result));
+        console.log('📝 Code length:', result.code?.length, 'chars');
+
+        // Store frontmatter for rendered view interpolation
+        currentFrontmatter = result.frontmatter?.data || {};
+
+        // Show JSX output
+        document.getElementById('jsx-output').textContent = result.code;
+        console.log('✅ JSX output set to DOM');
+
+        // Show frontmatter if present
+        if (result.frontmatter) {
+          document.getElementById('frontmatter-section').style.display = 'block';
+          document.getElementById('frontmatter-output').textContent =
+            JSON.stringify(result.frontmatter.data, null, 2);
+        } else {
+          document.getElementById('frontmatter-section').style.display = 'none';
+        }
+
+        // Show metadata
+        const metadata = [];
+        if (result.imports && result.imports.length > 0) {
+          metadata.push(`Imports: ${result.imports.length}`);
+        }
+        if (result.namedExports && result.namedExports.length > 0) {
+          metadata.push(`Named Exports: ${result.namedExports.length}`);
+        }
+        if (result.images && result.images.length > 0) {
+          metadata.push(`Images: ${result.images.length}`);
+        }
+        if (result.defaultExport) {
+          metadata.push(`Default Export: ${result.defaultExport}`);
+        }
+
+        if (metadata.length > 0) {
+          document.getElementById('metadata-section').style.display = 'block';
+          document.getElementById('metadata-output').textContent = metadata.join(' • ');
+        } else {
+          document.getElementById('metadata-section').style.display = 'none';
+        }
+
+        // Update rendered view if active
+        if (document.getElementById('rendered-view').style.display !== 'none') {
+          renderOutput();
+        }
+
+      } catch (error) {
+        console.error('❌ Compilation error:', error);
+        console.error('Error type:', typeof error);
+        console.error('Error keys:', Object.keys(error));
+        console.error('Error message:', error.message);
+        console.error('Error kind:', error.kind);
+        showError(error);
+      }
+    }
+
+    function showError(error) {
+      const outputEl = document.getElementById('output');
+
+      // Remove any existing error panel
+      outputEl.querySelector('.error-panel')?.remove();
+
+      // Create error panel
+      const errorPanel = document.createElement('div');
+      errorPanel.className = 'error-panel';
+
+      // Error kind badge
+      const kindBadge = document.createElement('div');
+      kindBadge.className = 'error-kind';
+      kindBadge.textContent = error.kind || 'error';
+      errorPanel.appendChild(kindBadge);
+
+      // Error message
+      const message = document.createElement('div');
+      message.className = 'error-message';
+      message.textContent = error.message || 'An error occurred';
+      errorPanel.appendChild(message);
+
+      // Location (for compilation errors)
+      if (error.location) {
+        const location = document.createElement('div');
+        location.className = 'error-location';
+        const parts = [];
+        if (error.location.file) parts.push(`File: ${error.location.file}`);
+        if (error.location.line) parts.push(`Line: ${error.location.line}`);
+        if (error.location.column) parts.push(`Column: ${error.location.column}`);
+        location.textContent = parts.join(' • ');
+        errorPanel.appendChild(location);
+      }
+
+      // Context (code snippet)
+      if (error.context) {
+        const contextLabel = document.createElement('div');
+        contextLabel.style.marginTop = '0.5rem';
+        contextLabel.style.fontWeight = '600';
+        contextLabel.style.fontSize = '0.85rem';
+        contextLabel.textContent = 'Context:';
+        errorPanel.appendChild(contextLabel);
+
+        const context = document.createElement('div');
+        context.className = 'error-context';
+        context.textContent = error.context;
+        errorPanel.appendChild(context);
+      }
+
+      // Suggestion
+      if (error.suggestion) {
+        const suggestion = document.createElement('div');
+        suggestion.className = 'error-suggestion';
+        suggestion.innerHTML = `<strong>💡 Suggestion:</strong> ${error.suggestion}`;
+        errorPanel.appendChild(suggestion);
+      }
+
+      // Details (for validation/serialization errors)
+      if (error.details) {
+        const details = document.createElement('div');
+        details.style.marginTop = '0.5rem';
+        details.style.fontSize = '0.85rem';
+        details.style.color = '#7f8c8d';
+        details.textContent = error.details;
+        errorPanel.appendChild(details);
+      }
+
+      outputEl.prepend(errorPanel);
+    }
+
+    // Event listeners
+    document.getElementById('compile-btn').addEventListener('click', compile);
+
+    document.getElementById('input').addEventListener('input', () => {
+      if (document.getElementById('live').checked) {
+        clearTimeout(compileTimeout);
+        compileTimeout = setTimeout(compile, 100); // Debounce 100ms
+      }
+    });
+
+    document.getElementById('gfm').addEventListener('change', compile);
+    document.getElementById('math').addEventListener('change', compile);
+    document.getElementById('footnotes').addEventListener('change', compile);
+
+    // Toggle output mode (JSX code vs Rendered)
+    console.log('🎛️ Setting up output mode toggles...');
+    document.querySelectorAll('input[name="output-mode"]').forEach(radio => {
+      console.log('🎛️ Found output-mode radio:', radio.value, 'checked:', radio.checked);
+      radio.addEventListener('change', (e) => {
+        const mode = e.target.value;
+        console.log('🔄 Output mode changed to:', mode);
+        if (mode === 'jsx') {
+          document.getElementById('jsx-view').style.display = 'block';
+          document.getElementById('rendered-view').style.display = 'none';
+          console.log('👁️ Showing JSX view');
+        } else {
+          document.getElementById('jsx-view').style.display = 'none';
+          document.getElementById('rendered-view').style.display = 'block';
+          console.log('👁️ Showing rendered view');
+          renderOutput();
+        }
+      });
+    });
+
+    function renderOutput() {
+      let code = document.getElementById('jsx-output').textContent;
+      const container = document.getElementById('rendered-output');
+
+      if (!reactRoot) {
+        reactRoot = ReactDOM.createRoot(container);
+      }
+
+      if (!code || !code.trim()) {
+        reactRoot.render(null);
+        return;
+      }
+
+      try {
+        // Function-body format: code expects arguments[0] with jsx runtime
+        const fn = new Function(code);
+        
+        // Call the function with jsx runtime in arguments[0]
+        const module = fn({
+          jsx: jsxRuntime.jsx,
+          jsxs: jsxRuntime.jsxs,
+          Fragment: jsxRuntime.Fragment,
+        });
+
+        // Render MDXContent with components prop using React.createElement
+        // This ensures proper React element creation with React 19
+        const element = React.createElement(module.default, { components });
+        reactRoot.render(element);
+      } catch (error) {
+        console.error('Render error:', error);
+        container.innerHTML = `<div class="error-panel"><div class="error-kind">render error</div><div class="error-message">${error.message}</div></div>`;
+      }
+    }
+
+    // Verify DOM elements before initialization
+    console.log('🔍 Checking DOM elements...');
+    console.log('input element:', document.getElementById('input'));
+    console.log('jsx-output element:', document.getElementById('jsx-output'));
+    console.log('gfm checkbox:', document.getElementById('gfm'));
+    console.log('rendered-output element:', document.getElementById('rendered-output'));
+
+    // Initialize WASM
+    initialize();
+  </script>
+</body>
+</html>

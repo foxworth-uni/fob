@@ -3,6 +3,8 @@ dist
 build
 target
 pkg
+pkg-*
+**/pkg-*
 .turbo
 
 # Dependencies

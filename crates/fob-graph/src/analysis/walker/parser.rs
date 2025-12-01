@@ -79,7 +79,7 @@ impl ModuleParser {
 
     /// Extract scripts from framework files if applicable.
     ///
-    /// For framework files (.astro, .svelte, .vue), extracts JavaScript/TypeScript
+    /// For framework files, extracts JavaScript/TypeScript
     /// from the component structure. For other files, returns the content as-is.
     fn extract_if_framework(&self, path: &Path, content: &str) -> Result<String, WalkerError> {
         let scripts =

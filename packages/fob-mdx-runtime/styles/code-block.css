@@ -1,0 +1,198 @@
+/**
+ * CodeBlock Component Styles
+ *
+ * Provides base styling for syntax-highlighted code blocks
+ * with CSS variable-based theming for light/dark mode support
+ */
+
+/* CSS Variables for theming */
+:root {
+  /* Light theme colors */
+  --code-bg: #f6f8fa;
+  --code-color: #24292f;
+  --code-border: #d0d7de;
+  --code-title-bg: #eaeef2;
+  --code-title-color: #24292f;
+  --code-line-highlight-bg: rgba(33, 136, 255, 0.1);
+  --code-line-number-color: #57606a;
+  --code-copy-button-bg: #f6f8fa;
+  --code-copy-button-hover: #eaeef2;
+  --code-word-highlight-bg: rgba(255, 212, 38, 0.4);
+}
+
+/* Dark theme colors */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --code-bg: #161b22;
+    --code-color: #c9d1d9;
+    --code-border: #30363d;
+    --code-title-bg: #0d1117;
+    --code-title-color: #c9d1d9;
+    --code-line-highlight-bg: rgba(56, 139, 253, 0.15);
+    --code-line-number-color: #8b949e;
+    --code-copy-button-bg: #21262d;
+    --code-copy-button-hover: #30363d;
+    --code-word-highlight-bg: rgba(187, 128, 9, 0.4);
+  }
+}
+
+/* Manual theme overrides */
+[data-theme='light'] {
+  --code-bg: #f6f8fa;
+  --code-color: #24292f;
+  --code-border: #d0d7de;
+  --code-title-bg: #eaeef2;
+  --code-title-color: #24292f;
+  --code-line-highlight-bg: rgba(33, 136, 255, 0.1);
+  --code-line-number-color: #57606a;
+  --code-copy-button-bg: #f6f8fa;
+  --code-copy-button-hover: #eaeef2;
+  --code-word-highlight-bg: rgba(255, 212, 38, 0.4);
+}
+
+[data-theme='dark'] {
+  --code-bg: #161b22;
+  --code-color: #c9d1d9;
+  --code-border: #30363d;
+  --code-title-bg: #0d1117;
+  --code-title-color: #c9d1d9;
+  --code-line-highlight-bg: rgba(56, 139, 253, 0.15);
+  --code-line-number-color: #8b949e;
+  --code-copy-button-bg: #21262d;
+  --code-copy-button-hover: #30363d;
+  --code-word-highlight-bg: rgba(187, 128, 9, 0.4);
+}
+
+/* CodeBlock container */
+.code-block {
+  margin: 1.5rem 0;
+  border-radius: 0.5rem;
+  border: 1px solid var(--code-border);
+  overflow: hidden;
+  background: var(--code-bg);
+}
+
+/* Title bar */
+.code-block-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: var(--code-title-bg);
+  border-bottom: 1px solid var(--code-border);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.code-block-title-text {
+  color: var(--code-title-color);
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+}
+
+.code-block-lang {
+  color: var(--code-line-number-color);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+/* Code container with copy button */
+.code-block-container {
+  position: relative;
+}
+
+/* Copy button */
+.code-block-copy-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.5rem;
+  background: var(--code-copy-button-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 0.375rem;
+  color: var(--code-line-number-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.code-block-copy-button:hover {
+  background: var(--code-copy-button-hover);
+  color: var(--code-color);
+}
+
+.code-block-copy-button:active {
+  transform: scale(0.95);
+}
+
+/* Pre and code elements */
+.code-block-pre {
+  margin: 0;
+  padding: 1rem;
+  overflow-x: auto;
+  background: transparent;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  tab-size: 2;
+}
+
+.code-block-code {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  color: var(--code-color);
+  background: transparent;
+}
+
+/* Code lines */
+.code-line {
+  display: table-row;
+}
+
+.code-line-highlighted {
+  background: var(--code-line-highlight-bg);
+  display: table-row;
+}
+
+/* Line numbers */
+.code-line-number {
+  display: table-cell;
+  padding-right: 1rem;
+  text-align: right;
+  user-select: none;
+  color: var(--code-line-number-color);
+  min-width: 2.5rem;
+}
+
+/* Line content */
+.code-line-content {
+  display: table-cell;
+  width: 100%;
+}
+
+/* Word highlighting */
+.highlighted-word {
+  background: var(--code-word-highlight-bg);
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.25rem;
+}
+
+/* Scrollbar styling for webkit browsers */
+.code-block-pre::-webkit-scrollbar {
+  height: 0.5rem;
+}
+
+.code-block-pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.code-block-pre::-webkit-scrollbar-thumb {
+  background: var(--code-border);
+  border-radius: 0.25rem;
+}
+
+.code-block-pre::-webkit-scrollbar-thumb:hover {
+  background: var(--code-line-number-color);
+}

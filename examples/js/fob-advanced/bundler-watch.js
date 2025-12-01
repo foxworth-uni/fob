@@ -7,7 +7,8 @@
  * - Error handling during development
  */
 
-import { bundle } from '@fob/bundler';
+import pkg from '@fox-uni/fob';
+const { Fob } = pkg;
 import { watch } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -20,6 +21,14 @@ const outputDir = join(__dirname, 'dist-watch');
 
 let isBuilding = false;
 let needsRebuild = false;
+
+const bundler = new Fob({
+  entries: [join(srcDir, 'index.js')],
+  outputDir,
+  format: 'Esm',
+  platform: 'node',
+  sourcemap: 'inline',
+});
 
 async function build() {
   if (isBuilding) {
@@ -34,14 +43,7 @@ async function build() {
   console.log(`\n🔨 Building... [${new Date().toLocaleTimeString()}]`);
 
   try {
-    const result = await bundle({
-      entries: [join(srcDir, 'index.js')],
-      outputDir,
-      format: 'esm',
-      platform: 'node',
-      sourceMaps: 'inline',
-      codeSplitting: true,
-    });
+    const result = await bundler.bundle();
 
     const duration = Date.now() - startTime;
     console.log(

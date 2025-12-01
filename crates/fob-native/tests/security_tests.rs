@@ -25,6 +25,7 @@ async fn test_path_validation_prevents_directory_traversal() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = Fob::new(config);
@@ -61,6 +62,7 @@ async fn test_path_validation_prevents_traversal_in_entry() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = Fob::new(config);
@@ -101,6 +103,7 @@ async fn test_path_validation_allows_valid_relative_paths() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = Fob::new(config);
@@ -126,6 +129,7 @@ async fn test_path_validation_handles_absolute_paths() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = Fob::new(config);
@@ -156,6 +160,7 @@ async fn test_path_validation_rejects_absolute_paths_outside_project() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = Fob::new(config);

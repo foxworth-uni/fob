@@ -7,7 +7,8 @@
  * - Comparing minified vs unminified sizes
  */
 
-import { Fob } from '@fob/bundler';
+import pkg from '@fox-uni/fob';
+const { Fob } = pkg;
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -23,7 +24,7 @@ try {
       entries: [join(__dirname, 'src/index.js')],
       outputDir: join(__dirname, 'dist-prod'),
       platform: 'node',
-      format: 'esm',
+      format: 'Esm',
     },
   });
 
@@ -43,7 +44,7 @@ try {
       entries: [join(__dirname, 'src/index.js')],
       outputDir: join(__dirname, 'dist-prod'),
       platform: 'node',
-      format: 'esm',
+      format: 'Esm',
       minify: true,
       sourceMaps: 'external',
     },

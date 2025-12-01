@@ -1,0 +1,12 @@
+{
+  "name": "@bunny/bunny-wasm",
+  "version": "0.1.0",
+  "exports": "./dist/mod.js",
+  "publish": {
+    "include": ["dist/**/*", "pkg/**/*", "README.md", "LICENSE"],
+    "exclude": ["src/**/*", "node_modules/**/*"]
+  },
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+  }
+}

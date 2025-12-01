@@ -1,0 +1,70 @@
+{
+  "name": "@fob/mdx-wasm",
+  "version": "0.1.0",
+  "description": "WASM bindings for fob-mdx - compile MDX to JSX in the browser or Node.js",
+  "type": "module",
+  "main": "./dist/node.js",
+  "module": "./dist/mod.js",
+  "types": "./dist/mod.d.ts",
+  "exports": {
+    ".": {
+      "node": {
+        "types": "./dist/node.d.ts",
+        "import": "./dist/node.js"
+      },
+      "browser": {
+        "types": "./dist/mod.d.ts",
+        "import": "./dist/mod.js"
+      },
+      "default": {
+        "types": "./dist/mod.d.ts",
+        "import": "./dist/mod.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "pkg",
+    "pkg-node"
+  ],
+  "scripts": {
+    "build": "pnpm build:wasm && pnpm build:js",
+    "build:wasm": "pnpm build:wasm:web && pnpm build:wasm:node",
+    "build:wasm:web": "wasm-pack build --target web --release ../../crates/fob-mdx-wasm --out-dir ../../crates/fob-mdx-wasm/pkg && wasm-opt -Os --enable-bulk-memory --enable-nontrapping-float-to-int ../../crates/fob-mdx-wasm/pkg/fob_mdx_wasm_bg.wasm -o ../../crates/fob-mdx-wasm/pkg/fob_mdx_wasm_bg.wasm && ./scripts/copy-wasm.sh",
+    "build:wasm:node": "wasm-pack build --target nodejs --release ../../crates/fob-mdx-wasm --out-dir ../../crates/fob-mdx-wasm/pkg-node && ./scripts/copy-wasm-node.sh",
+    "build:wasm:ci": "wasm-pack build --target web --release ../../crates/fob-mdx-wasm --out-dir ../../crates/fob-mdx-wasm/pkg && wasm-opt -Os --enable-bulk-memory --enable-nontrapping-float-to-int ../../crates/fob-mdx-wasm/pkg/fob_mdx_wasm_bg.wasm -o ../../crates/fob-mdx-wasm/pkg/fob_mdx_wasm_bg.wasm && cp -r ../../crates/fob-mdx-wasm/pkg/* ./pkg/ && wasm-pack build --target nodejs --release ../../crates/fob-mdx-wasm --out-dir ../../crates/fob-mdx-wasm/pkg-node && cp -r ../../crates/fob-mdx-wasm/pkg-node/* ./pkg-node/",
+    "build:js": "tsc && npm run copy:wasm:dist",
+    "copy:wasm:dist": "mkdir -p dist/pkg-node && cp -r pkg-node/*.wasm dist/pkg-node/ && cp -r pkg-node/*.js dist/pkg-node/ && cp -r pkg-node/*.d.ts dist/pkg-node/",
+    "serve": "sirv fixtures/playground --port 3030 --cors --single",
+    "dev": "pnpm build && pnpm serve",
+    "playground": "pnpm playground:build && pnpm playground:serve",
+    "playground:build": "wasm-pack build --target web --dev ../../crates/fob-mdx-wasm --out-dir ../../crates/fob-mdx-wasm/pkg && ./scripts/copy-wasm.sh",
+    "playground:serve": "sirv fixtures/playground --port 3030 --cors --single --dev",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "mdx",
+    "markdown",
+    "compiler",
+    "wasm",
+    "webassembly",
+    "react",
+    "browser"
+  ],
+  "author": "Taron Foxworth <fox@9generations.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/foxworth-uni/fob"
+  },
+  "homepage": "https://fob.dev",
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "sirv-cli": "^2.0.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.9"
+  }
+}

@@ -38,6 +38,7 @@ async fn test_core_bundler_without_napi() {
         external: None,
         minify: None,
         platform: None,
+        mdx: None,
     };
 
     let bundler = CoreBundler::new(config).unwrap();

@@ -1,0 +1,12 @@
+{
+  "name": "bunny-wasm-playground",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "sirv . --port 3030 --cors --single --dev"
+  },
+  "devDependencies": {
+    "sirv-cli": "^2.0.2"
+  }
+}

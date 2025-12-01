@@ -438,9 +438,6 @@ let result = BuildOptions::new("virtual:entry")
 - `crates/fob-plugin-css/src/lib.rs` - CSS plugin
 - `crates/fob-plugin-mdx/src/lib.rs` - MDX plugin
 - `crates/fob-plugin-tailwind/src/lib.rs` - Tailwind plugin
-- `crates/fob-plugin-vue/src/lib.rs` - Vue plugin
-- `crates/fob-plugin-svelte/src/lib.rs` - Svelte plugin
-- `crates/fob-plugin-astro/src/lib.rs` - Astro plugin
 
 ---
 
