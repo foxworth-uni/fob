@@ -26,3 +26,7 @@ Cargo.lock
 # Test fixtures
 examples/fixtures/
 fixtures/napi-local-test/fixtures/error-case/
+
+# NAPI-RS generated bindings (auto-generated, do not format)
+crates/fob-native/index.js
+crates/fob-native/index.d.ts
