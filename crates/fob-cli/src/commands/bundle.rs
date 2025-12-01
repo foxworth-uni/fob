@@ -62,7 +62,7 @@ impl BundleCommand {
         }
 
         if self.args.minify {
-            builder = builder.minify(true);
+            builder = builder.minify_level("identifiers");
         }
 
         let bundle = builder

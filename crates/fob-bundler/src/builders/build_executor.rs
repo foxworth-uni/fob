@@ -4,14 +4,14 @@
 //! build operations to the appropriate execution path based on the
 //! BuildOptions configuration.
 
-use rolldown::{BundlerOptions, GlobalsOutputOption, IsExternal, RawMinifyOptions, ResolveOptions};
+use rolldown::{BundlerOptions, GlobalsOutputOption, IsExternal, ResolveOptions};
 use rustc_hash::FxHashMap;
 use std::path::{Path, PathBuf};
 
 use crate::Result;
 use crate::analysis::AnalyzedBundle;
 use crate::builders::common::{BundlePlan, EntrySpec, execute_bundle};
-use crate::builders::unified::{BuildOptions, BuildOutput, BuildResult, EntryPoints};
+use crate::builders::unified::{BuildOptions, BuildOutput, BuildResult, EntryPoints, MinifyLevel};
 
 #[cfg(feature = "dts-generation")]
 use std::sync::Arc;
@@ -296,8 +296,10 @@ fn configure_rolldown_options(options: &BuildOptions) -> BundlerOptions {
     }
 
     // Minification
-    if options.minify {
-        rolldown_options.minify = Some(RawMinifyOptions::from(true));
+    if let Some(level_str) = &options.minify_level {
+        if let Ok(level) = MinifyLevel::parse(level_str) {
+            rolldown_options.minify = level.to_rolldown_options();
+        }
     }
 
     // Platform

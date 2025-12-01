@@ -160,8 +160,8 @@ impl CoreBundler {
             }
 
             // Set minify
-            if let Some(minify) = self.config.minify {
-                options = options.minify(minify);
+            if let Some(true) = self.config.minify {
+                options = options.minify_level("identifiers");
             }
 
             // Auto-inject MDX plugin if needed

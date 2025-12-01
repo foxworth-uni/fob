@@ -82,7 +82,9 @@ pub use rolldown_plugin::{
 };
 
 // Re-export bundler APIs
-pub use builders::{BuildOptions, BuildOutput, BuildResult, EntryPoints, build, plugin};
+pub use builders::{
+    BuildOptions, BuildOutput, BuildResult, EntryPoints, MinifyLevel, build, plugin,
+};
 
 #[cfg(feature = "dts-generation")]
 pub use builders::DtsOptions;

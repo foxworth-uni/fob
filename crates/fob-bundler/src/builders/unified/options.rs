@@ -55,8 +55,11 @@ pub struct BuildOptions {
     /// Source map generation strategy (default: external file).
     pub sourcemap: Option<crate::SourceMapType>,
 
-    /// Enable JavaScript minification (default: false).
-    pub minify: bool,
+    /// Minification level as a string (default: None/disabled).
+    ///
+    /// Valid values: "none", "whitespace", "syntax", "identifiers"
+    /// Also accepts "true"/"false" for boolean compatibility.
+    pub minify_level: Option<String>,
 
     /// Global variable names for external packages (IIFE/UMD only).
     ///
@@ -121,7 +124,7 @@ impl BuildOptions {
             platform: Platform::Browser,
             format: OutputFormat::Esm,
             sourcemap: Some(crate::SourceMapType::File),
-            minify: false,
+            minify_level: None,
             globals: FxHashMap::default(),
             plugins: Vec::new(),
             virtual_files: FxHashMap::default(),
@@ -295,9 +298,32 @@ impl BuildOptions {
         self
     }
 
-    /// Enable or disable minification.
-    pub fn minify(mut self, enabled: bool) -> Self {
-        self.minify = enabled;
+    /// Set the minification level.
+    ///
+    /// # Supported Values
+    ///
+    /// - `"none"` - No minification (readable output)
+    /// - `"whitespace"` - Remove whitespace and comments only
+    /// - `"syntax"` - Syntax-level optimizations
+    /// - `"identifiers"` - Full minification with identifier mangling
+    ///
+    /// Also accepts `"true"` (maps to "identifiers") and `"false"` (maps to "none").
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use fob_bundler::BuildOptions;
+    ///
+    /// // Enable full minification
+    /// let opts = BuildOptions::new("./src/index.js")
+    ///     .minify_level("identifiers");
+    ///
+    /// // Whitespace-only minification
+    /// let opts = BuildOptions::new("./src/index.js")
+    ///     .minify_level("whitespace");
+    /// ```
+    pub fn minify_level(mut self, level: impl Into<String>) -> Self {
+        self.minify_level = Some(level.into());
         self
     }
 

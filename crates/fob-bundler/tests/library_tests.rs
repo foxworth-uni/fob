@@ -68,7 +68,7 @@ async fn library_builder_accepts_globals_and_minify() {
         .platform(Platform::Node)
         .cwd(project.path())
         .globals_map([("react", "React")])
-        .minify(true)
+        .minify_level("identifiers")
         .build()
         .await
         .expect("library bundle with globals");

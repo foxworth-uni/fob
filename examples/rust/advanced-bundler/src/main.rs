@@ -55,7 +55,7 @@ async fn main() -> Result<()> {
         .path_alias("@lib", "./input/lib") // Use @lib/ instead of ./lib/
         .splitting(true) // Enable code splitting
         .sourcemap(true)
-        .minify(true)
+        .minify_level("identifiers")
         .build()
         .await?;
 
@@ -79,7 +79,7 @@ async fn main() -> Result<()> {
         .format(OutputFormat::Cjs)
         .path_alias("@lib", "./input/lib")
         .sourcemap(true)
-        .minify(false) // Keep readable for Node.js debugging
+        // No minification - keep readable for Node.js debugging
         .build()
         .await?;
 
@@ -103,7 +103,7 @@ async fn main() -> Result<()> {
         .format(OutputFormat::Iife)
         .path_alias("@lib", "./input/lib")
         .sourcemap(true)
-        .minify(true)
+        .minify_level("identifiers")
         .build()
         .await?;
 

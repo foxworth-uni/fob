@@ -96,7 +96,7 @@ async fn build_framework(routes: &HashMap<String, PathBuf>) -> Result<PathBuf> {
     BuildOptions::app(route_files)
         .runtime(runtime)
         .outdir(output_dir.clone())
-        .minify(true)
+        .minify_level("identifiers")
         .path_alias("@", "./app") // Clean imports: import "@/router"
         .build()
         .await

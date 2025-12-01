@@ -36,6 +36,7 @@
 #[cfg(feature = "dts-generation")]
 mod dts;
 mod entry;
+mod minify;
 mod options;
 mod output;
 
@@ -44,6 +45,7 @@ use crate::Result;
 #[cfg(feature = "dts-generation")]
 pub use dts::DtsOptions;
 pub use entry::EntryPoints;
+pub use minify::MinifyLevel;
 pub use options::BuildOptions;
 pub use output::{BuildOutput, BuildResult};
 

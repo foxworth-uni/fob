@@ -124,11 +124,15 @@ pub(crate) async fn build_with_result(
     builder = builder
         .bundle(config.bundle)
         .format(convert_format(config.format))
-        .minify(config.minify)
         .platform(convert_platform(config.platform))
         .splitting(config.splitting)
         .cwd(cwd)
         .runtime(Arc::new(NativeRuntime));
+
+    // Minification
+    if config.minify {
+        builder = builder.minify_level("identifiers");
+    }
 
     // Sourcemap
     if let Some(sourcemap_mode) = config.sourcemap {

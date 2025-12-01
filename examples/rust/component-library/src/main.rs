@@ -71,7 +71,7 @@ async fn main() -> Result<()> {
     let demo_result = BuildOptions::app(["demo/app.tsx"])
         .runtime(runtime)
         .outdir("demo/dist")
-        .minify(false)
+        // No minification - keep readable for development
         .sourcemap(true)
         .build()
         .await?;

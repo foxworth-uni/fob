@@ -44,7 +44,7 @@ async fn main() -> Result<()> {
         .outdir("output")
         .format(OutputFormat::Esm)
         .sourcemap(true)
-        .minify(true)
+        .minify_level("identifiers")
         .build()
         .await?;
 
