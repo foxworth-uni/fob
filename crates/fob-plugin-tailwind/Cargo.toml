@@ -1,6 +1,6 @@
 [package]
 name = "fob-plugin-tailwind"
-version = "0.2.3"
+version = "0.2.4"
 authors.workspace = true
 edition = "2021"
 rust-version = "1.75"
@@ -14,7 +14,7 @@ publish = false
 tailwindcss-oxide = { workspace = true }
 
 # Fob bundler (re-exports rolldown types)
-fob-bundler = { path = "../fob-bundler", version = "0.2.3" }
+fob-bundler = { path = "../fob-bundler", version = "0.2.4" }
 
 # Workspace dependencies
 anyhow.workspace = true

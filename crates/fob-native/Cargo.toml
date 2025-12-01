@@ -16,8 +16,8 @@ name = "fob-native"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-fob-bundler = { path = "../fob-bundler", version = "0.2.3" }
-fob-graph = { path = "../fob-graph", version = "0.2.3" }
+fob-bundler = { path = "../fob-bundler", version = "0.2.4" }
+fob-graph = { path = "../fob-graph", version = "0.2.4" }
 napi = { workspace = true, features = ["napi6", "tokio_rt"] }
 napi-derive = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
