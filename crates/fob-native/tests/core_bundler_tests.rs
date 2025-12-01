@@ -35,6 +35,9 @@ async fn test_core_bundler_without_napi() {
         format: None,
         sourcemap: None,
         cwd: Some(cwd.to_string_lossy().to_string()),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = CoreBundler::new(config).unwrap();

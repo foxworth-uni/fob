@@ -3,7 +3,7 @@
 use crate::api::config::BundleConfig;
 use crate::conversion::result::BundleResult;
 use crate::core::bundler::CoreBundler;
-use crate::types::{OutputFormat, SourceMapMode};
+use crate::types::OutputFormat;
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
@@ -29,7 +29,10 @@ pub async fn bundle_single(
         entries: vec![entry],
         output_dir: Some(output_dir),
         format,
-        sourcemap: Some(SourceMapMode::External),
+        sourcemap: Some("external".to_string()),
+        external: None,
+        platform: None,
+        minify: None,
         cwd,
     };
 

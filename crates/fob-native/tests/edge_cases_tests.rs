@@ -21,6 +21,9 @@ async fn test_bundle_with_missing_file() {
         format: Some(OutputFormat::Esm),
         sourcemap: None,
         cwd: Some(cwd),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -59,6 +62,9 @@ async fn test_bundle_with_syntax_error() {
         format: Some(OutputFormat::Esm),
         sourcemap: None,
         cwd: Some(cwd),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -102,6 +108,9 @@ async fn test_bundle_with_circular_import() {
         format: Some(OutputFormat::Esm),
         sourcemap: None,
         cwd: Some(cwd),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -129,6 +138,9 @@ async fn test_bundle_with_unresolved_import() {
         format: Some(OutputFormat::Esm),
         sourcemap: None,
         cwd: Some(cwd),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -161,6 +173,9 @@ async fn test_bundle_with_empty_file() {
         format: Some(OutputFormat::Esm),
         sourcemap: None,
         cwd: Some(cwd),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -194,6 +209,9 @@ async fn test_bundle_with_very_long_path() {
         format: Some(OutputFormat::Esm),
         sourcemap: None,
         cwd: Some(cwd),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -219,6 +237,9 @@ async fn test_bundle_with_special_characters_in_path() {
         format: Some(OutputFormat::Esm),
         sourcemap: None,
         cwd: Some(cwd),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -242,6 +263,9 @@ async fn test_bundle_output_dir_creation() {
         format: Some(OutputFormat::Esm),
         sourcemap: None,
         cwd: Some(cwd),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = Fob::new(config).unwrap();

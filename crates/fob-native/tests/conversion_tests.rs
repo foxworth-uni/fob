@@ -5,7 +5,7 @@
 use fob_bundler::{BuildOptions, OutputFormat as BundlerOutputFormat};
 use fob_native::conversion::format::convert_format;
 use fob_native::conversion::sourcemap::convert_sourcemap_mode;
-use fob_native::types::{OutputFormat, SourceMapMode};
+use fob_native::types::OutputFormat;
 
 #[test]
 fn test_output_format_conversion_esm() {
@@ -35,39 +35,61 @@ fn test_output_format_conversion_default() {
 #[test]
 fn test_sourcemap_mode_external() {
     let base = BuildOptions::library("test.js");
-    let result = convert_sourcemap_mode(base, Some(SourceMapMode::External));
+    let result = convert_sourcemap_mode(base, Some("external".to_string()));
+    assert!(result.is_ok());
+}
 
-    // Verify sourcemap is enabled (we can't directly check, but we verify it compiles)
-    // The actual behavior is tested in integration tests
-    let _ = result;
+#[test]
+fn test_sourcemap_mode_true() {
+    let base = BuildOptions::library("test.js");
+    let result = convert_sourcemap_mode(base, Some("true".to_string()));
+    assert!(result.is_ok());
 }
 
 #[test]
 fn test_sourcemap_mode_inline() {
     let base = BuildOptions::library("test.js");
-    let result = convert_sourcemap_mode(base, Some(SourceMapMode::Inline));
-    let _ = result;
+    let result = convert_sourcemap_mode(base, Some("inline".to_string()));
+    assert!(result.is_ok());
 }
 
 #[test]
 fn test_sourcemap_mode_hidden() {
     let base = BuildOptions::library("test.js");
-    let result = convert_sourcemap_mode(base, Some(SourceMapMode::Hidden));
-    let _ = result;
+    let result = convert_sourcemap_mode(base, Some("hidden".to_string()));
+    assert!(result.is_ok());
 }
 
 #[test]
-fn test_sourcemap_mode_disabled() {
+fn test_sourcemap_mode_false() {
     let base = BuildOptions::library("test.js");
-    let result = convert_sourcemap_mode(base, Some(SourceMapMode::Disabled));
-    let _ = result;
+    let result = convert_sourcemap_mode(base, Some("false".to_string()));
+    assert!(result.is_ok());
 }
 
 #[test]
 fn test_sourcemap_mode_none_defaults_to_disabled() {
     let base = BuildOptions::library("test.js");
     let result = convert_sourcemap_mode(base, None);
-    let _ = result;
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_sourcemap_mode_invalid_value() {
+    let base = BuildOptions::library("test.js");
+    let result = convert_sourcemap_mode(base, Some("invalid".to_string()));
+    assert!(result.is_err());
+    assert!(result.unwrap_err().contains("Invalid sourcemap value"));
+}
+
+#[test]
+fn test_sourcemap_mode_invalid_returns_helpful_error() {
+    let base = BuildOptions::library("test.js");
+    let result = convert_sourcemap_mode(base, Some("yes".to_string()));
+    assert!(result.is_err());
+    let error = result.unwrap_err();
+    assert!(error.contains("Invalid sourcemap value 'yes'"));
+    assert!(error.contains("Expected: true, false, inline, hidden, external"));
 }
 
 #[tokio::test]

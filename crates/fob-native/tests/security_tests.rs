@@ -22,6 +22,9 @@ async fn test_path_validation_prevents_directory_traversal() {
         format: Some(OutputFormat::Esm),
         sourcemap: None,
         cwd: Some(cwd.to_string_lossy().to_string()),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = Fob::new(config);
@@ -55,6 +58,9 @@ async fn test_path_validation_prevents_traversal_in_entry() {
         format: Some(OutputFormat::Esm),
         sourcemap: None,
         cwd: Some(cwd.to_string_lossy().to_string()),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = Fob::new(config);
@@ -92,6 +98,9 @@ async fn test_path_validation_allows_valid_relative_paths() {
         format: Some(OutputFormat::Esm),
         sourcemap: None,
         cwd: Some(cwd.to_string_lossy().to_string()),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = Fob::new(config);
@@ -114,6 +123,9 @@ async fn test_path_validation_handles_absolute_paths() {
         format: Some(OutputFormat::Esm),
         sourcemap: None,
         cwd: Some(cwd.to_string_lossy().to_string()),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = Fob::new(config);
@@ -141,6 +153,9 @@ async fn test_path_validation_rejects_absolute_paths_outside_project() {
         format: Some(OutputFormat::Esm),
         sourcemap: None,
         cwd: Some(cwd.to_string_lossy().to_string()),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = Fob::new(config);

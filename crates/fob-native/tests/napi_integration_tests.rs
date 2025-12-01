@@ -2,7 +2,7 @@
 //!
 //! These tests verify the actual NAPI bindings work correctly.
 
-use fob_native::types::{OutputFormat, SourceMapMode};
+use fob_native::types::OutputFormat;
 use fob_native::{BundleConfig, Fob, bundle_single, version};
 use tempfile::TempDir;
 
@@ -29,8 +29,11 @@ async fn test_fob_constructor_with_valid_config() {
         entries: vec!["index.js".to_string()],
         output_dir: Some("dist".to_string()),
         format: Some(OutputFormat::Esm),
-        sourcemap: Some(SourceMapMode::External),
+        sourcemap: Some("external".to_string()),
         cwd: Some(cwd),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let result = Fob::new(config);
@@ -47,6 +50,9 @@ async fn test_fob_constructor_rejects_empty_entries() {
         format: None,
         sourcemap: None,
         cwd: Some(cwd),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = Fob::new(config);
@@ -77,8 +83,11 @@ async fn test_fob_bundle_success() {
         entries: vec!["index.js".to_string()],
         output_dir: Some("dist".to_string()),
         format: Some(OutputFormat::Esm),
-        sourcemap: Some(SourceMapMode::External),
+        sourcemap: Some("external".to_string()),
         cwd: Some(cwd.clone()),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -111,8 +120,11 @@ async fn test_fob_bundle_with_all_formats() {
             entries: vec!["index.js".to_string()],
             output_dir: Some("dist".to_string()),
             format: Some(format),
-            sourcemap: Some(SourceMapMode::External),
+            sourcemap: Some("external".to_string()),
             cwd: Some(cwd.clone()),
+            external: None,
+            minify: None,
+            platform: None,
         };
 
         let bundler = Fob::new(config).unwrap();
@@ -128,10 +140,10 @@ async fn test_fob_bundle_with_all_sourcemap_modes() {
     create_test_file(&cwd, "index.js", "export const hello = 'world';");
 
     let modes = vec![
-        SourceMapMode::External,
-        SourceMapMode::Inline,
-        SourceMapMode::Hidden,
-        SourceMapMode::Disabled,
+        Some("external".to_string()),
+        Some("inline".to_string()),
+        Some("hidden".to_string()),
+        Some("false".to_string()),
     ];
 
     for mode in modes {
@@ -139,8 +151,11 @@ async fn test_fob_bundle_with_all_sourcemap_modes() {
             entries: vec!["index.js".to_string()],
             output_dir: Some("dist".to_string()),
             format: Some(OutputFormat::Esm),
-            sourcemap: Some(mode),
+            sourcemap: mode,
             cwd: Some(cwd.clone()),
+            external: None,
+            minify: None,
+            platform: None,
         };
 
         let bundler = Fob::new(config).unwrap();
@@ -160,8 +175,11 @@ async fn test_fob_bundle_multiple_entries() {
         entries: vec!["a.js".to_string(), "b.js".to_string()],
         output_dir: Some("dist".to_string()),
         format: Some(OutputFormat::Esm),
-        sourcemap: Some(SourceMapMode::External),
+        sourcemap: Some("external".to_string()),
         cwd: Some(cwd),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -236,6 +254,9 @@ async fn test_fob_bundle_error_serialization() {
         format: Some(OutputFormat::Esm),
         sourcemap: None,
         cwd: Some(cwd),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -281,6 +302,9 @@ async fn test_fob_bundle_with_defaults() {
         format: None,     // Should default to ESM
         sourcemap: None,  // Should default to disabled
         cwd: Some(cwd),
+        external: None,
+        minify: None,
+        platform: None,
     };
 
     let bundler = Fob::new(config).unwrap();

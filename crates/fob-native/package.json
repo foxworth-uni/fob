@@ -1,5 +1,5 @@
 {
-  "name": "fob-native-build",
+  "name": "@fox-uni/fob",
   "version": "0.2.4",
   "author": "Taron Foxworth <fox@9generations.com>",
   "napi": {
@@ -27,12 +27,12 @@
     "sync-binary": "node scripts/sync-binary.js"
   },
   "optionalDependencies": {
-    "@fox-uni/fob-darwin-x64": "0.1.0",
-    "@fox-uni/fob-darwin-arm64": "0.1.0",
-    "@fox-uni/fob-win32-x64-msvc": "0.1.0",
-    "@fox-uni/fob-linux-x64-gnu": "0.1.0",
-    "@fox-uni/fob-linux-x64-musl": "0.1.0",
-    "@fox-uni/fob-linux-arm64-gnu": "0.1.0",
-    "@fox-uni/fob-linux-arm64-musl": "0.1.0"
+    "@fox-uni/fob-darwin-x64": "0.2.4",
+    "@fox-uni/fob-darwin-arm64": "0.2.4",
+    "@fox-uni/fob-win32-x64-msvc": "0.2.4",
+    "@fox-uni/fob-linux-x64-gnu": "0.2.4",
+    "@fox-uni/fob-linux-x64-musl": "0.2.4",
+    "@fox-uni/fob-linux-arm64-gnu": "0.2.4",
+    "@fox-uni/fob-linux-arm64-musl": "0.2.4"
   }
 }
