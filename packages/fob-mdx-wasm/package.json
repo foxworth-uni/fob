@@ -40,7 +40,7 @@
     "playground": "pnpm playground:build && pnpm playground:serve",
     "playground:build": "wasm-pack build --target web --dev ../../crates/fob-mdx-wasm --out-dir ../../crates/fob-mdx-wasm/pkg && ./scripts/copy-wasm.sh",
     "playground:serve": "sirv fixtures/playground --port 3030 --cors --single --dev",
-    "test": "vitest",
+    "test": "vitest --run",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "prepublishOnly": "pnpm build"

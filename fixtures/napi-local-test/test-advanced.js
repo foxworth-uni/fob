@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { mkdirSync, rmSync, existsSync, readFileSync } from 'fs';
-import { Fob, OutputFormat, SourceMapMode } from '@fox-uni/fob';
+import { Fob, OutputFormat } from '@fox-uni/fob';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -66,7 +66,7 @@ try {
     bundle: true,
     format: OutputFormat.Esm,
     cwd: __dirname,
-    sourcemap: SourceMapMode.Inline,
+    sourcemap: 'inline',
   };
 
   rmSync(config.outputDir, { recursive: true, force: true });
@@ -99,7 +99,7 @@ try {
     bundle: true,
     format: OutputFormat.Esm,
     cwd: __dirname,
-    sourcemap: SourceMapMode.External,
+    sourcemap: 'external',
   };
 
   rmSync(config.outputDir, { recursive: true, force: true });
@@ -129,7 +129,7 @@ try {
     bundle: true,
     format: OutputFormat.Esm,
     cwd: __dirname,
-    sourcemap: SourceMapMode.Disabled,
+    sourcemap: 'false',
   };
 
   rmSync(config.outputDir, { recursive: true, force: true });

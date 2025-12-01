@@ -418,4 +418,57 @@ mod tests {
             _ => panic!("Wrong error type"),
         }
     }
+
+    #[test]
+    fn test_wasmerror_serialization() {
+        // Test ValidationError serializes with correct kind
+        let err = WasmError::ValidationError {
+            message: "test".to_string(),
+            details: None,
+        };
+        let json = serde_json::to_string(&err).unwrap();
+        assert!(
+            json.contains(r#""kind":"validationError""#),
+            "Expected 'validationError' in JSON, got: {}",
+            json
+        );
+
+        // Test CompilationError serializes with correct kind
+        let comp_err = WasmError::CompilationError {
+            message: "test".to_string(),
+            location: None,
+            context: None,
+            suggestion: None,
+        };
+        let comp_json = serde_json::to_string(&comp_err).unwrap();
+        assert!(
+            comp_json.contains(r#""kind":"compilationError""#),
+            "Expected 'compilationError' in JSON, got: {}",
+            comp_json
+        );
+
+        // Test SerializationError serializes with correct kind
+        let ser_err = WasmError::SerializationError {
+            message: "test".to_string(),
+            details: None,
+        };
+        let ser_json = serde_json::to_string(&ser_err).unwrap();
+        assert!(
+            ser_json.contains(r#""kind":"serializationError""#),
+            "Expected 'serializationError' in JSON, got: {}",
+            ser_json
+        );
+
+        // Test InternalError serializes with correct kind
+        let int_err = WasmError::InternalError {
+            message: "test".to_string(),
+            details: None,
+        };
+        let int_json = serde_json::to_string(&int_err).unwrap();
+        assert!(
+            int_json.contains(r#""kind":"internalError""#),
+            "Expected 'internalError' in JSON, got: {}",
+            int_json
+        );
+    }
 }

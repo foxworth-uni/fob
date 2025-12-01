@@ -1,0 +1,21 @@
+{
+  "name": "fob-mdx-wasm",
+  "collaborators": [
+    "Taron Foxworth <fox@9generations.com>"
+  ],
+  "description": "WASM bindings for fob-mdx - compile MDX to JSX in the browser",
+  "version": "0.3.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/foxworth-uni/fob"
+  },
+  "files": [
+    "fob_mdx_wasm_bg.wasm",
+    "fob_mdx_wasm.js",
+    "fob_mdx_wasm.d.ts"
+  ],
+  "main": "fob_mdx_wasm.js",
+  "homepage": "https://fob.dev",
+  "types": "fob_mdx_wasm.d.ts"
+}

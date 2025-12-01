@@ -37,8 +37,8 @@ pub struct BundleConfig {
     /// Output format ("esm" | "cjs" | "iife")
     pub format: Option<OutputFormat>,
     /// Source map generation mode
-    /// Can be a boolean string ("true" = external, "false" = disabled) or a mode string ("inline" | "hidden" | "external")
-    /// In JavaScript/TypeScript, pass as string: "true", "false", "inline", "hidden", or "external"
+    /// Accepts: "true", "false", "external", "inline", "hidden"
+    /// Default: disabled (no source maps)
     pub sourcemap: Option<String>,
     /// Packages to externalize (not bundled)
     pub external: Option<Vec<String>>,

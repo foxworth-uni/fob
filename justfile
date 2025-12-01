@@ -289,6 +289,14 @@ clean:
     @pnpm clean || true
     @echo "✓ Clean complete"
 
+# Clean WASM build artifacts only
+clean-wasm:
+    @echo "Cleaning WASM artifacts..."
+    @rm -rf crates/fob-mdx-wasm/pkg crates/fob-mdx-wasm/pkg-node
+    @rm -rf packages/fob-mdx-wasm/pkg packages/fob-mdx-wasm/pkg-node
+    @rm -rf packages/fob-mdx-wasm/dist
+    @echo "✓ WASM artifacts cleaned"
+
 # =============================================================================
 # Verification & Quality
 # =============================================================================

@@ -35,8 +35,8 @@ export interface BundleConfig {
   format?: OutputFormat;
   /**
    * Source map generation mode
-   * Can be a boolean string ("true" = external, "false" = disabled) or a mode string ("inline" | "hidden" | "external")
-   * In JavaScript/TypeScript, pass as string: "true", "false", "inline", "hidden", or "external"
+   * Accepts: "true", "false", "external", "inline", "hidden"
+   * Default: disabled (no source maps)
    */
   sourcemap?: string;
   /** Packages to externalize (not bundled) */

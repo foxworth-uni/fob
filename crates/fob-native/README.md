@@ -25,13 +25,13 @@ The package will automatically install the correct native binary for your platfo
 ### Basic Bundle
 
 ```typescript
-import { Fob, OutputFormat, SourceMapMode } from '@fox-uni/fob';
+import { Fob, OutputFormat } from '@fox-uni/fob';
 
 const bundler = new Fob({
   entries: ['./src/index.js'],
   outputDir: './dist',
   format: OutputFormat.Esm,
-  sourcemap: SourceMapMode.External,
+  sourcemap: 'external',
   cwd: process.cwd(),
 });
 
@@ -62,7 +62,7 @@ new Fob(config: BundleConfig)
 - `entries: string[]` - Entry points to bundle
 - `outputDir?: string` - Output directory (default: `"dist"`)
 - `format?: OutputFormat` - Output format: `Esm`, `Cjs`, or `Iife` (default: `Esm`)
-- `sourcemap?: SourceMapMode` - Source map mode: `External`, `Inline`, `Hidden`, or `Disabled`
+- `sourcemap?: string` - Source map mode: `"external"`, `"inline"`, `"hidden"`, or `"false"` (default: disabled)
 - `cwd?: string` - Working directory for resolution (default: `process.cwd()`)
 
 #### Methods
@@ -104,12 +104,12 @@ version(): string
 - **`OutputFormat.Cjs`** - CommonJS format
 - **`OutputFormat.Iife`** - Immediately Invoked Function Expression format
 
-## Source Map Modes
+## Source Map Options
 
-- **`SourceMapMode.External`** - Generate external `.map` file (default)
-- **`SourceMapMode.Inline`** - Embed source map in output
-- **`SourceMapMode.Hidden`** - Generate source map but don't link from output
-- **`SourceMapMode.Disabled`** - No source map generation
+- **`"external"`** or **`"true"`** - Generate external `.map` file
+- **`"inline"`** - Embed source map inline as data URL
+- **`"hidden"`** - Generate source map but don't link from output
+- **`"false"`** or `undefined` - No source map generation (default)
 
 ## Features
 
