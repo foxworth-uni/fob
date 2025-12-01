@@ -85,7 +85,6 @@ impl ConfigDiscovery {
             return self.load_from_package_json(path);
         }
 
-        // TOML only - JavaScript/TypeScript config evaluation has been removed
         let content = fs::read_to_string(path)
             .map_err(|e| ConfigError::InvalidValue(format!("Failed to read config file: {}", e)))?;
 
@@ -121,8 +120,6 @@ impl ConfigDiscovery {
         JoyConfig::from_value(fob_value.clone())
     }
 }
-
-// ConfigFormat enum removed - we only support TOML now
 
 /// Discover and load config from current directory (convenience function)
 ///

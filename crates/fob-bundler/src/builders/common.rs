@@ -75,13 +75,6 @@ pub(crate) struct BundlePlan {
     pub runtime: Option<Arc<dyn crate::Runtime>>,
 }
 
-// Legacy function - no longer used with plugin-based collection
-// Keeping for reference but should be removed once integration is verified
-
-// Legacy scan_bundle_for_assets function removed.
-// Asset detection now happens automatically via the AssetDetectionPlugin transform hook
-// during bundling, which is more efficient and WASM-compatible.
-
 pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
     let BundlePlan {
         entries,
@@ -95,19 +88,13 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
     // Determine the scan_cwd for asset scanning
     // Priority: explicit cwd > runtime.get_cwd() > std::env::current_dir() (native only)
     let scan_cwd = match cwd.clone() {
-        Some(path) => {
-            eprintln!("[FOB_BUILD] Using explicit cwd: {}", path.display());
-            path
-        }
+        Some(path) => path,
         None => {
             // Try to get cwd from runtime if available
             if let Some(ref rt) = runtime {
                 match rt.get_cwd() {
-                    Ok(path) => {
-                        eprintln!("[FOB_BUILD] Using runtime cwd: {}", path.display());
-                        path
-                    }
-                    Err(e) => {
+                    Ok(path) => path,
+                    Err(_e) => {
                         // On WASM, this is a critical error - we MUST have a cwd
                         #[cfg(target_family = "wasm")]
                         {
@@ -121,10 +108,6 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
                         // On native, fall back to std::env::current_dir()
                         #[cfg(not(target_family = "wasm"))]
                         {
-                            eprintln!(
-                                "[FOB_BUILD] Runtime get_cwd() failed: {}, falling back to std::env::current_dir()",
-                                e
-                            );
                             std::env::current_dir()?
                         }
                     }
@@ -141,9 +124,6 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
 
                 #[cfg(not(target_family = "wasm"))]
                 {
-                    eprintln!(
-                        "[FOB_BUILD] No runtime or explicit cwd, using std::env::current_dir()"
-                    );
                     std::env::current_dir()?
                 }
             }
@@ -197,7 +177,6 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
         None => {
             #[cfg(not(target_family = "wasm"))]
             {
-                eprintln!("[FOB_BUILD] No runtime provided, using NativeRuntime");
                 Arc::new(crate::NativeRuntime::new())
             }
             #[cfg(target_family = "wasm")]
@@ -218,11 +197,9 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
         Arc::clone(&runtime),
     );
     plugins.push(Arc::new(asset_plugin));
-    eprintln!("[FOB_BUILD] Added asset detection plugin");
 
     // Add module collection plugin to gather module data
     plugins.push(collection_plugin.clone());
-    eprintln!("[FOB_BUILD] Added module collection plugin");
 
     let mut bundler = RolldownBundlerBuilder::default()
         .with_options(options)
@@ -235,13 +212,6 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
         .await
         .map_err(|e| Error::from_rolldown_batch(&e))?;
 
-    eprintln!(
-        "[FOB_BUILD] Bundle complete. Asset registry has {} assets",
-        asset_registry.len()
-    );
-
-    // Asset detection now happens during bundling via the plugin transform hook
-    // The asset_registry was populated by the AssetDetectionPlugin during transform
     let asset_registry_opt = if !asset_registry.is_empty() {
         Some(asset_registry)
     } else {
@@ -250,10 +220,6 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
 
     // Extract collected module data from the plugin and build the module graph
     let collection_data = collection_plugin.take_data();
-    eprintln!(
-        "[FOB_BUILD] Collected {} modules",
-        collection_data.modules.len()
-    );
 
     let graph = fob_graph::ModuleGraph::from_collected_data(collection_data).map_err(|e| {
         Error::Bundler(vec![diagnostics::ExtractedDiagnostic {

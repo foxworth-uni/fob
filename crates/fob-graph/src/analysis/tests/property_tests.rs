@@ -3,7 +3,7 @@
 //! These tests use proptest to verify invariants hold across a wide range
 //! of inputs, helping catch edge cases and bugs.
 
-use fob_graph::analysis::config::{AnalyzerConfig, DEFAULT_MAX_DEPTH, DEFAULT_MAX_MODULES};
+use crate::analysis::config::{AnalyzerConfig, DEFAULT_MAX_DEPTH, DEFAULT_MAX_MODULES};
 
 #[cfg(feature = "proptest")]
 use proptest::prelude::*;
@@ -98,8 +98,8 @@ fn test_path_normalization_invariants(#[strategy("[a-zA-Z0-9_./-]{0, 50}")] path
 #[cfg(feature = "proptest")]
 #[proptest]
 fn test_resolver_random_specifiers(#[strategy("[a-zA-Z0-9_./@~-]{1, 100}")] specifier: String) {
-    use fob_graph::analysis::config::AnalyzerConfig;
-    use fob_graph::analysis::resolver::ModuleResolver;
+    use crate::analysis::config::AnalyzerConfig;
+    use crate::analysis::resolver::ModuleResolver;
 
     // Create resolver - should not panic on any specifier format
     let config = AnalyzerConfig::default();
@@ -112,7 +112,7 @@ fn test_resolver_random_specifiers(#[strategy("[a-zA-Z0-9_./@~-]{1, 100}")] spec
 /// Property test: max_depth enforcement invariant.
 #[test]
 fn test_max_depth_invariant() {
-    use fob_graph::analysis::config::{AnalyzerConfig, DEFAULT_MAX_DEPTH};
+    use crate::analysis::config::{AnalyzerConfig, DEFAULT_MAX_DEPTH};
 
     // Invariant: max_depth should always be enforced if set
     let mut config = AnalyzerConfig::default();
@@ -135,7 +135,7 @@ fn test_max_depth_invariant() {
 /// Property test: max_modules enforcement invariant.
 #[test]
 fn test_max_modules_invariant() {
-    use fob_graph::analysis::config::{AnalyzerConfig, DEFAULT_MAX_MODULES};
+    use crate::analysis::config::{AnalyzerConfig, DEFAULT_MAX_MODULES};
 
     // Invariant: max_modules should always be enforced if set
     let mut config = AnalyzerConfig::default();
@@ -177,7 +177,7 @@ fn test_path_alias_formats(
     #[strategy("[a-zA-Z0-9@~#]{1, 20}")] alias: String,
     #[strategy("[a-zA-Z0-9_./-]{1, 50}")] target: String,
 ) {
-    use fob_graph::analysis::resolver::aliases::resolve_path_alias;
+    use crate::analysis::resolver::aliases::resolve_path_alias;
     use rustc_hash::FxHashMap;
     use std::path::Path;
 

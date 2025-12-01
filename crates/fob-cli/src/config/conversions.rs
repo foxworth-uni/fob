@@ -30,5 +30,3 @@ impl From<crate::cli::SourceMapMode> for SourceMapMode {
         }
     }
 }
-
-// EsTarget conversion removed - config::EsTarget is now a re-export of cli::EsTarget

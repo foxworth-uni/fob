@@ -1,9 +1,9 @@
 //! Unit tests for GraphWalker.
 
 use super::test_helpers::*;
+use crate::analysis::config::AnalyzerConfig;
+use crate::analysis::walker::GraphWalker;
 use crate::test_utils::TestRuntime;
-use fob_graph::analysis::config::AnalyzerConfig;
-use fob_graph::analysis::walker::GraphWalker;
 use std::sync::Arc;
 use tempfile::TempDir;
 

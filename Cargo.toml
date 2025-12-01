@@ -51,7 +51,7 @@ oxc_parser = "0.97.0"
 oxc_ast = "0.97.0"
 oxc_ast_visit = "0.97.0"
 oxc_semantic = "0.97.0"
-oxc_resolver = "11.13.2"
+oxc_resolver = "=11.13.2"
 oxc_transformer = "0.97.0"
 oxc_transformer_plugins = "0.97.0"
 oxc_codegen = "0.97.0"
@@ -207,5 +207,4 @@ disallowed_methods = "deny"
 async_fn_in_trait = "allow"
 # Missing docs warnings are tracked separately per crate
 missing_docs = "allow"
-
 

@@ -1,8 +1,8 @@
 //! Unit tests for Analyzer API.
 
 use super::test_helpers::*;
+use crate::analysis::analyzer::Analyzer;
 use crate::test_utils::TestRuntime;
-use fob_graph::analysis::analyzer::Analyzer;
 use std::sync::Arc;
 use tempfile::TempDir;
 

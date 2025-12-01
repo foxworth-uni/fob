@@ -1,9 +1,9 @@
 //! Unit tests for ModuleResolver.
 
 use super::test_helpers::*;
+use crate::analysis::config::{AnalyzerConfig, ResolveResult};
+use crate::analysis::resolver::ModuleResolver;
 use crate::test_utils::TestRuntime;
-use fob_graph::analysis::config::{AnalyzerConfig, ResolveResult};
-use fob_graph::analysis::resolver::ModuleResolver;
 use tempfile::TempDir;
 
 #[tokio::test]

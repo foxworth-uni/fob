@@ -472,9 +472,6 @@ impl AssetDetectionPlugin {
             Ok(None)
         }
     }
-
-    // Legacy scan_file method removed.
-    // Asset detection now happens automatically via the transform hook during bundling.
 }
 
 /// Detect asset references in module source code.

@@ -164,20 +164,13 @@ pub async fn resolve_asset(
     cwd: &Path,
     runtime: &dyn Runtime,
 ) -> Result<PathBuf> {
-    eprintln!("[ASSET_RESOLVE] Resolving asset:");
-    eprintln!("[ASSET_RESOLVE]   specifier: '{}'", specifier);
-    eprintln!("[ASSET_RESOLVE]   referrer: {}", referrer.display());
-    eprintln!("[ASSET_RESOLVE]   cwd: {}", cwd.display());
-
     // Handle relative paths (./file or ../file)
     if specifier.starts_with('.') {
-        eprintln!("[ASSET_RESOLVE]   Type: relative path");
         return resolve_relative(specifier, referrer, cwd, runtime).await;
     }
 
     // Handle absolute paths (rare, but possible)
     if specifier.starts_with('/') {
-        eprintln!("[ASSET_RESOLVE]   Type: absolute path");
         let path = PathBuf::from(specifier);
         return validate_and_canonicalize(&path, cwd, runtime).await;
     }
@@ -191,27 +184,20 @@ pub async fn resolve_asset(
     // - If relative fails or it clearly looks like a package path, try node_modules
     //
     // This handles wasm-bindgen's pattern: new URL('file.wasm', import.meta.url)
-    eprintln!("[ASSET_RESOLVE]   Type: bare specifier");
 
     // Check if it's a simple filename (no path separators except possibly in @scope)
     let is_simple_filename = !specifier.contains('/')
         || (specifier.starts_with('@') && specifier.matches('/').count() == 1);
 
     if !is_simple_filename {
-        eprintln!("[ASSET_RESOLVE]   Looks like package path, trying node_modules");
         return resolve_from_node_modules(specifier, referrer, cwd, runtime).await;
     }
 
     // Try resolving as relative to referrer first (wasm-bindgen case)
-    eprintln!("[ASSET_RESOLVE]   Trying as relative filename");
     match resolve_relative(specifier, referrer, cwd, runtime).await {
-        Ok(resolved) => {
-            eprintln!("[ASSET_RESOLVE]   ✓ Resolved relative to referrer");
-            Ok(resolved)
-        }
+        Ok(resolved) => Ok(resolved),
         Err(_) => {
             // Fall back to node_modules lookup
-            eprintln!("[ASSET_RESOLVE]   Failed relative, trying node_modules");
             resolve_from_node_modules(specifier, referrer, cwd, runtime).await
         }
     }
@@ -235,11 +221,8 @@ async fn resolve_relative(
         referrer
     };
 
-    eprintln!("[ASSET_RESOLVE]   base_dir: {}", base_dir.display());
-
     // Join and resolve
     let resolved = base_dir.join(specifier);
-    eprintln!("[ASSET_RESOLVE]   joined path: {}", resolved.display());
 
     validate_and_canonicalize(&resolved, cwd, runtime).await
 }
@@ -263,23 +246,11 @@ async fn resolve_from_node_modules(
         referrer
     };
 
-    eprintln!(
-        "[ASSET_RESOLVE]   Starting search from: {}",
-        current.display()
-    );
-
     // Walk up the directory tree
-    let mut attempts = 0;
     loop {
         let candidate = current.join("node_modules").join(specifier);
-        eprintln!(
-            "[ASSET_RESOLVE]   Attempt {}: checking {}",
-            attempts,
-            candidate.display()
-        );
 
         if runtime.exists(&candidate) {
-            eprintln!("[ASSET_RESOLVE]   ✓ Found!");
             return validate_and_canonicalize(&candidate, cwd, runtime).await;
         }
 
@@ -287,10 +258,8 @@ async fn resolve_from_node_modules(
         match current.parent() {
             Some(parent) => {
                 current = parent;
-                attempts += 1;
             }
             None => {
-                eprintln!("[ASSET_RESOLVE]   ✗ Not found in any node_modules");
                 break;
             }
         }
@@ -314,32 +283,19 @@ async fn validate_and_canonicalize(
     cwd: &Path,
     runtime: &dyn Runtime,
 ) -> Result<PathBuf> {
-    eprintln!("[ASSET_RESOLVE]   Validating: {}", path.display());
-
     // Check if file exists
     if !runtime.exists(path) {
-        eprintln!("[ASSET_RESOLVE]   ✗ File does not exist");
         return Err(Error::AssetNotFound {
             specifier: path.display().to_string(),
             searched_from: cwd.display().to_string(),
         });
     }
 
-    eprintln!("[ASSET_RESOLVE]   ✓ File exists");
-
     // Canonicalize to resolve symlinks and relative components
     let canonical = canonicalize_path(path, runtime).await?;
 
-    eprintln!("[ASSET_RESOLVE]   Canonical: {}", canonical.display());
-
     // Security: Validate path is safe
     validate_asset_security(&canonical, cwd, runtime).await?;
-
-    eprintln!("[ASSET_RESOLVE]   ✓ Security validation passed");
-    eprintln!(
-        "[ASSET_RESOLVE]   Final resolved path: {}",
-        canonical.display()
-    );
 
     Ok(canonical)
 }

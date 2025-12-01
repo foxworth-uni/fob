@@ -6,18 +6,24 @@ Instead of running a CLI tool, call Fob as a library. Build meta-frameworks, cus
 
 ## Quick Start
 
-### JavaScript/Node.js
+### JavaScript/TypeScript API (NAPI)
 
-```javascript
-import { bundle } from '@fob/bundler';
+```bash
+npm install @fox-uni/fob
+```
 
-const result = await bundle({
-  entries: ['src/index.js'],
+```typescript
+import { Fob } from '@fox-uni/fob';
+
+const bundler = new Fob({
+  entries: ['./src/index.ts'],
   outputDir: 'dist',
   format: 'esm',
 });
 
-console.log(`Built ${result.stats.totalModules} modules`);
+const result = await bundler.bundle();
+
+console.log(`Built ${result.stats.total_modules} modules`);
 console.log(`Generated ${result.chunks.length} chunks`);
 ```
 
@@ -135,6 +141,151 @@ npm install @fob/bundler
 ```toml
 [dependencies]
 fob-core = "0.1"
+```
+
+## JavaScript/TypeScript API
+
+### Installation
+
+```bash
+npm install @fox-uni/fob
+```
+
+### Quick Start
+
+```typescript
+import { Fob } from '@fox-uni/fob';
+
+const bundler = new Fob({
+  entries: ['./src/index.ts'],
+  outputDir: 'dist',
+  format: 'esm',
+});
+
+const result = await bundler.bundle();
+```
+
+### Configuration Reference
+
+#### `BundleConfig`
+
+```typescript
+interface BundleConfig {
+  // Required
+  entries: string[];
+
+  // Output
+  outputDir?: string; // default: "dist"
+
+  // Build behavior
+  external?: string[]; // packages to externalize
+  platform?: 'browser' | 'node'; // target runtime, default: "browser"
+
+  // Output format
+  format?: 'esm' | 'cjs' | 'iife'; // lowercase strings
+
+  // Optimizations
+  minify?: boolean; // enable minification
+  sourcemap?: string; // source map generation: "true"/"external" (external file), "false" (disabled), "inline", or "hidden"
+
+  // Context
+  cwd?: string; // working directory for resolution
+}
+```
+
+#### Configuration Options
+
+- **`entries`** (required): Array of entry point file paths to bundle
+- **`outputDir`**: Output directory for bundled files (default: `"dist"`)
+- **`external`**: Array of package names to externalize (not bundled). Essential for library authors.
+- **`platform`**: Target runtime environment - `"browser"` (default) or `"node"`
+- **`format`**: Output module format - `"esm"` (default), `"cjs"`, or `"iife"`
+- **`minify`**: Enable JavaScript minification (default: `false`)
+- **`sourcemap`**: Source map generation mode (string):
+  - `"true"` or `"external"`: Generate external `.map` file
+  - `"false"`: Disable source maps
+  - `"inline"`: Generate inline source map (data URI)
+  - `"hidden"`: Generate source map but don't reference it in bundle
+- **`cwd`**: Working directory for module resolution (default: current directory)
+
+### Result Types
+
+#### `BundleResult`
+
+```typescript
+interface BundleResult {
+  chunks: ChunkInfo[];
+  manifest: ManifestInfo;
+  stats: BuildStatsInfo;
+  assets: AssetInfo[];
+  module_count: number;
+}
+```
+
+#### `ChunkInfo`
+
+```typescript
+interface ChunkInfo {
+  id: string;
+  kind: string; // "entry" | "async" | "shared"
+  file_name: string;
+  code: string;
+  source_map?: string;
+  modules: ModuleInfo[];
+  imports: string[];
+  dynamic_imports: string[];
+  size: number;
+}
+```
+
+### Examples
+
+#### Library Build (with external dependencies)
+
+```typescript
+import { Fob } from '@fox-uni/fob';
+
+const bundler = new Fob({
+  entries: ['./src/index.ts'],
+  outputDir: 'dist',
+  format: 'esm',
+  external: ['react', 'react-dom'],
+  sourcemap: 'external',
+});
+
+const result = await bundler.bundle();
+```
+
+#### App Build (bundled dependencies)
+
+```typescript
+import { Fob } from '@fox-uni/fob';
+
+const bundler = new Fob({
+  entries: ['./src/index.ts'],
+  outputDir: 'dist',
+  format: 'esm',
+  minify: true,
+  sourcemap: 'inline',
+});
+
+const result = await bundler.bundle();
+```
+
+#### Node.js Target
+
+```typescript
+import { Fob } from '@fox-uni/fob';
+
+const bundler = new Fob({
+  entries: ['./src/index.ts'],
+  outputDir: 'dist',
+  format: 'cjs',
+  platform: 'node',
+  external: ['fs', 'path'],
+});
+
+const result = await bundler.bundle();
 ```
 
 ## Documentation

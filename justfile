@@ -364,7 +364,7 @@ release-dry level:
     echo "Previewing {{level}} release..."
     cargo release {{level}} --workspace --no-verify
 
-# Publish crates to crates.io (skips already-published)
+
 publish:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -433,82 +433,6 @@ watch-package package:
     @echo "Watching {{package}}..."
     @cargo watch -x "check --package {{package}}" -x "test --package {{package}}"
 
-# =============================================================================
-# Examples
-# =============================================================================
-
-# List all available examples
-examples:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "📦 Available Examples"
-    echo ""
-    echo "Rust Examples:"
-    for dir in examples/rust/*/; do
-        if [ -f "$dir/Cargo.toml" ]; then
-            name=$(basename "$dir")
-            desc=$(grep -m1 "^# " "$dir/README.md" 2>/dev/null | sed 's/^# //' || echo "")
-            if [ -n "$desc" ]; then
-                printf "  %-30s %s\n" "$name" "$desc"
-            else
-                printf "  %s\n" "$name"
-            fi
-        fi
-    done
-    echo ""
-    echo "JavaScript Examples:"
-    for dir in examples/js/*/; do
-        if [ -f "$dir/package.json" ]; then
-            name=$(basename "$dir")
-            desc=$(grep -m1 '"description"' "$dir/package.json" 2>/dev/null | sed 's/.*"description": "\(.*\)".*/\1/' || echo "")
-            if [ -n "$desc" ]; then
-                printf "  %-30s %s\n" "$name" "$desc"
-            else
-                printf "  %s\n" "$name"
-            fi
-        fi
-    done
-    echo ""
-    echo "💡 Quick Start:"
-    echo "  just example rust/basic-bundler        # Start here!"
-    echo "  just example rust/advanced-bundler     # Production patterns"
-    echo "  just example rust/component-library    # React components"
-    echo "  just example rust/meta-framework       # Framework building"
-    echo ""
-    echo "Run any example:"
-    echo "  just example rust/<name>"
-    echo "  just example js/<name>"
-
-# Run a specific example
-example name:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    NAME="{{name}}"
-    if [[ "$NAME" == rust/* ]]; then
-        example_name="${NAME#rust/}"
-        example_dir="examples/rust/$example_name"
-        if [ ! -d "$example_dir" ]; then
-            echo "❌ Rust example '$example_name' not found"
-            echo "Run 'just examples' to see available examples"
-            exit 1
-        fi
-        echo "🦀 Running Rust example: $example_name"
-        cd "$example_dir" && cargo run
-    elif [[ "$NAME" == js/* ]]; then
-        example_name="${NAME#js/}"
-        example_dir="examples/js/$example_name"
-        if [ ! -d "$example_dir" ]; then
-            echo "❌ JavaScript example '$example_name' not found"
-            echo "Run 'just examples' to see available examples"
-            exit 1
-        fi
-        echo "📦 Running JavaScript example: $example_name"
-        cd "$example_dir" && npm run start 2>/dev/null || npm run dev 2>/dev/null || node src/index.js
-    else
-        echo "❌ Invalid example format. Use 'rust/<name>' or 'js/<name>'"
-        echo "Run 'just examples' to see available examples"
-        exit 1
-    fi
 
 # =============================================================================
 # Utility Recipes

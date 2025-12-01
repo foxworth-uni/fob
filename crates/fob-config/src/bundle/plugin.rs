@@ -38,7 +38,6 @@ pub struct PluginOptions {
     pub name: Option<String>,
 
     /// Backend implementation used to execute the plugin
-    /// Note: Extism support has been removed. Plugins are now registered directly in code.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub backend: Option<PluginBackend>,
 
@@ -76,7 +75,4 @@ pub struct PluginOptions {
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum PluginBackend {
-    // Extism support has been removed
-    // Future plugin backends can be added here (e.g., Boa, Native)
-}
+pub enum PluginBackend {}
