@@ -52,10 +52,9 @@ impl PackageJson {
     /// # Example
     ///
     /// ```no_run
-    /// # use fob_graph::PackageJson;
-    /// # use crate::runtime::Runtime;
+    /// # use fob_graph::{PackageJson, Runtime, Result};
     /// # use std::path::PathBuf;
-    /// # async fn example<R: Runtime>(runtime: &R) -> crate::Result<()> {
+    /// # async fn example<R: Runtime>(runtime: &R) -> Result<()> {
     /// let pkg = PackageJson::from_path(runtime, &PathBuf::from("./package.json")).await?;
     /// println!("Package: {:?}", pkg.name);
     /// # Ok(())
@@ -104,9 +103,9 @@ impl PackageJson {
     /// # Example
     ///
     /// ```no_run
-    /// # use fob_graph::PackageJson;
+    /// # use fob_graph::{PackageJson, Result};
     /// # use std::path::PathBuf;
-    /// # async fn example() -> crate::Result<()> {
+    /// # async fn example() -> Result<()> {
     /// let pkg = PackageJson::from_path_native(&PathBuf::from("./package.json")).await?;
     /// println!("Package: {:?}", pkg.name);
     /// # Ok(())
@@ -130,10 +129,9 @@ impl PackageJson {
     /// # Example
     ///
     /// ```no_run
-    /// # use fob_graph::PackageJson;
-    /// # use crate::runtime::Runtime;
+    /// # use fob_graph::{PackageJson, Runtime, Result};
     /// # use std::path::PathBuf;
-    /// # async fn example<R: Runtime>(runtime: &R) -> crate::Result<()> {
+    /// # async fn example<R: Runtime>(runtime: &R) -> Result<()> {
     /// let pkg = PackageJson::find_from_dir(runtime, &PathBuf::from("./src")).await?;
     /// println!("Package: {:?}", pkg.name);
     /// # Ok(())
@@ -170,9 +168,9 @@ impl PackageJson {
     /// # Example
     ///
     /// ```no_run
-    /// # use fob_graph::PackageJson;
+    /// # use fob_graph::{PackageJson, Result};
     /// # use std::path::PathBuf;
-    /// # async fn example() -> crate::Result<()> {
+    /// # async fn example() -> Result<()> {
     /// let pkg = PackageJson::find_from_dir_native(&PathBuf::from("./src")).await?;
     /// println!("Package: {:?}", pkg.name);
     /// # Ok(())

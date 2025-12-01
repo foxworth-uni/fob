@@ -6,7 +6,7 @@
 //! # Usage
 //!
 //! ```rust,no_run
-//! use super::extractors::{extract_scripts, ExtractedScript};
+//! use fob_graph::analysis::extractors::{extract_scripts, ExtractedScript};
 //! use std::path::Path;
 //!
 //! # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -55,7 +55,7 @@ use std::path::Path;
 /// # Example
 ///
 /// ```rust,no_run
-/// use super::extractors::extract_scripts;
+/// use fob_graph::analysis::extractors::extract_scripts;
 /// use std::path::Path;
 ///
 /// # fn example() -> Result<(), Box<dyn std::error::Error>> {

@@ -15,8 +15,8 @@ impl ModuleGraph {
     ///
     /// # Example
     /// ```
-    /// # use fob_graph::ModuleGraph;
-    /// # fn example(graph: &ModuleGraph, module_id: &fob_graph::ModuleId) -> crate::Result<()> {
+    /// # use fob_graph::{ModuleGraph, ModuleId, Result};
+    /// # fn example(graph: &ModuleGraph, module_id: &ModuleId) -> Result<()> {
     /// let module = graph.module(module_id)?.unwrap();
     /// println!("Path: {}", module.path.display());
     /// # Ok(())

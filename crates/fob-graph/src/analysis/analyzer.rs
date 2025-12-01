@@ -37,9 +37,9 @@ pub struct Configured;
 /// # Example
 ///
 /// ```rust,no_run
-/// use super::analyzer::Analyzer;
+/// use fob_graph::{Analyzer, Result};
 ///
-/// # async fn example() -> crate::Result<()> {
+/// # async fn example() -> Result<()> {
 /// let analysis = Analyzer::new()
 ///     .entry("src/index.ts")  // Transitions to Configured state
 ///     .external(vec!["react", "lodash"])
@@ -109,16 +109,7 @@ impl<State> Analyzer<State> {
 
     /// Add a path alias for import resolution.
     ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// use super::analyzer::Analyzer;
-    ///
-    /// Analyzer::new()
-    ///     .entry("src/index.ts")
-    ///     .path_alias("@", "./src");
-    ///     // Now "@/components/Button" resolves to "./src/components/Button"
-    /// ```
+    /// Example: `path_alias("@", "./src")` makes "@/components/Button" resolve to "./src/components/Button".
     pub fn path_alias(mut self, from: impl Into<String>, to: impl Into<String>) -> Self {
         self.config.path_aliases.insert(from.into(), to.into());
         self

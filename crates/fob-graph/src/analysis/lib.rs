@@ -52,9 +52,9 @@
 //! ## Quick Start
 //!
 //! ```rust,no_run
-//! use super::Analyzer;
+//! use fob_graph::{Analyzer, Result};
 //!
-//! # async fn example() -> crate::Result<()> {
+//! # async fn example() -> Result<()> {
 //! // Create analyzer and configure entry points
 //! let analysis = Analyzer::new()
 //!     .entry("src/index.ts")  // Required: transitions to Configured state

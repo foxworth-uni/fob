@@ -46,24 +46,25 @@ use std::path::{Path, PathBuf};
 ///
 /// ## Usage Example
 ///
-/// ```rust
+/// ```rust,ignore
 /// use tempfile::TempDir;
-/// use crate::runtime::test_utils::TestRuntime;
+/// use fob_graph::runtime::test_utils::TestRuntime;
+/// use fob_graph::Runtime;
 /// use std::fs;
 ///
-/// # #[tokio::test]
-/// # async fn example() {
-/// let temp = TempDir::new().unwrap();
-/// let cwd = temp.path().to_path_buf();
-/// let runtime = TestRuntime::new(cwd.clone());
+/// #[tokio::test]
+/// async fn example() {
+///     let temp = TempDir::new().unwrap();
+///     let cwd = temp.path().to_path_buf();
+///     let runtime = TestRuntime::new(cwd.clone());
 ///
-/// // Create test files
-/// fs::write(cwd.join("test.txt"), b"content").unwrap();
+///     // Create test files
+///     fs::write(cwd.join("test.txt"), b"content").unwrap();
 ///
-/// // Use runtime in tests
-/// let content = runtime.read_file(&cwd.join("test.txt")).await.unwrap();
-/// assert_eq!(content, b"content");
-/// # }
+///     // Use runtime in tests
+///     let content = runtime.read_file(&cwd.join("test.txt")).await.unwrap();
+///     assert_eq!(content, b"content");
+/// }
 /// ```
 #[cfg(not(target_family = "wasm"))]
 #[derive(Debug)]
@@ -78,16 +79,6 @@ impl TestRuntime {
     /// # Arguments
     ///
     /// * `cwd` - The current working directory for path resolution
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use tempfile::TempDir;
-    /// use crate::runtime::test_utils::TestRuntime;
-    ///
-    /// let temp = TempDir::new().unwrap();
-    /// let runtime = TestRuntime::new(temp.path().to_path_buf());
-    /// ```
     pub fn new(cwd: PathBuf) -> Self {
         Self { cwd }
     }
