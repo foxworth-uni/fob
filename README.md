@@ -183,56 +183,6 @@ interface ChunkInfo {
 }
 ```
 
-### Examples
-
-#### Library Build (with external dependencies)
-
-```typescript
-import { Fob } from '@fox-uni/fob';
-
-const bundler = new Fob({
-  entries: ['./src/index.ts'],
-  outputDir: 'dist',
-  format: 'esm',
-  external: ['react', 'react-dom'],
-  sourcemap: 'external',
-});
-
-const result = await bundler.bundle();
-```
-
-#### App Build (bundled dependencies)
-
-```typescript
-import { Fob } from '@fox-uni/fob';
-
-const bundler = new Fob({
-  entries: ['./src/index.ts'],
-  outputDir: 'dist',
-  format: 'esm',
-  minify: true,
-  sourcemap: 'inline',
-});
-
-const result = await bundler.bundle();
-```
-
-#### Node.js Target
-
-```typescript
-import { Fob } from '@fox-uni/fob';
-
-const bundler = new Fob({
-  entries: ['./src/index.ts'],
-  outputDir: 'dist',
-  format: 'cjs',
-  platform: 'node',
-  external: ['fs', 'path'],
-});
-
-const result = await bundler.bundle();
-```
-
 ## Documentation
 
 - [JavaScript API](packages/fob-bundler/README.md)

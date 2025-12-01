@@ -87,7 +87,7 @@ impl TestBrowserConfig {
         let temp_dir = std::env::temp_dir();
         let unique_id = uuid::Uuid::new_v4();
         let user_data_dir = temp_dir.join(format!("fob-browser-test-{unique_id}"));
-        config = config.arg(format!("--user-data-dir={}", user_data_dir.display()));
+        config = config.user_data_dir(&user_data_dir);
 
         for arg in &self.args {
             config = config.arg(arg.clone());
