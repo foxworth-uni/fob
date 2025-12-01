@@ -3,106 +3,102 @@
 /** Fob bundler for Node.js */
 export declare class Fob {
   /** Create a new bundler instance */
-  constructor(config: BundleConfig);
+  constructor(config: BundleConfig)
   /** Bundle the configured entries and return detailed bundle information */
-  bundle(): Promise<BundleResult>;
+  bundle(): Promise<BundleResult>
 }
 
 /** Asset information */
 export interface AssetInfo {
-  publicPath: string;
-  relativePath: string;
-  size: number;
-  format?: string;
+  publicPath: string
+  relativePath: string
+  size: number
+  format?: string
 }
 
 /** Build statistics */
 export interface BuildStatsInfo {
-  totalModules: number;
-  totalChunks: number;
-  totalSize: number;
-  durationMs: number;
-  cacheHitRate: number;
+  totalModules: number
+  totalChunks: number
+  totalSize: number
+  durationMs: number
+  cacheHitRate: number
 }
 
 /** Bundle configuration */
 export interface BundleConfig {
   /** Entry points to bundle */
-  entries: Array<string>;
+  entries: Array<string>
   /** Output directory (defaults to "dist" if not provided) */
-  outputDir?: string;
+  outputDir?: string
   /** Output format ("esm" | "cjs" | "iife") */
-  format?: OutputFormat;
+  format?: OutputFormat
   /**
    * Source map generation mode
    * Accepts: "true", "false", "external", "inline", "hidden"
    * Default: disabled (no source maps)
    */
-  sourcemap?: string;
+  sourcemap?: string
   /** Packages to externalize (not bundled) */
-  external?: Array<string>;
+  external?: Array<string>
   /** Target platform ("browser" | "node", default: "browser") */
-  platform?: string;
+  platform?: string
   /** Enable minification (default: false) */
-  minify?: boolean;
+  minify?: boolean
   /** Working directory for resolution */
-  cwd?: string;
+  cwd?: string
   /**
    * MDX compilation options
    * If None, MDX is auto-enabled when .mdx entries are detected
    */
-  mdx?: MdxOptions;
+  mdx?: MdxOptions
 }
 
 /** Result of a bundle operation */
 export interface BundleResult {
   /** Generated chunks */
-  chunks: Array<ChunkInfo>;
+  chunks: Array<ChunkInfo>
   /** Bundle manifest */
-  manifest: ManifestInfo;
+  manifest: ManifestInfo
   /** Build statistics */
-  stats: BuildStatsInfo;
+  stats: BuildStatsInfo
   /** Static assets */
-  assets: Array<AssetInfo>;
+  assets: Array<AssetInfo>
   /** Total module count (convenience field) */
-  moduleCount: number;
+  moduleCount: number
 }
 
 /** Quick helper to bundle a single entry */
-export declare function bundleSingle(
-  entry: string,
-  outputDir: string,
-  format?: OutputFormat | undefined | null
-): Promise<BundleResult>;
+export declare function bundleSingle(entry: string, outputDir: string, format?: OutputFormat | undefined | null): Promise<BundleResult>
 
 /** Detailed chunk information */
 export interface ChunkInfo {
   /** Chunk identifier */
-  id: string;
+  id: string
   /** Chunk type: "entry" | "async" | "shared" */
-  kind: string;
+  kind: string
   /** Output file name */
-  fileName: string;
+  fileName: string
   /** Generated code */
-  code: string;
+  code: string
   /** Source map (optional) */
-  sourceMap?: string;
+  sourceMap?: string
   /** Modules in this chunk */
-  modules: Array<ModuleInfo>;
+  modules: Array<ModuleInfo>
   /** Static imports */
-  imports: Array<string>;
+  imports: Array<string>
   /** Dynamic imports */
-  dynamicImports: Array<string>;
+  dynamicImports: Array<string>
   /** Size in bytes */
-  size: number;
+  size: number
 }
 
 /** Chunk metadata */
 export interface ChunkMetadata {
-  file: string;
-  imports: Array<string>;
-  dynamicImports: Array<string>;
-  css: Array<string>;
+  file: string
+  imports: Array<string>
+  dynamicImports: Array<string>
+  css: Array<string>
 }
 
 /**
@@ -120,7 +116,7 @@ export interface ChunkMetadata {
  * initLogging('debug');
  * ```
  */
-export declare function initLogging(level?: LogLevel | undefined | null): void;
+export declare function initLogging(level?: LogLevel | undefined | null): void
 
 /**
  * Initialize logging from RUST_LOG environment variable
@@ -136,7 +132,7 @@ export declare function initLogging(level?: LogLevel | undefined | null): void;
  * initLoggingFromEnv();
  * ```
  */
-export declare function initLoggingFromEnv(): void;
+export declare function initLoggingFromEnv(): void
 
 /**
  * Log level for fob output
@@ -153,17 +149,17 @@ export declare const enum LogLevel {
   /** Errors, warnings, and info (default) */
   Info = 'Info',
   /** All logs including debug */
-  Debug = 'Debug',
+  Debug = 'Debug'
 }
 
 /** Bundle manifest */
 export interface ManifestInfo {
   /** Entry mappings */
-  entries: Record<string, string>;
+  entries: Record<string, string>
   /** Chunk metadata */
-  chunks: Record<string, ChunkMetadata>;
+  chunks: Record<string, ChunkMetadata>
   /** Version */
-  version: string;
+  version: string
 }
 
 /**
@@ -177,37 +173,37 @@ export interface MdxOptions {
    * Enable GitHub Flavored Markdown (tables, strikethrough, task lists)
    * Default: true
    */
-  gfm?: boolean;
+  gfm?: boolean
   /**
    * Enable footnotes
    * Default: true
    */
-  footnotes?: boolean;
+  footnotes?: boolean
   /**
    * Enable math support ($inline$ and $$block$$)
    * Default: true
    */
-  math?: boolean;
+  math?: boolean
   /**
    * JSX runtime module path
    * Default: "react/jsx-runtime"
    */
-  jsxRuntime?: string;
+  jsxRuntime?: string
   /**
    * Use default plugins (heading IDs, image optimization)
    * Default: true
    */
-  useDefaultPlugins?: boolean;
+  useDefaultPlugins?: boolean
 }
 
 /** Module information */
 export interface ModuleInfo {
   /** Module path */
-  path: string;
+  path: string
   /** Module size in bytes (None if unavailable) */
-  size?: number;
+  size?: number
   /** Has side effects (None if unavailable) */
-  hasSideEffects?: boolean;
+  hasSideEffects?: boolean
 }
 
 /** Output format for bundled code */
@@ -217,8 +213,8 @@ export declare const enum OutputFormat {
   /** CommonJS format */
   Cjs = 'Cjs',
   /** Immediately Invoked Function Expression format */
-  Iife = 'Iife',
+  Iife = 'Iife'
 }
 
 /** Get the bundler version */
-export declare function version(): string;
+export declare function version(): string
