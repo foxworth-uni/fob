@@ -377,44 +377,47 @@ release:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    # Check tools
     command -v gum >/dev/null || { echo "Install gum: brew install gum"; exit 1; }
     command -v cargo-release >/dev/null || { echo "Install: cargo install cargo-release"; exit 1; }
 
-    # Pick level
     LEVEL=$(gum choose "patch" "minor" "major")
 
-    # Preview
     echo "Previewing $LEVEL release..."
     cargo release $LEVEL --workspace --no-verify
 
-    # Confirm
     gum confirm "Execute this release?" || exit 0
 
-    # Step 1: Bump versions (no publish yet)
+    # Bump versions only (no commit, no tag - we handle those manually)
     echo "Bumping versions..."
-    cargo release $LEVEL --workspace --execute --no-confirm --no-verify --no-publish
+    cargo release $LEVEL --workspace --execute --no-confirm --no-verify --no-publish --no-tag
 
-    # Sync npm version (read from workspace Cargo.toml)
+    # Extract version
     VERSION=$(grep -m1 '^version = ' Cargo.toml | cut -d '"' -f2)
+
+    # Sync npm version
     node -e "
       const fs = require('fs');
       const pkg = JSON.parse(fs.readFileSync('crates/fob-native/package.json'));
       pkg.version = '$VERSION';
       fs.writeFileSync('crates/fob-native/package.json', JSON.stringify(pkg, null, 2) + '\n');
     "
-    git add crates/fob-native/package.json
-    git commit --amend --no-edit
+
+    # Commit all changes
+    git add -A
+    git commit -m "chore: release v$VERSION"
+
+    # Create annotated tag
+    git tag -a "v$VERSION" -m "Release v$VERSION"
 
     # Push
     gum confirm "Push to origin?" && git push && git push --tags
 
-    # Step 2: Publish (auto-skips already published, safe to re-run)
+    # Publish
     gum confirm "Publish to crates.io?" || exit 0
     echo "Publishing to crates.io..."
     cargo release publish --workspace --execute --no-verify
 
-    echo "Done! If rate-limited, run 'just publish' to continue."
+    echo "Done!"
 
 # =============================================================================
 # Development Tools
