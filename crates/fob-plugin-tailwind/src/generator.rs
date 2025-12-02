@@ -246,8 +246,8 @@ impl TailwindGenerator {
             cmd.arg("--minify");
         }
 
-        // v4 CLI: -i - reads from stdin
-        cmd.arg("-i").arg("-");
+        // v4 CLI: -i - reads from stdin, -o - writes to stdout
+        cmd.arg("-i").arg("-").arg("-o").arg("-");
 
         // Use stdin/stdout for communication
         cmd.stdin(Stdio::piped())
