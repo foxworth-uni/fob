@@ -3,7 +3,6 @@
 use crate::error::GeneratorError;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
-use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
 use tokio::time::{timeout, Duration};
 
@@ -209,24 +208,25 @@ impl TailwindGenerator {
         self
     }
 
-    /// Generate CSS from the given input CSS content
+    /// Generate CSS from a file path
+    ///
+    /// Passes the file path directly to the Tailwind CLI. The CLI requires
+    /// both input and output to be file paths (stdin/stdout don't work),
+    /// so we use a temp file for the output.
     ///
     /// # Arguments
     ///
-    /// * `input_css` - CSS content to process, containing `@tailwind` directives
+    /// * `input_path` - Path to the CSS file containing `@tailwind` directives
     ///
     /// # Returns
     ///
     /// Generated CSS as a string
-    ///
-    /// # Implementation
-    ///
-    /// This method:
-    /// 1. Builds a command using the detected package manager
-    /// 2. Spawns the package manager to execute Tailwind CLI
-    /// 3. Writes the input CSS to stdin
-    /// 4. Reads generated CSS from stdout
-    pub async fn generate_from_input(&self, input_css: &str) -> Result<String, GeneratorError> {
+    pub async fn generate_from_file(&self, input_path: &Path) -> Result<String, GeneratorError> {
+        // Create temp file for output (Tailwind CLI requires file paths, not stdout)
+        let output_file =
+            tempfile::NamedTempFile::new().map_err(GeneratorError::spawn_failed)?;
+        let output_path = output_file.path();
+
         // Build command using package manager
         let cmd_parts = self.package_manager.build_command();
         let mut cmd = Command::new(cmd_parts[0]);
@@ -246,34 +246,18 @@ impl TailwindGenerator {
             cmd.arg("--minify");
         }
 
-        // v4 CLI: -i - reads from stdin, -o - writes to stdout
-        cmd.arg("-i").arg("-").arg("-o").arg("-");
+        // Use file paths for BOTH input and output
+        cmd.arg("-i").arg(input_path);
+        cmd.arg("-o").arg(output_path);
 
-        // Use stdin/stdout for communication
-        cmd.stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped());
+        // Capture stderr for error messages
+        cmd.stderr(Stdio::piped());
 
         // Set working directory to project root
         cmd.current_dir(&self.project_root);
 
         // Spawn the process
-        let mut child = cmd.spawn().map_err(GeneratorError::spawn_failed)?;
-
-        // Get stdin handle
-        let mut stdin = child.stdin.take().ok_or_else(|| {
-            GeneratorError::spawn_failed(std::io::Error::new(
-                std::io::ErrorKind::BrokenPipe,
-                "Failed to capture stdin",
-            ))
-        })?;
-
-        // Write input CSS to stdin
-        stdin
-            .write_all(input_css.as_bytes())
-            .await
-            .map_err(GeneratorError::spawn_failed)?;
-        drop(stdin); // Close stdin to signal EOF
+        let child = cmd.spawn().map_err(GeneratorError::spawn_failed)?;
 
         // Wait for process with timeout
         let output = timeout(
@@ -291,16 +275,16 @@ impl TailwindGenerator {
             return Err(GeneratorError::cli_exit_error(exit_code, stderr));
         }
 
+        // Read output from temp file
+        let output_css =
+            std::fs::read_to_string(output_path).map_err(GeneratorError::spawn_failed)?;
+
         // Check output size
-        if output.stdout.len() > MAX_OUTPUT_SIZE {
-            return Err(GeneratorError::output_too_large(
-                output.stdout.len(),
-                MAX_OUTPUT_SIZE,
-            ));
+        if output_css.len() > MAX_OUTPUT_SIZE {
+            return Err(GeneratorError::output_too_large(output_css.len(), MAX_OUTPUT_SIZE));
         }
 
-        // Parse output as UTF-8
-        String::from_utf8(output.stdout).map_err(GeneratorError::parse_error)
+        Ok(output_css)
     }
 }
 

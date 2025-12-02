@@ -1,16 +1,22 @@
 //! Rolldown plugin implementation for Tailwind CSS.
 //!
 //! This module provides a Rolldown plugin that integrates Tailwind CSS processing
-//! into the Rolldown bundler pipeline. It uses the `transform` hook to intercept
-//! `.css` files and process `@tailwind` directives using the Tailwind CLI.
+//! into the Rolldown bundler pipeline. It uses the `load` hook to intercept
+//! `.css` files with `@tailwind` directives and process them using the Tailwind CLI.
 //!
 //! ## Architecture
 //!
 //! ```text
-//! CSS file → transform() → contains @tailwind? → YES → process with CLI → transformed CSS
-//!                                         ↓
-//!                                         NO → skip
+//! CSS file → load() → contains @tailwind? → YES → process with CLI (file path) → CSS
+//!                                   ↓
+//!                                   NO → skip (let other plugins handle)
 //! ```
+//!
+//! ## Plugin Order
+//!
+//! This plugin should be registered BEFORE the CSS plugin so it can claim
+//! `@tailwind` files. Files without `@tailwind` directives fall through to
+//! the CSS plugin for processing with lightningcss.
 //!
 //! ## Example Usage
 //!
@@ -27,11 +33,9 @@
 //! ```
 
 use anyhow::{Context, Result};
-use fob_bundler::{
-    HookTransformArgs, HookTransformOutput, HookTransformReturn, Plugin,
-    SharedTransformPluginContext,
-};
+use fob_bundler::{HookLoadArgs, HookLoadOutput, HookLoadReturn, ModuleType, Plugin, PluginContext};
 use std::borrow::Cow;
+use std::path::Path;
 use std::sync::Arc;
 use tokio::runtime::Handle;
 use tracing::debug;
@@ -142,20 +146,21 @@ impl FobTailwindPlugin {
             .await
     }
 
-    /// Process CSS file with @tailwind directives
+    /// Process CSS file with @tailwind directives using file path
     ///
-    /// Replaces @tailwind directives with actual Tailwind CSS utilities
-    /// by invoking the Tailwind CLI.
-    async fn process_css(&self, content: &str) -> Result<String> {
+    /// This method passes the file path directly to the Tailwind CLI instead
+    /// of using stdin. This is more reliable as some CLI versions don't
+    /// properly handle stdin input.
+    async fn process_css_file(&self, path: &Path) -> Result<String> {
         // Get or initialize the generator
         let generator = self
             .get_generator()
             .await
             .context("Failed to initialize Tailwind generator")?;
 
-        // Generate CSS from the input CSS content using the CLI
+        // Generate CSS from the file path using the CLI
         let generated_css = generator
-            .generate_from_input(content)
+            .generate_from_file(path)
             .await
             .context("Failed to generate CSS from Tailwind CLI")?;
 
@@ -177,71 +182,74 @@ impl Plugin for FobTailwindPlugin {
 
     /// Declare which hooks this plugin uses
     fn register_hook_usage(&self) -> fob_bundler::HookUsage {
-        use fob_bundler::HookUsage;
-        HookUsage::Transform
+        fob_bundler::HookUsage::Load
     }
 
-    /// Transform hook - processes CSS files with `@tailwind` directives.
+    /// Load hook - processes CSS files with `@tailwind` directives.
     ///
-    /// It no longer scans source files for classes, delegating that responsibility
-    /// entirely to the Tailwind CLI, which reads the `content` configuration
-    /// from `tailwind.config.js`.
-    fn transform(
+    /// This hook runs BEFORE the CSS plugin's load hook (if registered first).
+    /// It peeks at CSS files and claims those with `@tailwind` directives,
+    /// processing them directly with the Tailwind CLI using the file path.
+    ///
+    /// Files without `@tailwind` directives are skipped (return None),
+    /// allowing them to fall through to the CSS plugin.
+    fn load(
         &self,
-        _ctx: SharedTransformPluginContext,
-        args: &HookTransformArgs<'_>,
-    ) -> impl std::future::Future<Output = HookTransformReturn> + Send {
+        _ctx: &PluginContext,
+        args: &HookLoadArgs<'_>,
+    ) -> impl std::future::Future<Output = HookLoadReturn> + Send {
         let id = args.id.to_string();
-        let code = args.code.to_string();
-
-        // Clone fields needed for the async block
         let plugin = self.clone();
 
         async move {
-            // Only handle CSS files with @tailwind directives
-            if !id.ends_with(".css") || !code.contains("@tailwind") {
+            // Only handle .css files
+            if !id.ends_with(".css") {
                 return Ok(None);
             }
 
-            debug!("[fob-tailwind] Processing @tailwind directives in: {}", id);
+            // Peek at file to check for @tailwind directives
+            let content = match std::fs::read_to_string(&id) {
+                Ok(c) => c,
+                Err(_) => return Ok(None), // Let other plugins handle if we can't read
+            };
 
-            // In order to not block the main tokio runtime, we need to spawn this
-            // on a blocking thread if we are in a sync context.
+            if !content.contains("@tailwind") {
+                // No @tailwind directives - let CSS plugin handle it
+                return Ok(None);
+            }
+
+            debug!("[fob-tailwind] Loading @tailwind CSS file: {}", id);
+
+            // Process with Tailwind CLI using FILE PATH (not stdin)
+            let path = std::path::PathBuf::from(&id);
             let handle = Handle::try_current();
 
-            let code_len = code.len();
-            let processed_css_result = match handle {
+            let processed_result = match handle {
                 Ok(h) => {
-                    // We are in an async context, just await it.
-                    h.spawn(async move { plugin.process_css(&code).await })
+                    h.spawn(async move { plugin.process_css_file(&path).await })
                         .await?
                 }
                 Err(_) => {
-                    // We are in a sync context, spawn a new runtime to handle this.
-                    // This is a fallback and might be less efficient.
                     let rt = tokio::runtime::Builder::new_current_thread()
                         .enable_all()
                         .build()?;
-                    rt.block_on(async move { plugin.process_css(&code).await })
+                    rt.block_on(async move { plugin.process_css_file(&path).await })
                 }
             };
 
-            let processed = processed_css_result
-                .with_context(|| format!("Failed to process Tailwind CSS in: {}", id))?;
+            let processed = processed_result
+                .with_context(|| format!("Failed to process Tailwind CSS: {}", id))?;
 
             debug!(
-                "[fob-tailwind] Processed {} ({} -> {} bytes)",
+                "[fob-tailwind] Loaded {} ({} bytes output)",
                 id,
-                code_len,
                 processed.len()
             );
 
-            // Return processed CSS
-            Ok(Some(HookTransformOutput {
-                code: Some(processed),
-                map: None,
-                side_effects: None,
-                module_type: None,
+            Ok(Some(HookLoadOutput {
+                code: processed.into(),
+                module_type: Some(ModuleType::Css),
+                ..Default::default()
             }))
         }
     }

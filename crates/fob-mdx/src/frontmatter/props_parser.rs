@@ -183,7 +183,11 @@ fn options_parser(input: &mut &str) -> WResult<PropOptions> {
 
     // Build RefreshStrategy from collected options
     let strategy = match (&refresh_raw, is_client) {
-        (None, _) => RefreshStrategy::BuildTime,
+        (None, false) => RefreshStrategy::BuildTime,
+        (None, true) => {
+            // @client without @refresh: use default polling interval
+            RefreshStrategy::ClientTime { interval_seconds: 60 }
+        }
         (Some(dur), false) => {
             let ttl_seconds = parse_duration_seconds(dur).unwrap_or(60);
             RefreshStrategy::RequestTime { ttl_seconds }
@@ -248,6 +252,18 @@ mod tests {
             prop.options.strategy,
             RefreshStrategy::ClientTime { interval_seconds: 30 }
         ));
+    }
+
+    #[test]
+    fn test_client_without_refresh() {
+        // @client alone should use default polling interval
+        let prop =
+            parse_prop_expression("prefs", "local.storage(\"prefs\") @client").unwrap();
+        assert!(matches!(
+            prop.options.strategy,
+            RefreshStrategy::ClientTime { interval_seconds: 60 }
+        ));
+        assert!(prop.options.refresh_raw.is_none());
     }
 
     #[test]
