@@ -72,12 +72,12 @@ impl PackageManager {
     }
 
     /// Build the command to execute Tailwind CLI via this package manager
-    /// Note: Tailwind v4 moved CLI to @tailwindcss/cli package
+    /// Note: Tailwind v4 CLI is in @tailwindcss/cli package, but the binary is named "tailwindcss"
     fn build_command(&self) -> Vec<&'static str> {
         match self {
-            Self::Pnpm => vec!["pnpm", "exec", "@tailwindcss/cli"],
-            Self::Npm => vec!["npx", "--no-install", "@tailwindcss/cli"],
-            Self::Bun => vec!["bunx", "@tailwindcss/cli"],
+            Self::Pnpm => vec!["pnpm", "exec", "tailwindcss"],
+            Self::Npm => vec!["npx", "--no-install", "tailwindcss"],
+            Self::Bun => vec!["bunx", "tailwindcss"],
             Self::Deno => vec!["deno", "run", "--allow-all", "npm:@tailwindcss/cli"],
         }
     }
@@ -301,5 +301,144 @@ impl TailwindGenerator {
 
         // Parse output as UTF-8
         String::from_utf8(output.stdout).map_err(GeneratorError::parse_error)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_build_command_pnpm() {
+        let cmd = PackageManager::Pnpm.build_command();
+        assert_eq!(cmd, vec!["pnpm", "exec", "tailwindcss"]);
+    }
+
+    #[test]
+    fn test_build_command_npm() {
+        let cmd = PackageManager::Npm.build_command();
+        assert_eq!(cmd, vec!["npx", "--no-install", "tailwindcss"]);
+    }
+
+    #[test]
+    fn test_build_command_bun() {
+        let cmd = PackageManager::Bun.build_command();
+        assert_eq!(cmd, vec!["bunx", "tailwindcss"]);
+    }
+
+    #[test]
+    fn test_build_command_deno() {
+        let cmd = PackageManager::Deno.build_command();
+        assert_eq!(cmd, vec!["deno", "run", "--allow-all", "npm:@tailwindcss/cli"]);
+    }
+
+    #[test]
+    fn test_package_manager_name() {
+        assert_eq!(PackageManager::Pnpm.name(), "pnpm");
+        assert_eq!(PackageManager::Npm.name(), "npm");
+        assert_eq!(PackageManager::Bun.name(), "bun");
+        assert_eq!(PackageManager::Deno.name(), "deno");
+    }
+
+    #[test]
+    fn test_package_manager_detect_from_pnpm_lockfile() {
+        let temp_dir = std::env::temp_dir().join("tailwind_test_pnpm");
+        let _ = std::fs::create_dir_all(&temp_dir);
+        let lockfile = temp_dir.join("pnpm-lock.yaml");
+        std::fs::write(&lockfile, "lockfileVersion: 9.0").unwrap();
+
+        let result = PackageManager::detect(&temp_dir);
+        assert_eq!(result, Some(PackageManager::Pnpm));
+
+        // Cleanup
+        let _ = std::fs::remove_file(&lockfile);
+        let _ = std::fs::remove_dir(&temp_dir);
+    }
+
+    #[test]
+    fn test_package_manager_detect_from_npm_lockfile() {
+        let temp_dir = std::env::temp_dir().join("tailwind_test_npm");
+        let _ = std::fs::create_dir_all(&temp_dir);
+        let lockfile = temp_dir.join("package-lock.json");
+        std::fs::write(&lockfile, "{}").unwrap();
+
+        let result = PackageManager::detect(&temp_dir);
+        assert_eq!(result, Some(PackageManager::Npm));
+
+        // Cleanup
+        let _ = std::fs::remove_file(&lockfile);
+        let _ = std::fs::remove_dir(&temp_dir);
+    }
+
+    #[test]
+    fn test_package_manager_detect_from_bun_lockfile() {
+        let temp_dir = std::env::temp_dir().join("tailwind_test_bun");
+        let _ = std::fs::create_dir_all(&temp_dir);
+        let lockfile = temp_dir.join("bun.lockb");
+        std::fs::write(&lockfile, "").unwrap();
+
+        let result = PackageManager::detect(&temp_dir);
+        assert_eq!(result, Some(PackageManager::Bun));
+
+        // Cleanup
+        let _ = std::fs::remove_file(&lockfile);
+        let _ = std::fs::remove_dir(&temp_dir);
+    }
+
+    #[test]
+    fn test_package_manager_detect_from_deno_lockfile() {
+        let temp_dir = std::env::temp_dir().join("tailwind_test_deno");
+        let _ = std::fs::create_dir_all(&temp_dir);
+        let lockfile = temp_dir.join("deno.lock");
+        std::fs::write(&lockfile, "{}").unwrap();
+
+        let result = PackageManager::detect(&temp_dir);
+        assert_eq!(result, Some(PackageManager::Deno));
+
+        // Cleanup
+        let _ = std::fs::remove_file(&lockfile);
+        let _ = std::fs::remove_dir(&temp_dir);
+    }
+
+    #[test]
+    fn test_package_manager_detect_from_package_json_field() {
+        let temp_dir = std::env::temp_dir().join("tailwind_test_corepack");
+        let _ = std::fs::create_dir_all(&temp_dir);
+        let pkg_json = temp_dir.join("package.json");
+        std::fs::write(&pkg_json, r#"{"packageManager": "pnpm@9.0.0"}"#).unwrap();
+
+        let result = PackageManager::detect(&temp_dir);
+        assert_eq!(result, Some(PackageManager::Pnpm));
+
+        // Cleanup
+        let _ = std::fs::remove_file(&pkg_json);
+        let _ = std::fs::remove_dir(&temp_dir);
+    }
+
+    #[test]
+    fn test_package_manager_detect_none_empty_dir() {
+        let temp_dir = std::env::temp_dir().join("tailwind_test_empty");
+        let _ = std::fs::create_dir_all(&temp_dir);
+
+        let result = PackageManager::detect(&temp_dir);
+        assert_eq!(result, None);
+
+        // Cleanup
+        let _ = std::fs::remove_dir(&temp_dir);
+    }
+
+    #[test]
+    fn test_package_manager_detect_defaults_to_npm_with_package_json() {
+        let temp_dir = std::env::temp_dir().join("tailwind_test_default_npm");
+        let _ = std::fs::create_dir_all(&temp_dir);
+        let pkg_json = temp_dir.join("package.json");
+        std::fs::write(&pkg_json, r#"{"name": "test"}"#).unwrap();
+
+        let result = PackageManager::detect(&temp_dir);
+        assert_eq!(result, Some(PackageManager::Npm));
+
+        // Cleanup
+        let _ = std::fs::remove_file(&pkg_json);
+        let _ = std::fs::remove_dir(&temp_dir);
     }
 }
