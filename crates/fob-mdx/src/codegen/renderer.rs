@@ -17,7 +17,7 @@ use crate::frontmatter::extract_frontmatter;
 /// - Handles ESM imports/exports properly
 /// - Supports GFM, footnotes, and math
 pub fn mdast_to_jsx(root: &Node) -> Result<String> {
-    mdast_to_jsx_with_options(root, &crate::mdx::MdxOptions::default())
+    mdast_to_jsx_with_options(root, &crate::MdxOptions::default())
 }
 
 /// Convert MDX mdast to JSX string with custom options
@@ -31,7 +31,7 @@ pub fn mdast_to_jsx(root: &Node) -> Result<String> {
 /// 2. Run all `plugin.transform_ast()` in registration order
 /// 3. Convert AST to JSX
 /// 4. Run all `plugin.transform_jsx()` in registration order
-pub fn mdast_to_jsx_with_options(root: &Node, options: &crate::mdx::MdxOptions) -> Result<String> {
+pub fn mdast_to_jsx_with_options(root: &Node, options: &crate::MdxOptions) -> Result<String> {
     // Use pre-extracted frontmatter if provided, otherwise extract from AST
     let (mut cleaned_root, frontmatter) = if options.frontmatter.is_some() {
         // Frontmatter already extracted, just clone root and use provided frontmatter
@@ -122,12 +122,25 @@ pub fn mdast_to_jsx_with_options(root: &Node, options: &crate::mdx::MdxOptions) 
     }
 
     // Add frontmatter export if present
-    if let Some(fm) = frontmatter {
+    // Also extract prop names for MDXContent signature
+    let prop_names: Vec<String> = frontmatter
+        .as_ref()
+        .map(|fm| fm.prop_names().into_iter().map(String::from).collect())
+        .unwrap_or_default();
+
+    if let Some(ref fm) = frontmatter {
         // Serialize frontmatter as JSON and inject as a named export
         let json_str = serde_json::to_string(&fm.data)
             .with_context(|| "Failed to serialize frontmatter to JSON")?;
 
         named_exports.push(format!("export const frontmatter = {};", json_str));
+
+        // Export propDefinitions if props exist
+        if !fm.props.is_empty() {
+            let props_json = serde_json::to_string(&fm.props)
+                .with_context(|| "Failed to serialize propDefinitions to JSON")?;
+            named_exports.push(format!("export const propDefinitions = {};", props_json));
+        }
     }
 
     // Generate MDXContent component with React 19 JSX runtime
@@ -147,9 +160,16 @@ pub fn mdast_to_jsx_with_options(root: &Node, options: &crate::mdx::MdxOptions) 
         )
     };
 
+    // Build data props destructuring if props exist
+    let data_props_destructure = if prop_names.is_empty() {
+        String::new()
+    } else {
+        format!("\n  const {{ {} }} = _dataProps;", prop_names.join(", "))
+    };
+
     // Build MDXContent function body (shared between formats)
     let mdx_content_body = format!(
-        r#"function MDXContent({{components: _cProp = {{}}, ...props}}) {{
+        r#"function MDXContent({{components: _cProp = {{}}, _dataProps = {{}}, ...props}}) {{{data_props}
   const _components = Object.assign({{
     h1: "h1", h2: "h2", h3: "h3", h4: "h4", h5: "h5", h6: "h6",
     p: "p", a: "a", strong: "strong", em: "em", code: "code", pre: "pre",
@@ -164,9 +184,10 @@ pub fn mdast_to_jsx_with_options(root: &Node, options: &crate::mdx::MdxOptions) 
       _taskListCtx.toggleTask(taskId, e.target.checked);
     }}
   }};
-  return {};
+  return {content};
 }}"#,
-        content
+        data_props = data_props_destructure,
+        content = content
     );
 
     // Build final output based on format

@@ -293,13 +293,27 @@ impl DevBuilder {
             let final_content = if content_type == "application/javascript" && !url_map.is_empty() {
                 tracing::debug!("[URL_REWRITE] Processing JS file: {}", file_name);
                 if let Ok(code) = String::from_utf8(content.clone()) {
-                    let rewritten = asset_processor::rewrite_urls(&code, &url_map);
-                    if rewritten != code {
-                        tracing::debug!("[URL_REWRITE] URLs were rewritten in {}", file_name);
-                    } else {
-                        tracing::debug!("[URL_REWRITE] No changes needed for {}", file_name);
+                    match asset_processor::rewrite_urls_ast(&code, &url_map) {
+                        Ok((rewritten, report)) => {
+                            if report.replacements > 0 {
+                                tracing::debug!(
+                                    "[URL_REWRITE] Rewrote {} URLs in {}",
+                                    report.replacements,
+                                    file_name
+                                );
+                            } else {
+                                tracing::debug!(
+                                    "[URL_REWRITE] No changes needed for {}",
+                                    file_name
+                                );
+                            }
+                            rewritten.into_bytes()
+                        }
+                        Err(e) => {
+                            tracing::warn!("[URL_REWRITE] Failed to rewrite {}: {}", file_name, e);
+                            content
+                        }
                     }
-                    rewritten.into_bytes()
                 } else {
                     tracing::warn!("[URL_REWRITE] Failed to parse {} as UTF-8", file_name);
                     content

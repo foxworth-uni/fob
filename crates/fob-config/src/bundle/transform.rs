@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use crate::bundle::helpers::{default_mode, default_true};
-use crate::bundle::types::{EsTarget, JsxRuntime, TypeCheckMode};
+use crate::bundle::types::{EsTarget, TypeCheckMode};
 
 /// Transformation/transpilation options for TypeScript and JSX
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -23,10 +23,6 @@ pub struct TransformOptions {
     /// Type-checking mode (currently experimental)
     #[serde(default)]
     pub type_check: TypeCheckMode,
-
-    /// JSX runtime mode (classic vs automatic)
-    #[serde(default)]
-    pub jsx_runtime: JsxRuntime,
 
     /// JSX import source for automatic runtime (e.g., "@emotion/react", "solid-js")
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -92,7 +88,6 @@ impl Default for TransformOptions {
             jsx: true,
             target: EsTarget::default(),
             type_check: TypeCheckMode::default(),
-            jsx_runtime: JsxRuntime::default(),
             jsx_import_source: None,
             jsx_dev: true,
             define: HashMap::new(),

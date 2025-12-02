@@ -148,6 +148,7 @@ minijinja = { version = "2.12.0", features = ["loader"] }
 
 # Markdown and MDX parsing
 markdown = "1.0.0-alpha.21"
+winnow = "0.7"
 
 # CSS parsing and transformation
 lightningcss = "1.0.0-alpha.68"

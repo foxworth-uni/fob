@@ -329,7 +329,10 @@ mod tests {
     #[test]
     fn test_build_command_deno() {
         let cmd = PackageManager::Deno.build_command();
-        assert_eq!(cmd, vec!["deno", "run", "--allow-all", "npm:@tailwindcss/cli"]);
+        assert_eq!(
+            cmd,
+            vec!["deno", "run", "--allow-all", "npm:@tailwindcss/cli"]
+        );
     }
 
     #[test]

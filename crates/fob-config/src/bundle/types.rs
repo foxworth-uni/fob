@@ -102,17 +102,6 @@ pub enum TypeCheckMode {
     // Semantic,
 }
 
-/// JSX transformation runtime mode
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum JsxRuntime {
-    /// Classic runtime: React.createElement (legacy)
-    Classic,
-    /// Automatic runtime: react/jsx-runtime (modern, default)
-    #[default]
-    Automatic,
-}
-
 /// Type of built-in HTML template to use
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]

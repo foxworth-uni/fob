@@ -308,64 +308,6 @@ pub fn rewrite_urls_ast(
     Ok((rewritten, report))
 }
 
-/// Rewrite URLs in bundled JavaScript code (legacy string-based implementation).
-///
-/// This is kept for backward compatibility but should be replaced with
-/// `rewrite_urls_ast` for better reliability.
-///
-/// # Arguments
-///
-/// * `code` - JavaScript code to rewrite
-/// * `url_map` - Map of original specifier → public URL
-///
-/// # Returns
-///
-/// Rewritten code with updated URLs
-pub fn rewrite_urls(code: &str, url_map: &HashMap<String, String>) -> String {
-    // Use AST-based rewrite by default
-    match rewrite_urls_ast(code, url_map) {
-        Ok((rewritten, _report)) => rewritten,
-        Err(_) => {
-            // Fallback to old implementation if AST rewrite fails
-            let mut rewritten = code.to_string();
-
-            for (specifier, public_url) in url_map {
-                // Pattern 1: new URL('specifier', import.meta.url)
-                let pattern1 = format!("new URL('{}', import.meta.url)", specifier);
-                let replacement1 = format!("'{}'", public_url);
-                rewritten = rewritten.replace(&pattern1, &replacement1);
-
-                // Pattern 2: new URL("specifier", import.meta.url)
-                let pattern2 = format!("new URL(\"{}\", import.meta.url)", specifier);
-                let replacement2 = format!("\"{}\"", public_url);
-                rewritten = rewritten.replace(&pattern2, &replacement2);
-
-                // Pattern 3: new URL(`specifier`, import.meta.url)
-                let pattern3 = format!("new URL(`{}`, import.meta.url)", specifier);
-                let replacement3 = format!("`{}`", public_url);
-                rewritten = rewritten.replace(&pattern3, &replacement3);
-
-                // Pattern 4: new URL('specifier', import.meta.url).href (used in dynamic imports)
-                let pattern4 = format!("new URL('{}', import.meta.url).href", specifier);
-                let replacement4 = format!("'{}'", public_url);
-                rewritten = rewritten.replace(&pattern4, &replacement4);
-
-                // Pattern 5: new URL("specifier", import.meta.url).href
-                let pattern5 = format!("new URL(\"{}\", import.meta.url).href", specifier);
-                let replacement5 = format!("\"{}\"", public_url);
-                rewritten = rewritten.replace(&pattern5, &replacement5);
-
-                // Pattern 6: new URL(`specifier`, import.meta.url).href
-                let pattern6 = format!("new URL(`{}`, import.meta.url).href", specifier);
-                let replacement6 = format!("`{}`", public_url);
-                rewritten = rewritten.replace(&pattern6, &replacement6);
-            }
-
-            rewritten
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -406,7 +348,7 @@ mod tests {
     }
 
     #[test]
-    fn test_rewrite_urls() {
+    fn test_rewrite_urls_basic() {
         let code = r#"
             const url1 = new URL('./file.wasm', import.meta.url);
             const url2 = new URL("./image.png", import.meta.url);
@@ -427,7 +369,7 @@ mod tests {
             "/assets/font-ghi789.woff2".to_string(),
         );
 
-        let rewritten = rewrite_urls(code, &url_map);
+        let (rewritten, _report) = rewrite_urls_ast(code, &url_map).unwrap();
 
         assert!(rewritten.contains("'/assets/file-abc123.wasm'"));
         assert!(rewritten.contains("\"/assets/image-def456.png\""));
@@ -467,7 +409,7 @@ mod tests {
             "/__fob_assets__/font.woff2".to_string(),
         );
 
-        let rewritten = rewrite_urls(code, &url_map);
+        let (rewritten, _report) = rewrite_urls_ast(code, &url_map).unwrap();
 
         // Check that .href patterns are rewritten
         assert!(rewritten.contains("'/__fob_assets__/joy_bundler_wasm.js'"));

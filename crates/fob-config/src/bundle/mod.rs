@@ -17,8 +17,8 @@ pub use html::HtmlOptions;
 pub use plugin::{CacheConfig, PluginBackend, PluginOptions};
 pub use transform::{TransformOptions, TypeScriptConfig};
 pub use types::{
-    EsTarget, ExperimentalOptions, HtmlTemplateType, JsxRuntime, OutputFormat, Platform,
-    SourceMapOptions, TypeCheckMode,
+    EsTarget, ExperimentalOptions, HtmlTemplateType, OutputFormat, Platform, SourceMapOptions,
+    TypeCheckMode,
 };
 
 use helpers::{

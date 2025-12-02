@@ -43,7 +43,7 @@ use super::MdxPlugin;
 /// # Usage
 ///
 /// ```rust,no_run
-/// use fob_mdx::mdx::plugins::ImageOptimizationPlugin;
+/// use fob_mdx::plugins::ImageOptimizationPlugin;
 ///
 /// let plugin = ImageOptimizationPlugin::new();
 /// // ... use plugin in MdxOptions ...

@@ -44,7 +44,7 @@ use super::MdxPlugin;
 /// # Usage
 ///
 /// ```rust,no_run
-/// use fob_mdx::mdx::plugins::LinkValidationPlugin;
+/// use fob_mdx::plugins::LinkValidationPlugin;
 ///
 /// let plugin = LinkValidationPlugin::new();
 /// ```

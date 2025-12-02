@@ -12,56 +12,18 @@ pub mod error;
 pub mod esm;
 pub mod frontmatter;
 pub mod nodes;
+pub mod options;
 pub mod plugins;
 pub mod utils;
-
-// Legacy mdx module for gradual migration
-pub mod mdx {
-    //! Legacy MDX module - gradually being deprecated
-
-    pub use crate::codegen::{mdast_to_jsx, mdast_to_jsx_with_options};
-    pub use crate::frontmatter::{FrontmatterData, FrontmatterFormat, extract_frontmatter};
-    pub use crate::plugins::MdxPlugin;
-
-    // Re-export plugins module
-    pub use crate::plugins;
-
-    /// Configuration options for MDX processing
-    pub struct MdxOptions {
-        pub plugins: Vec<Box<dyn MdxPlugin>>,
-        pub jsx_runtime: String,
-        pub output_format: crate::OutputFormat,
-        /// Pre-extracted frontmatter (passed from compile() to avoid double extraction)
-        pub frontmatter: Option<crate::FrontmatterData>,
-    }
-
-    impl Default for MdxOptions {
-        fn default() -> Self {
-            Self {
-                plugins: Vec::new(),
-                jsx_runtime: "react/jsx-runtime".to_string(),
-                output_format: crate::OutputFormat::default(),
-                frontmatter: None,
-            }
-        }
-    }
-
-    impl MdxOptions {
-        pub fn new() -> Self {
-            Self::default()
-        }
-
-        pub fn with_plugin(mut self, plugin: Box<dyn MdxPlugin>) -> Self {
-            self.plugins.push(plugin);
-            self
-        }
-    }
-}
 
 // Re-export public types
 pub use codegen::{mdast_to_jsx, mdast_to_jsx_with_options};
 pub use error::MdxError;
-pub use frontmatter::{FrontmatterData, FrontmatterFormat, extract_frontmatter};
+pub use frontmatter::{
+    FrontmatterData, FrontmatterFormat, PropArg, PropDefinition, PropOptions, PropParseError,
+    extract_frontmatter,
+};
+pub use options::MdxOptions;
 pub use plugins::MdxPlugin;
 
 use anyhow::{Result, anyhow};
@@ -226,7 +188,7 @@ pub fn compile(
         extract_frontmatter(&mdast).map_err(|e| Box::new(MdxError::new(format!("{:#}", e))))?;
 
     // Set up MDX conversion options with plugins and jsx_runtime
-    let mut mdx_options = mdx::MdxOptions {
+    let mut mdx_options = MdxOptions {
         plugins: Vec::new(),
         jsx_runtime: options.jsx_runtime.clone(),
         output_format: options.output_format,

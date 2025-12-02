@@ -2,8 +2,7 @@
 
 use fob_config::{
     BundleOptions, CacheConfig, DevConfig, EsTarget, ExperimentalOptions, GlobalSettings,
-    JoyConfig, JsxRuntime, OutputFormat, Platform, SourceMapOptions, TransformOptions,
-    TypeCheckMode,
+    JoyConfig, OutputFormat, Platform, SourceMapOptions, TransformOptions, TypeCheckMode,
 };
 use std::path::PathBuf;
 
@@ -70,7 +69,6 @@ fn transform_options_defaults() {
     assert!(transform.jsx);
     assert_eq!(transform.target, EsTarget::ES2022);
     assert_eq!(transform.type_check, TypeCheckMode::None);
-    assert_eq!(transform.jsx_runtime, JsxRuntime::Automatic);
     assert!(transform.jsx_import_source.is_none());
     assert!(transform.jsx_dev);
 }
@@ -117,12 +115,6 @@ fn es_target_enum() {
 #[test]
 fn type_check_mode_enum() {
     assert_eq!(TypeCheckMode::default(), TypeCheckMode::None);
-}
-
-#[test]
-fn jsx_runtime_enum() {
-    assert_eq!(JsxRuntime::default(), JsxRuntime::Automatic);
-    assert_ne!(JsxRuntime::Automatic, JsxRuntime::Classic);
 }
 
 #[test]
