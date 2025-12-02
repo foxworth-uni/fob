@@ -21,7 +21,7 @@ oxc_allocator.workspace = true
 oxc_span.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-serde_yaml.workspace = true
+serde-saphyr.workspace = true
 toml.workspace = true
 anyhow.workspace = true
 thiserror.workspace = true
@@ -31,8 +31,8 @@ path-clean.workspace = true
 regex.workspace = true
 bon.workspace = true
 winnow.workspace = true
+async-trait.workspace = true
 
 [dev-dependencies]
-anyhow.workspace = true
-async-trait.workspace = true
+tokio = { workspace = true, features = ["rt", "macros"] }
 

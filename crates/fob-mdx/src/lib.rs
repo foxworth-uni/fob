@@ -14,6 +14,7 @@ pub mod frontmatter;
 pub mod nodes;
 pub mod options;
 pub mod plugins;
+pub mod provider;
 pub mod utils;
 
 // Re-export public types
@@ -21,10 +22,11 @@ pub use codegen::{mdast_to_jsx, mdast_to_jsx_with_options};
 pub use error::MdxError;
 pub use frontmatter::{
     FrontmatterData, FrontmatterFormat, PropArg, PropDefinition, PropOptions, PropParseError,
-    extract_frontmatter,
+    RefreshStrategy, extract_frontmatter,
 };
 pub use options::MdxOptions;
 pub use plugins::MdxPlugin;
+pub use provider::{Provider, ProviderError, ProviderRegistry};
 
 use anyhow::{Result, anyhow};
 use bon::Builder;

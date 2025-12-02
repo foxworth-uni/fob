@@ -170,7 +170,7 @@ fob-mdx-wasm = { path = "crates/fob-mdx-wasm", version = "0.3.0" }
 fob-mdx-runtime = { path = "crates/fob-mdx-runtime", version = "0.3.0" }
 
 # MDX dependencies
-serde_yaml = "0.9"
+serde-saphyr = "0.0"
 bon = "3.8.1"
 wasm-bindgen-test = "0.3.42"
 

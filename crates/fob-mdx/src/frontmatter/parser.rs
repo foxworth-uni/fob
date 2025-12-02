@@ -37,7 +37,7 @@ fn parse_props_from_data(data: &JsonValue) -> Result<Vec<PropDefinition>> {
 ///
 /// # Security
 ///
-/// - YAML parsing uses serde_yaml which is safe for untrusted input
+/// - YAML parsing uses serde-saphyr which is panic-free for untrusted input
 /// - TOML parsing uses the toml crate which is memory-safe
 /// - Frontmatter is parsed and validated before being embedded in output
 ///
@@ -75,7 +75,7 @@ pub fn extract_frontmatter(root: &Node) -> Result<(Node, Option<FrontmatterData>
                 }
 
                 // Parse YAML to JSON
-                let data: JsonValue = serde_yaml::from_str(&yaml_node.value)
+                let data: JsonValue = serde_saphyr::from_str(&yaml_node.value)
                     .context("Failed to parse YAML frontmatter")?;
 
                 // Parse props from frontmatter

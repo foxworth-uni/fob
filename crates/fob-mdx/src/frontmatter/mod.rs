@@ -18,6 +18,6 @@ mod props_parser;
 mod types;
 
 pub use parser::extract_frontmatter;
-pub use props::{PropArg, PropDefinition, PropOptions};
+pub use props::{PropArg, PropDefinition, PropOptions, RefreshStrategy};
 pub use props_parser::{PropParseError, parse_prop_expression};
 pub use types::{FrontmatterData, FrontmatterFormat};
