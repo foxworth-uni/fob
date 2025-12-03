@@ -13,6 +13,7 @@ fob-bundler = { path = "../fob-bundler", version = "0.3.0" }
 
 anyhow.workspace = true
 thiserror.workspace = true
+miette.workspace = true
 serde_json.workspace = true
 tracing.workspace = true
 tempfile = "3"

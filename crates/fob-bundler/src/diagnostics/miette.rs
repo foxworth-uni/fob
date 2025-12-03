@@ -138,14 +138,52 @@ pub fn calculate_enhanced_span(source: &str, offset: usize, kind: &DiagnosticKin
 #[derive(Debug)]
 pub struct DiagnosticError {
     diag: ExtractedDiagnostic,
-    source_code: Option<(String, String)>, // (file, source)
+    /// Named source for miette to display source code
+    named_source: Option<miette::NamedSource<String>>,
+    /// Related errors (from error chain)
+    related_errors: Vec<ChainedError>,
+}
+
+/// A simple error type for error chain entries
+#[derive(Debug)]
+pub struct ChainedError {
+    message: String,
+}
+
+impl std::error::Error for ChainedError {}
+
+impl std::fmt::Display for ChainedError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl Diagnostic for ChainedError {
+    fn code(&self) -> Option<Box<dyn std::fmt::Display + '_>> {
+        None
+    }
+
+    fn severity(&self) -> Option<Severity> {
+        Some(Severity::Advice)
+    }
 }
 
 impl std::error::Error for DiagnosticError {}
 
 impl std::fmt::Display for DiagnosticError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.diag.message)
+        write!(f, "{}", self.diag.message)?;
+
+        // Append error chain if present
+        if !self.diag.error_chain.is_empty() {
+            writeln!(f)?;
+            writeln!(f, "Caused by:")?;
+            for (i, cause) in self.diag.error_chain.iter().enumerate() {
+                writeln!(f, "  {}: {}", i + 1, cause)?;
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -169,19 +207,19 @@ impl Diagnostic for DiagnosticError {
     }
 
     fn source_code(&self) -> Option<&dyn miette::SourceCode> {
-        // Miette requires returning a reference, but we own the source
-        // We'll handle source code display via labels and the file path
-        // The actual source code will be loaded by miette's report handler
-        None
+        self.named_source
+            .as_ref()
+            .map(|s| s as &dyn miette::SourceCode)
     }
 
     fn labels(&self) -> Option<Box<dyn Iterator<Item = LabeledSpan> + '_>> {
         if let (Some(_file), Some(line), Some(column)) =
             (&self.diag.file, self.diag.line, self.diag.column)
         {
-            if let Some((_, source)) = &self.source_code {
-                if let Some(offset) = line_col_to_offset(source, line, column) {
-                    let length = calculate_enhanced_span(source, offset, &self.diag.kind);
+            if let Some(source) = &self.named_source {
+                let source_str = source.inner();
+                if let Some(offset) = line_col_to_offset(source_str, line, column) {
+                    let length = calculate_enhanced_span(source_str, offset, &self.diag.kind);
                     let span = SourceSpan::new(offset.into(), length);
 
                     let label = match &self.diag.kind {
@@ -206,14 +244,36 @@ impl Diagnostic for DiagnosticError {
         }
         None
     }
+
+    fn related<'a>(&'a self) -> Option<Box<dyn Iterator<Item = &'a dyn Diagnostic> + 'a>> {
+        if self.related_errors.is_empty() {
+            None
+        } else {
+            Some(Box::new(
+                self.related_errors.iter().map(|e| e as &dyn Diagnostic),
+            ))
+        }
+    }
 }
 
 /// Convert ExtractedDiagnostic to a DiagnosticError with source code loaded
 pub fn to_diagnostic_error(diag: ExtractedDiagnostic) -> DiagnosticError {
-    let source_code = diag
-        .file
-        .as_ref()
-        .and_then(|file| load_source(file).map(|source| (file.clone(), source)));
+    let named_source = diag.file.as_ref().and_then(|file| {
+        load_source(file).map(|source| miette::NamedSource::new(file.clone(), source))
+    });
 
-    DiagnosticError { diag, source_code }
+    // Convert error chain to related errors
+    let related_errors: Vec<ChainedError> = diag
+        .error_chain
+        .iter()
+        .map(|msg| ChainedError {
+            message: msg.clone(),
+        })
+        .collect();
+
+    DiagnosticError {
+        diag,
+        named_source,
+        related_errors,
+    }
 }

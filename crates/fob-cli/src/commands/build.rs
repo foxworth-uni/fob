@@ -209,9 +209,10 @@ fn validate_output_dir(out_dir: &Path, cwd: &Path) -> Result<()> {
         let parent = resolved_out_dir.parent().ok_or_else(|| {
             CliError::Build(BuildError::OutputNotWritable(resolved_out_dir.clone()))
         })?;
-        parent
-            .canonicalize()?
-            .join(resolved_out_dir.file_name().unwrap())
+        let filename = resolved_out_dir.file_name().ok_or_else(|| {
+            CliError::Build(BuildError::OutputNotWritable(resolved_out_dir.clone()))
+        })?;
+        parent.canonicalize()?.join(filename)
     };
 
     let canonical_cwd = cwd.canonicalize()?;

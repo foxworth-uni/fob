@@ -40,35 +40,41 @@ impl ConfigValidator for SchemaValidator {
         // Validate external packages (must be non-empty strings)
         for external in &config.external {
             if external.trim().is_empty() {
-                return Err(ConfigError::SchemaValidation(
-                    "external package names cannot be empty".to_string(),
-                ));
+                return Err(ConfigError::SchemaValidation {
+                    message: "external package names cannot be empty".to_string(),
+                    hint: Some("Remove empty strings from the 'external' array".to_string()),
+                });
             }
         }
 
         // Validate plugin configurations
         for plugin in &config.plugins {
             if plugin.path.as_os_str().is_empty() {
-                return Err(ConfigError::SchemaValidation(
-                    "plugin path cannot be empty".to_string(),
-                ));
+                return Err(ConfigError::SchemaValidation {
+                    message: "plugin path cannot be empty".to_string(),
+                    hint: Some("Specify a valid path for each plugin".to_string()),
+                });
             }
 
             // Validate order is reasonable
             if plugin.order < -1000 || plugin.order > 1000 {
-                return Err(ConfigError::SchemaValidation(format!(
-                    "plugin order {} is out of reasonable range (-1000 to 1000)",
-                    plugin.order
-                )));
+                return Err(ConfigError::SchemaValidation {
+                    message: format!(
+                        "plugin order {} is out of reasonable range (-1000 to 1000)",
+                        plugin.order
+                    ),
+                    hint: Some("Use an order value between -1000 and 1000".to_string()),
+                });
             }
         }
 
         // Validate cache config
         if config.cache_config.max_size > 0 && config.cache_config.max_size < 1024 * 1024 {
-            return Err(ConfigError::SchemaValidation(
-                "cache max_size must be at least 1MB (1048576 bytes) or 0 for unlimited"
+            return Err(ConfigError::SchemaValidation {
+                message: "cache max_size must be at least 1MB (1048576 bytes) or 0 for unlimited"
                     .to_string(),
-            ));
+                hint: Some("Set max_size to 0 for unlimited or at least 1048576".to_string()),
+            });
         }
 
         Ok(())
@@ -113,21 +119,21 @@ impl ConfigValidator for FsValidator {
         for entry in &config.entries {
             let path = self.root.join(entry);
             if !path.exists() {
-                return Err(ConfigError::EntryNotFound(path));
+                return Err(ConfigError::EntryNotFound { path });
             }
         }
 
         if let Some(dir) = &config.cache_config.cache_dir {
             let path = self.root.join(dir);
             if !path.exists() {
-                return Err(ConfigError::CacheDirNotWritable(path));
+                return Err(ConfigError::CacheDirNotWritable { path });
             }
         }
 
         for plugin in &config.plugins {
             let path = self.root.join(&plugin.path);
             if !path.exists() {
-                return Err(ConfigError::PluginNotFound(path));
+                return Err(ConfigError::PluginNotFound { path });
             }
         }
 
@@ -198,7 +204,7 @@ mod tests {
         assert!(result.is_err());
         assert!(matches!(
             result.unwrap_err(),
-            ConfigError::SchemaValidation(_)
+            ConfigError::SchemaValidation { .. }
         ));
     }
 
@@ -222,7 +228,7 @@ mod tests {
         assert!(result.is_err());
         assert!(matches!(
             result.unwrap_err(),
-            ConfigError::SchemaValidation(_)
+            ConfigError::SchemaValidation { .. }
         ));
     }
 
@@ -235,7 +241,7 @@ mod tests {
         assert!(result.is_err());
         assert!(matches!(
             result.unwrap_err(),
-            ConfigError::SchemaValidation(_)
+            ConfigError::SchemaValidation { .. }
         ));
     }
 

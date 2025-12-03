@@ -28,6 +28,9 @@ pub struct ExtractedDiagnostic {
     pub help: Option<String>,
     /// Structured context for the diagnostic (if available)
     pub context: Option<DiagnosticContext>,
+    /// Error chain (causes) extracted from the error
+    #[serde(default)]
+    pub error_chain: Vec<String>,
 }
 
 /// Structured context for different diagnostic kinds.
@@ -164,6 +167,9 @@ fn extract_single_from_string(error_str: &str) -> ExtractedDiagnostic {
     // Extract help text if available
     let help = extract_help_text(error_str);
 
+    // Extract error chain (causes)
+    let error_chain = extract_error_chain(error_str);
+
     // Try to extract structured context based on diagnostic kind
     let context = match &kind {
         DiagnosticKind::MissingExport => extract_missing_export_context(error_str, &help),
@@ -192,7 +198,57 @@ fn extract_single_from_string(error_str: &str) -> ExtractedDiagnostic {
         column,
         help,
         context,
+        error_chain,
     }
+}
+
+/// Extract error chain from error message.
+///
+/// Looks for patterns like:
+/// - "Caused by: ..."
+/// - "  - cause 1"
+/// - "Error chain:\n  - ..."
+fn extract_error_chain(text: &str) -> Vec<String> {
+    let mut chain = Vec::new();
+
+    // Look for "Caused by:" pattern (common in anyhow errors)
+    for line in text.lines() {
+        let trimmed = line.trim();
+
+        // Match "Caused by: message" or "  - Caused by: message"
+        if let Some(pos) = trimmed.find("Caused by:") {
+            let cause = trimmed[pos + 10..].trim();
+            if !cause.is_empty() {
+                chain.push(cause.to_string());
+            }
+        }
+        // Match "  - message" pattern (bullet points in error chain)
+        else if trimmed.starts_with("- ") && !trimmed.contains("->") {
+            let cause = trimmed[2..].trim();
+            if !cause.is_empty() && !cause.starts_with("Plugin") {
+                chain.push(cause.to_string());
+            }
+        }
+    }
+
+    // Also try to extract from "Error chain:" section
+    if let Some(chain_start) = text.find("Error chain:") {
+        let chain_section = &text[chain_start + 12..];
+        for line in chain_section.lines() {
+            let trimmed = line.trim();
+            if trimmed.starts_with("- ") {
+                let cause = trimmed[2..].trim();
+                if !cause.is_empty() && !chain.contains(&cause.to_string()) {
+                    chain.push(cause.to_string());
+                }
+            } else if trimmed.is_empty() {
+                // End of chain section
+                break;
+            }
+        }
+    }
+
+    chain
 }
 
 /// Extract multiple diagnostics from a batched error string.

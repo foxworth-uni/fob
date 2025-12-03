@@ -88,7 +88,10 @@ impl<'a> ProgramBuilder<'a> {
 
         writer
             .write_all(result.code.as_bytes())
-            .map_err(|e| crate::error::GenError::CodegenFailed(format!("Write error: {}", e)))?;
+            .map_err(|e| crate::error::GenError::CodegenFailed {
+                context: "Write error".to_string(),
+                reason: Some(e.to_string()),
+            })?;
 
         Ok(())
     }

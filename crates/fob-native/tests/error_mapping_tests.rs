@@ -50,6 +50,7 @@ fn test_map_missing_export_diagnostic() {
             module_id: "module.js".to_string(),
             available_exports: vec!["bar".to_string(), "baz".to_string()],
         }),
+        error_chain: Vec::new(),
     };
 
     let error = BundlerError::Bundler(vec![diagnostic]);
@@ -80,6 +81,7 @@ fn test_map_circular_dependency_diagnostic() {
         context: Some(DiagnosticContext::CircularDependency {
             cycle_path: vec!["a.js".to_string(), "b.js".to_string(), "a.js".to_string()],
         }),
+        error_chain: Vec::new(),
     };
 
     let error = BundlerError::Bundler(vec![diagnostic]);
@@ -108,6 +110,7 @@ fn test_map_plugin_error() {
         context: Some(DiagnosticContext::Plugin {
             plugin_name: "test-plugin".to_string(),
         }),
+        error_chain: Vec::new(),
     };
 
     let error = BundlerError::Bundler(vec![diagnostic]);
@@ -133,6 +136,7 @@ fn test_map_multiple_diagnostics() {
             column: Some(1),
             help: None,
             context: None,
+            error_chain: Vec::new(),
         },
         ExtractedDiagnostic {
             kind: DiagnosticKind::UnresolvedImport,
@@ -143,6 +147,7 @@ fn test_map_multiple_diagnostics() {
             column: Some(2),
             help: None,
             context: None,
+            error_chain: Vec::new(),
         },
     ];
 

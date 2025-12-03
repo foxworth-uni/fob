@@ -11,6 +11,8 @@ use fob_bundler::diagnostics::{calculate_span_length, line_col_to_offset, load_s
 #[derive(Debug)]
 pub struct FobErrorDiagnostic {
     error: FobErrorDetails,
+    /// Pre-built related diagnostics (for Multiple errors)
+    related_diagnostics: Vec<Box<FobErrorDiagnostic>>,
 }
 
 impl std::error::Error for FobErrorDiagnostic {}
@@ -149,19 +151,36 @@ impl Diagnostic for FobErrorDiagnostic {
     }
 
     fn related(&self) -> Option<Box<dyn Iterator<Item = &dyn Diagnostic> + '_>> {
-        match &self.error {
-            FobErrorDetails::Multiple(_multiple) => {
-                // Convert related errors to diagnostics
-                // We can't return references to local values, so return None
-                // The primary message will contain the summary
-                None
-            }
-            _ => None,
+        if self.related_diagnostics.is_empty() {
+            None
+        } else {
+            Some(Box::new(
+                self.related_diagnostics
+                    .iter()
+                    .map(|d| d.as_ref() as &dyn Diagnostic),
+            ))
         }
     }
 }
 
 /// Convert FobErrorDetails to a miette diagnostic
 pub fn to_miette_diagnostic(error: FobErrorDetails) -> FobErrorDiagnostic {
-    FobErrorDiagnostic { error }
+    // Build related diagnostics for Multiple errors
+    let related_diagnostics = match &error {
+        FobErrorDetails::Multiple(multiple) => {
+            // Skip the first error (it's the primary), convert rest to diagnostics
+            multiple
+                .errors
+                .iter()
+                .skip(1)
+                .map(|e| Box::new(to_miette_diagnostic(e.clone())))
+                .collect()
+        }
+        _ => Vec::new(),
+    };
+
+    FobErrorDiagnostic {
+        error,
+        related_diagnostics,
+    }
 }

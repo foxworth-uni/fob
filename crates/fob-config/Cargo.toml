@@ -14,6 +14,7 @@ description = "Configuration loading and validation for the Fob bundler"
 [dependencies]
 figment.workspace = true
 indexmap.workspace = true
+miette.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true

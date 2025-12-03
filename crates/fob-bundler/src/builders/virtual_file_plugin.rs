@@ -80,6 +80,10 @@ impl Plugin for VirtualFilePlugin {
     ///
     /// This hook is called before load and needs to confirm that we can handle
     /// the requested module ID. Without this, Rolldown will reject virtual entries.
+    ///
+    /// Also handles extensionless imports by trying `.tsx` fallback. This allows
+    /// users to write `import { Link } from 'gumbo/router'` while the virtual
+    /// module is registered as `gumbo/router.tsx` for proper TypeScript parsing.
     fn resolve_id(
         &self,
         _ctx: &PluginContext,
@@ -89,17 +93,36 @@ impl Plugin for VirtualFilePlugin {
         let files = self.files.clone();
 
         async move {
-            // If this is one of our virtual files, resolve it to itself
+            use rolldown_plugin::HookResolveIdOutput;
+
+            // Check exact match first
             if files.contains_key(&specifier) {
-                use rolldown_plugin::HookResolveIdOutput;
-                Ok(Some(HookResolveIdOutput {
+                return Ok(Some(HookResolveIdOutput {
                     id: specifier.into(),
                     ..Default::default()
-                }))
-            } else {
-                // Not our virtual file, let other resolvers handle it
-                Ok(None)
+                }));
             }
+
+            // Try adding .tsx extension for TypeScript parsing
+            let with_tsx = format!("{}.tsx", specifier);
+            if files.contains_key(&with_tsx) {
+                return Ok(Some(HookResolveIdOutput {
+                    id: with_tsx.into(),
+                    ..Default::default()
+                }));
+            }
+
+            // Try adding .ts extension
+            let with_ts = format!("{}.ts", specifier);
+            if files.contains_key(&with_ts) {
+                return Ok(Some(HookResolveIdOutput {
+                    id: with_ts.into(),
+                    ..Default::default()
+                }));
+            }
+
+            // Not our virtual file, let other resolvers handle it
+            Ok(None)
         }
     }
 
@@ -248,5 +271,13 @@ mod tests {
 
         let result = VirtualFilePlugin::new(files);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_infer_module_type_extensionless() {
+        // Extensionless paths default to JavaScript
+        assert!(matches!(infer_module_type("gumbo/router"), ModuleType::Js));
+        // With extension, proper type is inferred
+        assert!(matches!(infer_module_type("gumbo/router.tsx"), ModuleType::Tsx));
     }
 }

@@ -231,6 +231,7 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
             column: None,
             help: None,
             context: None,
+            error_chain: Vec::new(),
         }])
     })?;
 

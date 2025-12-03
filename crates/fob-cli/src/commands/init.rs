@@ -129,7 +129,8 @@ fn validate_project_name(name: &str) -> Result<()> {
     }
 
     // Cannot start with a dot or number
-    if name.starts_with('.') || name.chars().next().unwrap().is_ascii_digit() {
+    // Note: empty check above guarantees name is non-empty
+    if name.starts_with('.') || name.as_bytes()[0].is_ascii_digit() {
         return Err(CliError::InvalidArgument(
             "Project name cannot start with a dot or number".to_string(),
         ));

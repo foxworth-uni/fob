@@ -549,8 +549,5 @@ impl<'a> JsBuilder<'a> {
     }
 }
 
-impl<'a> Default for JsBuilder<'a> {
-    fn default() -> Self {
-        panic!("JsBuilder requires an allocator - use JsBuilder::new(allocator)");
-    }
-}
+// Note: Default is intentionally NOT implemented for JsBuilder.
+// Use JsBuilder::new(allocator) instead - the allocator is required.

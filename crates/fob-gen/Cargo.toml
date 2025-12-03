@@ -19,6 +19,7 @@ oxc_parser = { workspace = true, optional = true }
 oxc_ast_visit = { workspace = true, optional = true }
 
 # Error handling
+miette = { workspace = true }
 thiserror = { workspace = true }
 
 [features]

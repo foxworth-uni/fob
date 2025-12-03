@@ -85,36 +85,45 @@ impl ConfigDiscovery {
             return self.load_from_package_json(path);
         }
 
-        let content = fs::read_to_string(path)
-            .map_err(|e| ConfigError::InvalidValue(format!("Failed to read config file: {}", e)))?;
+        let content = fs::read_to_string(path)?;
 
-        let toml_val: toml::Value = toml::from_str(&content)
-            .map_err(|e| ConfigError::InvalidValue(format!("Invalid TOML: {}", e)))?;
+        let toml_val: toml::Value = toml::from_str(&content).map_err(|e| {
+            ConfigError::InvalidValue {
+                field: "toml".to_string(),
+                hint: Some(format!("Invalid TOML syntax: {}", e)),
+            }
+        })?;
 
         let value = serde_json::to_value(toml_val).map_err(|e| {
-            ConfigError::InvalidValue(format!("TOML to JSON conversion failed: {}", e))
+            ConfigError::InvalidValue {
+                field: "toml".to_string(),
+                hint: Some(format!("TOML to JSON conversion failed: {}", e)),
+            }
         })?;
 
         JoyConfig::from_value(value)
     }
 
     fn load_from_package_json(&self, path: &Path) -> Result<JoyConfig> {
-        let content = fs::read_to_string(path).map_err(|e| {
-            ConfigError::InvalidValue(format!("Failed to read package.json: {}", e))
-        })?;
+        let content = fs::read_to_string(path)?;
 
         let parsed: Value = serde_json::from_str(&content).map_err(|e| {
-            ConfigError::InvalidValue(format!("Invalid JSON in package.json: {}", e))
+            ConfigError::InvalidValue {
+                field: "package.json".to_string(),
+                hint: Some(format!("Invalid JSON: {}", e)),
+            }
         })?;
 
-        let fob_value = parsed.get("fob").ok_or_else(|| {
-            ConfigError::InvalidValue("No 'fob' field in package.json".to_string())
+        let fob_value = parsed.get("fob").ok_or_else(|| ConfigError::InvalidValue {
+            field: "fob".to_string(),
+            hint: Some("Add a 'fob' field to your package.json".to_string()),
         })?;
 
         if fob_value.is_null() {
-            return Err(ConfigError::InvalidValue(
-                "'fob' field in package.json is null".to_string(),
-            ));
+            return Err(ConfigError::InvalidValue {
+                field: "fob".to_string(),
+                hint: Some("The 'fob' field cannot be null".to_string()),
+            });
         }
 
         JoyConfig::from_value(fob_value.clone())
@@ -132,9 +141,7 @@ impl ConfigDiscovery {
 /// ```
 pub fn discover() -> Result<JoyConfig> {
     #[cfg(not(target_arch = "wasm32"))]
-    let root = std::env::current_dir().map_err(|e| {
-        ConfigError::InvalidValue(format!("Failed to get current directory: {}", e))
-    })?;
+    let root = std::env::current_dir()?;
 
     #[cfg(target_arch = "wasm32")]
     let root = PathBuf::from("/");
@@ -153,9 +160,7 @@ pub fn discover() -> Result<JoyConfig> {
 /// ```
 pub fn discover_with_profile(profile: &str) -> Result<JoyConfig> {
     #[cfg(not(target_arch = "wasm32"))]
-    let root = std::env::current_dir().map_err(|e| {
-        ConfigError::InvalidValue(format!("Failed to get current directory: {}", e))
-    })?;
+    let root = std::env::current_dir()?;
 
     #[cfg(target_arch = "wasm32")]
     let root = PathBuf::from("/");

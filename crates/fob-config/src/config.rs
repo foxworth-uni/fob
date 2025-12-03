@@ -66,15 +66,22 @@ impl JoyConfig {
     /// assert_eq!(config.bundle.entries, vec![PathBuf::from("index.mdx")]);
     /// ```
     pub fn from_value(value: Value) -> ConfigResult<Self> {
-        let mut config: JoyConfig =
-            serde_json::from_value(value).map_err(|e| ConfigError::InvalidValue(e.to_string()))?;
+        let mut config: JoyConfig = serde_json::from_value(value).map_err(|e| {
+            ConfigError::InvalidValue {
+                field: "config".to_string(),
+                hint: Some(e.to_string()),
+            }
+        })?;
         config.promote_top_level_plugins();
         Ok(config)
     }
 
     /// Convert to serde_json::Value
     pub fn to_value(&self) -> ConfigResult<Value> {
-        serde_json::to_value(self).map_err(|e| ConfigError::InvalidValue(e.to_string()))
+        serde_json::to_value(self).map_err(|e| ConfigError::InvalidValue {
+            field: "config".to_string(),
+            hint: Some(e.to_string()),
+        })
     }
 }
 
@@ -85,36 +92,52 @@ impl JoyConfig {
         if let Some(name) = profile {
             if let Some(profile_cfg) = self.profiles.get(name) {
                 if !profile_cfg.bundle.is_null() {
-                    let mut base = serde_json::to_value(&self.bundle)
-                        .map_err(|err| ConfigError::InvalidProfileOverride(err.to_string()))?;
+                    let mut base = serde_json::to_value(&self.bundle).map_err(|err| {
+                        ConfigError::InvalidProfileOverride {
+                            message: err.to_string(),
+                        }
+                    })?;
                     merge_values(&mut base, &profile_cfg.bundle);
-                    self.bundle = serde_json::from_value(base)
-                        .map_err(|err| ConfigError::InvalidProfileOverride(err.to_string()))?;
+                    self.bundle = serde_json::from_value(base).map_err(|err| {
+                        ConfigError::InvalidProfileOverride {
+                            message: err.to_string(),
+                        }
+                    })?;
                 }
 
                 if !profile_cfg.dev.is_null() {
                     let mut base = match &self.dev {
-                        Some(dev) => serde_json::to_value(dev)
-                            .map_err(|err| ConfigError::InvalidProfileOverride(err.to_string()))?,
+                        Some(dev) => serde_json::to_value(dev).map_err(|err| {
+                            ConfigError::InvalidProfileOverride {
+                                message: err.to_string(),
+                            }
+                        })?,
                         None => Value::Null,
                     };
                     merge_values(&mut base, &profile_cfg.dev);
                     if base.is_null() {
                         self.dev = None;
                     } else {
-                        self.dev =
-                            Some(serde_json::from_value(base).map_err(|err| {
-                                ConfigError::InvalidProfileOverride(err.to_string())
-                            })?);
+                        self.dev = Some(serde_json::from_value(base).map_err(|err| {
+                            ConfigError::InvalidProfileOverride {
+                                message: err.to_string(),
+                            }
+                        })?);
                     }
                 }
 
                 if !profile_cfg.settings.is_null() {
-                    let mut base = serde_json::to_value(&self.settings)
-                        .map_err(|err| ConfigError::InvalidProfileOverride(err.to_string()))?;
+                    let mut base = serde_json::to_value(&self.settings).map_err(|err| {
+                        ConfigError::InvalidProfileOverride {
+                            message: err.to_string(),
+                        }
+                    })?;
                     merge_values(&mut base, &profile_cfg.settings);
-                    self.settings = serde_json::from_value(base)
-                        .map_err(|err| ConfigError::InvalidProfileOverride(err.to_string()))?;
+                    self.settings = serde_json::from_value(base).map_err(|err| {
+                        ConfigError::InvalidProfileOverride {
+                            message: err.to_string(),
+                        }
+                    })?;
                 }
             }
 
@@ -167,11 +190,17 @@ fn apply_plugin_profiles(plugins: &mut [PluginOptions], profile: &str) -> Config
         }
 
         let original_profiles = plugin.profiles.clone();
-        let mut merged = serde_json::to_value(&*plugin)
-            .map_err(|err| ConfigError::InvalidProfileOverride(err.to_string()))?;
+        let mut merged = serde_json::to_value(&*plugin).map_err(|err| {
+            ConfigError::InvalidProfileOverride {
+                message: err.to_string(),
+            }
+        })?;
         merge_values(&mut merged, &overrides);
-        let mut updated: PluginOptions = serde_json::from_value(merged)
-            .map_err(|err| ConfigError::InvalidProfileOverride(err.to_string()))?;
+        let mut updated: PluginOptions = serde_json::from_value(merged).map_err(|err| {
+            ConfigError::InvalidProfileOverride {
+                message: err.to_string(),
+            }
+        })?;
         updated.profiles = original_profiles;
         *plugin = updated;
     }

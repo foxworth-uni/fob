@@ -2090,6 +2090,7 @@ version = "0.3.0"
 dependencies = [
  "figment",
  "indexmap",
+ "miette",
  "serde",
  "serde_json",
  "tempfile",
@@ -2102,6 +2103,7 @@ dependencies = [
 name = "fob-gen"
 version = "0.3.0"
 dependencies = [
+ "miette",
  "oxc_allocator 0.97.0",
  "oxc_ast 0.97.0",
  "oxc_ast_visit 0.97.0",
@@ -2243,6 +2245,7 @@ version = "0.3.0"
 dependencies = [
  "anyhow",
  "fob-bundler",
+ "miette",
  "serde_json",
  "tempfile",
  "thiserror 2.0.17",

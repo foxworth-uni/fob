@@ -14,7 +14,7 @@ fn validate_catches_missing_entry() {
     let result = FsValidator::new(dir.path()).validate(&cfg.bundle);
     assert!(result.is_err());
     match result.unwrap_err() {
-        ConfigError::EntryNotFound(path) => {
+        ConfigError::EntryNotFound { path } => {
             assert!(path.ends_with("src/nonexistent.ts"));
         }
         _ => panic!("expected EntryNotFound error"),
@@ -61,7 +61,7 @@ fn validate_catches_missing_plugin() {
     let result = FsValidator::new(dir.path()).validate(&cfg.bundle);
     assert!(result.is_err());
     match result.unwrap_err() {
-        ConfigError::PluginNotFound(path) => {
+        ConfigError::PluginNotFound { path } => {
             assert!(path.ends_with("plugins/missing.wasm"));
         }
         _ => panic!("expected PluginNotFound error"),
@@ -113,7 +113,7 @@ fn validate_catches_missing_cache_dir() {
     let result = FsValidator::new(dir.path()).validate(&cfg.bundle);
     assert!(result.is_err());
     match result.unwrap_err() {
-        ConfigError::CacheDirNotWritable(path) => {
+        ConfigError::CacheDirNotWritable { path } => {
             assert!(path.ends_with(".cache/fob"));
         }
         _ => panic!("expected CacheDirNotWritable error"),
@@ -169,7 +169,7 @@ fn validate_checks_multiple_entries() {
     let result = FsValidator::new(dir.path()).validate(&cfg.bundle);
     assert!(result.is_err());
     match result.unwrap_err() {
-        ConfigError::EntryNotFound(path) => {
+        ConfigError::EntryNotFound { path } => {
             assert!(path.ends_with("src/b.ts"));
         }
         _ => panic!("expected EntryNotFound error"),
@@ -217,7 +217,7 @@ fn validate_checks_multiple_plugins() {
     let result = FsValidator::new(dir.path()).validate(&cfg.bundle);
     assert!(result.is_err());
     match result.unwrap_err() {
-        ConfigError::PluginNotFound(path) => {
+        ConfigError::PluginNotFound { path } => {
             assert!(path.ends_with("plugins/b.wasm"));
         }
         _ => panic!("expected PluginNotFound error"),

@@ -134,14 +134,16 @@ mod parser_impl {
             .collect();
 
         if !options.allow_errors && !diagnostics.is_empty() {
-            return Err(GenError::CodegenFailed(format!(
-                "Parse errors: {}",
-                diagnostics
-                    .iter()
-                    .map(|d| d.message.clone())
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            )));
+            return Err(GenError::CodegenFailed {
+                context: "Parse errors".to_string(),
+                reason: Some(
+                    diagnostics
+                        .iter()
+                        .map(|d| d.message.clone())
+                        .collect::<Vec<_>>()
+                        .join(", "),
+                ),
+            });
         }
 
         Ok(ParsedProgram {

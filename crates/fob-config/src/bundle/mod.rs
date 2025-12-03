@@ -140,8 +140,10 @@ impl BundleOptions {
     /// assert!(options.minify);
     /// ```
     pub fn from_value(value: Value) -> Result<Self, crate::error::ConfigError> {
-        serde_json::from_value(value)
-            .map_err(|e| crate::error::ConfigError::InvalidValue(e.to_string()))
+        serde_json::from_value(value).map_err(|e| crate::error::ConfigError::InvalidValue {
+            field: "bundle".to_string(),
+            hint: Some(e.to_string()),
+        })
     }
 
     /// Convert to serde_json::Value
@@ -155,8 +157,10 @@ impl BundleOptions {
     /// let value = options.to_value().unwrap();
     /// ```
     pub fn to_value(&self) -> Result<Value, crate::error::ConfigError> {
-        serde_json::to_value(self)
-            .map_err(|e| crate::error::ConfigError::InvalidValue(e.to_string()))
+        serde_json::to_value(self).map_err(|e| crate::error::ConfigError::InvalidValue {
+            field: "bundle".to_string(),
+            hint: Some(e.to_string()),
+        })
     }
 
     /// Synchronize the top-level minify flag to transform.minify
