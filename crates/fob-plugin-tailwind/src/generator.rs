@@ -223,8 +223,7 @@ impl TailwindGenerator {
     /// Generated CSS as a string
     pub async fn generate_from_file(&self, input_path: &Path) -> Result<String, GeneratorError> {
         // Create temp file for output (Tailwind CLI requires file paths, not stdout)
-        let output_file =
-            tempfile::NamedTempFile::new().map_err(GeneratorError::spawn_failed)?;
+        let output_file = tempfile::NamedTempFile::new().map_err(GeneratorError::spawn_failed)?;
         let output_path = output_file.path();
 
         // Build command using package manager
@@ -281,7 +280,10 @@ impl TailwindGenerator {
 
         // Check output size
         if output_css.len() > MAX_OUTPUT_SIZE {
-            return Err(GeneratorError::output_too_large(output_css.len(), MAX_OUTPUT_SIZE));
+            return Err(GeneratorError::output_too_large(
+                output_css.len(),
+                MAX_OUTPUT_SIZE,
+            ));
         }
 
         Ok(output_css)

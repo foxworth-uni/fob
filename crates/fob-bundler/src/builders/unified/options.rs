@@ -12,6 +12,9 @@ use super::entry::EntryPoints;
 /// This struct controls all aspects of the bundling process. Use the builder
 /// pattern methods for ergonomic configuration, or construct directly for
 /// full control.
+///
+/// Note: This is the current public API. For advanced use cases with deployment
+/// targets, see `BuildConfig` in the `config` module.
 #[derive(Debug, Clone)]
 pub struct BuildOptions {
     /// Entry point(s) for the build.
@@ -155,73 +158,6 @@ impl BuildOptions {
 
         let mut opts = Self::new("."); // Dummy entry
         opts.entry = EntryPoints::Multiple(normalized);
-        opts
-    }
-
-    /// Preset: library build configuration.
-    ///
-    /// Optimized for npm packages:
-    /// - `bundle: false` (externalize all dependencies)
-    /// - `platform: Node`
-    /// - Auto-generates .d.ts for TypeScript entries (if dts-generation feature enabled)
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use fob_bundler::BuildOptions;
-    ///
-    /// # async fn example() -> fob_bundler::Result<()> {
-    /// let result = BuildOptions::library("./src/index.ts")
-    ///     .external(["react"])  // Optional: explicitly externalize
-    ///     .build()
-    ///     .await?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    pub fn library(entry: impl AsRef<Path>) -> Self {
-        let mut opts = Self::new(entry);
-        opts.bundle = false;
-        opts.platform = Platform::Node;
-
-        #[cfg(feature = "dts-generation")]
-        {
-            opts.dts = Some(DtsOptions::default());
-        }
-
-        opts
-    }
-
-    /// Preset: components build (independent islands).
-    ///
-    /// Bundles each component separately without shared chunks:
-    /// - `bundle: true`
-    /// - `splitting: false`
-    /// - Creates one bundle per entry
-    pub fn components<P, I>(entries: I) -> Self
-    where
-        P: AsRef<Path>,
-        I: IntoIterator<Item = P>,
-    {
-        let mut opts = Self::new_multiple(entries);
-        opts.bundle = true;
-        opts.splitting = false;
-        opts
-    }
-
-    /// Preset: application build with code splitting.
-    ///
-    /// Optimized for web apps:
-    /// - `bundle: true`
-    /// - `splitting: true`
-    /// - Shared dependencies extracted to chunks
-    pub fn app<P, I>(entries: I) -> Self
-    where
-        P: AsRef<Path>,
-        I: IntoIterator<Item = P>,
-    {
-        let mut opts = Self::new_multiple(entries);
-        opts.bundle = true;
-        opts.splitting = true;
         opts
     }
 
@@ -418,7 +354,8 @@ impl BuildOptions {
     /// use fob_bundler::BuildOptions;
     ///
     /// # async fn example() -> fob_bundler::Result<()> {
-    /// let result = BuildOptions::library("./src/index.ts")
+    /// let result = BuildOptions::new("./src/index.ts")
+    ///     .bundle(false)  // Library mode
     ///     .decorators(true)
     ///     .build()
     ///     .await?;

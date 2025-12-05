@@ -236,8 +236,8 @@ fn extract_error_chain(text: &str) -> Vec<String> {
         let chain_section = &text[chain_start + 12..];
         for line in chain_section.lines() {
             let trimmed = line.trim();
-            if trimmed.starts_with("- ") {
-                let cause = trimmed[2..].trim();
+            if let Some(stripped) = trimmed.strip_prefix("- ") {
+                let cause = stripped.trim();
                 if !cause.is_empty() && !chain.contains(&cause.to_string()) {
                     chain.push(cause.to_string());
                 }

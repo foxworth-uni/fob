@@ -98,11 +98,14 @@ pub async fn bundle_mdx(options: BundleMdxOptions) -> Result<BundleMdxResult> {
     let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut build_opts = BuildOptions::new("__mdx_entry__.jsx")
         .format(OutputFormat::Esm)
-        .sourcemap_hidden()
-        .runtime(Arc::new(
-            NativeRuntime::new(cwd.clone()).context("Failed to create native runtime")?,
-        ))
-        .plugin(Arc::new(FobMdxPlugin::new(cwd)));
+        .sourcemap_hidden();
+
+    let runtime =
+        Arc::new(NativeRuntime::new(cwd.clone()).context("Failed to create native runtime")?);
+
+    build_opts = build_opts
+        .runtime(runtime.clone())
+        .plugin(Arc::new(FobMdxPlugin::new(runtime)));
 
     // Add MDX entry as virtual file
     build_opts

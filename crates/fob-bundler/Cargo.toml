@@ -71,6 +71,10 @@ tokio = { workspace = true, features = ["rt", "fs"] }
 
 [dev-dependencies]
 tempfile.workspace = true
+fob-plugin-mdx = { path = "../fob-plugin-mdx" }
+fob-plugin-css = { path = "../fob-plugin-css" }
+rolldown = { workspace = true, features = ["testing"] }
+futures = "0.3"
 
 # Platform-specific dev dependencies for native tests
 [target.'cfg(not(target_family = "wasm"))'.dev-dependencies]

@@ -122,25 +122,12 @@ pub fn mdast_to_jsx_with_options(root: &Node, options: &crate::MdxOptions) -> Re
     }
 
     // Add frontmatter export if present
-    // Also extract prop names for MDXContent signature
-    let prop_names: Vec<String> = frontmatter
-        .as_ref()
-        .map(|fm| fm.prop_names().into_iter().map(String::from).collect())
-        .unwrap_or_default();
-
     if let Some(ref fm) = frontmatter {
         // Serialize frontmatter as JSON and inject as a named export
         let json_str = serde_json::to_string(&fm.data)
             .with_context(|| "Failed to serialize frontmatter to JSON")?;
 
         named_exports.push(format!("export const frontmatter = {};", json_str));
-
-        // Export propDefinitions if props exist
-        if !fm.props.is_empty() {
-            let props_json = serde_json::to_string(&fm.props)
-                .with_context(|| "Failed to serialize propDefinitions to JSON")?;
-            named_exports.push(format!("export const propDefinitions = {};", props_json));
-        }
     }
 
     // Generate MDXContent component with React 19 JSX runtime
@@ -160,12 +147,8 @@ pub fn mdast_to_jsx_with_options(root: &Node, options: &crate::MdxOptions) -> Re
         )
     };
 
-    // Build data props destructuring if props exist
-    let data_props_destructure = if prop_names.is_empty() {
-        String::new()
-    } else {
-        format!("\n  const {{ {} }} = _dataProps;", prop_names.join(", "))
-    };
+    // Data props destructuring (empty since providers are removed)
+    let data_props_destructure = String::new();
 
     // Build MDXContent function body (shared between formats)
     let mdx_content_body = format!(

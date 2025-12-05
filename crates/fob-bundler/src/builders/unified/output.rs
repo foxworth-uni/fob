@@ -78,7 +78,10 @@ impl BuildResult {
     /// ```no_run
     /// # use fob_bundler::BuildOptions;
     /// # async fn example() -> fob_bundler::Result<()> {
-    /// let result = BuildOptions::library("./src/main.js").build().await?;
+    /// let result = BuildOptions::new("./src/main.js")
+    ///     .bundle(false)  // Library mode
+    ///     .build()
+    ///     .await?;
     /// for chunk in result.chunks() {
     ///     println!("Chunk: {} ({} bytes)", chunk.filename, chunk.code.len());
     /// }

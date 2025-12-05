@@ -13,3 +13,7 @@ fob-mdx = { workspace = true }
 fob-bundler = { workspace = true }
 anyhow.workspace = true
 tracing.workspace = true
+
+# Platform-specific dev dependencies for native tests
+[target.'cfg(not(target_family = "wasm"))'.dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

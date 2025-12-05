@@ -12,7 +12,7 @@ use fob_bundler::diagnostics::{calculate_span_length, line_col_to_offset, load_s
 pub struct FobErrorDiagnostic {
     error: FobErrorDetails,
     /// Pre-built related diagnostics (for Multiple errors)
-    related_diagnostics: Vec<Box<FobErrorDiagnostic>>,
+    related_diagnostics: Vec<FobErrorDiagnostic>,
 }
 
 impl std::error::Error for FobErrorDiagnostic {}
@@ -157,7 +157,7 @@ impl Diagnostic for FobErrorDiagnostic {
             Some(Box::new(
                 self.related_diagnostics
                     .iter()
-                    .map(|d| d.as_ref() as &dyn Diagnostic),
+                    .map(|d| d as &dyn Diagnostic),
             ))
         }
     }
@@ -173,7 +173,7 @@ pub fn to_miette_diagnostic(error: FobErrorDetails) -> FobErrorDiagnostic {
                 .errors
                 .iter()
                 .skip(1)
-                .map(|e| Box::new(to_miette_diagnostic(e.clone())))
+                .map(|e| to_miette_diagnostic(e.clone()))
                 .collect()
         }
         _ => Vec::new(),

@@ -66,7 +66,8 @@ async fn test_single_entry_bundle() {
 
     // Build
     let runtime = Arc::new(NativeRuntime::new(cwd.clone()).unwrap());
-    let result = BuildOptions::library(entry)
+    let result = BuildOptions::new(entry)
+        .bundle(false)
         .cwd(cwd)
         .runtime(runtime)
         .build()
@@ -92,7 +93,8 @@ async fn test_multiple_entry_bundle() {
     create_test_file(&cwd, "b.js", "export const b = 'b';");
 
     let runtime = Arc::new(NativeRuntime::new(cwd.clone()).unwrap());
-    let result = BuildOptions::components(vec![cwd.join("a.js"), cwd.join("b.js")])
+    let result = BuildOptions::new_multiple(vec![cwd.join("a.js"), cwd.join("b.js")])
+        .bundle(false)
         .cwd(cwd)
         .runtime(runtime)
         .build()
@@ -113,7 +115,8 @@ async fn test_bundle_with_sourcemap() {
     let entry = create_test_file(&cwd, "index.js", "export const hello = 'world';");
 
     let runtime = Arc::new(NativeRuntime::new(cwd.clone()).unwrap());
-    let result = BuildOptions::library(entry)
+    let result = BuildOptions::new(entry)
+        .bundle(false)
         .cwd(cwd)
         .sourcemap(true)
         .runtime(runtime)
@@ -146,7 +149,8 @@ async fn test_bundle_different_formats() {
 
     for format in formats {
         let runtime = Arc::new(NativeRuntime::new(cwd.clone()).unwrap());
-        let result = BuildOptions::library(entry.clone())
+        let result = BuildOptions::new(entry.clone())
+            .bundle(false)
             .cwd(cwd.clone())
             .format(format)
             .runtime(runtime)
@@ -172,7 +176,8 @@ async fn test_bundle_with_external_dependencies() {
     );
 
     let runtime = Arc::new(NativeRuntime::new(cwd.clone()).unwrap());
-    let result = BuildOptions::library(entry)
+    let result = BuildOptions::new(entry)
+        .bundle(false)
         .cwd(cwd)
         .external(vec!["external".to_string()])
         .runtime(runtime)

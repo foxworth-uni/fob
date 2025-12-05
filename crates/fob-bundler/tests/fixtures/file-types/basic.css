@@ -1,0 +1,29 @@
+/* Basic CSS test fixture */
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.btn {
+    background-color: #3b82f6;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    border: none;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background-color: #2563eb;
+}
+
+.greeting {
+    text-align: center;
+}
+
+.greeting h1 {
+    color: #1f2937;
+    font-size: 2rem;
+}

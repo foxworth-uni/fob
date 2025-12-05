@@ -2016,6 +2016,9 @@ dependencies = [
  "brk_rolldown_plugin",
  "fob-gen",
  "fob-graph",
+ "fob-plugin-css",
+ "fob-plugin-mdx",
+ "futures",
  "miette",
  "oxc_allocator 0.97.0",
  "oxc_ast 0.97.0",
@@ -2145,7 +2148,6 @@ name = "fob-mdx"
 version = "0.3.0"
 dependencies = [
  "anyhow",
- "async-trait",
  "bon",
  "markdown",
  "oxc_allocator 0.97.0",
@@ -2161,7 +2163,6 @@ dependencies = [
  "tokio",
  "toml 0.9.8",
  "tracing",
- "winnow",
 ]
 
 [[package]]
@@ -2236,6 +2237,7 @@ dependencies = [
  "anyhow",
  "fob-bundler",
  "fob-mdx",
+ "tokio",
  "tracing",
 ]
 
@@ -2251,6 +2253,18 @@ dependencies = [
  "thiserror 2.0.17",
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "fob-target"
+version = "0.3.0"
+dependencies = [
+ "fob-bundler",
+ "miette",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.17",
+ "tokio",
 ]
 
 [[package]]

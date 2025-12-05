@@ -22,18 +22,23 @@
 //!
 //! ```rust,no_run
 //! use fob_plugin_tailwind::FobTailwindPlugin;
+//! use fob_bundler::{Runtime, runtime::BundlerRuntime};
 //! use std::sync::Arc;
 //! use std::path::PathBuf;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Use with your Rolldown bundler configuration
-//! let plugin = Arc::new(FobTailwindPlugin::new(PathBuf::from(".")));
+//! let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
+//! let plugin = Arc::new(FobTailwindPlugin::new(runtime, PathBuf::from(".")));
 //! # Ok(())
 //! # }
 //! ```
 
 use anyhow::{Context, Result};
-use fob_bundler::{HookLoadArgs, HookLoadOutput, HookLoadReturn, ModuleType, Plugin, PluginContext};
+use fob_bundler::{
+    FobPlugin, HookLoadArgs, HookLoadOutput, HookLoadReturn, ModuleType, Plugin, PluginContext,
+    PluginPhase, Runtime,
+};
 use std::borrow::Cow;
 use std::path::Path;
 use std::sync::Arc;
@@ -65,43 +70,73 @@ pub struct FobTailwindPlugin {
 
     /// Project root directory for resolving paths
     project_root: std::path::PathBuf,
+
+    /// Runtime for file access (handles virtual files + filesystem)
+    runtime: Arc<dyn Runtime>,
 }
 
 impl FobTailwindPlugin {
     /// Create a new FobTailwindPlugin with default configuration
     ///
+    /// # Arguments
+    ///
+    /// * `runtime` - Runtime for file access (handles virtual files + filesystem)
+    /// * `project_root` - Project root directory for resolving paths
+    ///
     /// # Example
     ///
     /// ```rust
     /// use fob_plugin_tailwind::FobTailwindPlugin;
+    /// use fob_bundler::{Runtime, runtime::BundlerRuntime};
     /// use std::path::PathBuf;
+    /// use std::sync::Arc;
     ///
-    /// let plugin = FobTailwindPlugin::new(PathBuf::from("."));
+    /// # async fn example() {
+    /// let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
+    /// let plugin = FobTailwindPlugin::new(runtime, PathBuf::from("."));
+    /// # }
     /// ```
-    pub fn new(project_root: std::path::PathBuf) -> Self {
+    pub fn new(runtime: Arc<dyn Runtime>, project_root: std::path::PathBuf) -> Self {
         Self {
             config: TailwindConfig::default(),
             generator: Arc::new(tokio::sync::OnceCell::new()),
             project_root,
+            runtime,
         }
     }
 
     /// Create a new FobTailwindPlugin with custom configuration
     ///
+    /// # Arguments
+    ///
+    /// * `runtime` - Runtime for file access (handles virtual files + filesystem)
+    /// * `config` - Tailwind configuration options
+    /// * `project_root` - Project root directory for resolving paths
+    ///
     /// # Example
     ///
     /// ```rust
     /// use fob_plugin_tailwind::{FobTailwindPlugin, TailwindConfig};
+    /// use fob_bundler::{Runtime, runtime::BundlerRuntime};
     /// use std::path::PathBuf;
+    /// use std::sync::Arc;
     ///
+    /// # async fn example() {
+    /// let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
     /// let config = TailwindConfig::default();
-    /// let plugin = FobTailwindPlugin::with_config(config, PathBuf::from("."));
+    /// let plugin = FobTailwindPlugin::with_config(runtime, config, PathBuf::from("."));
+    /// # }
     /// ```
-    pub fn with_config(config: TailwindConfig, project_root: std::path::PathBuf) -> Self {
+    pub fn with_config(
+        runtime: Arc<dyn Runtime>,
+        config: TailwindConfig,
+        project_root: std::path::PathBuf,
+    ) -> Self {
         Self {
             config,
             generator: Arc::new(tokio::sync::OnceCell::new()),
             project_root,
+            runtime,
         }
     }
 
@@ -168,11 +203,7 @@ impl FobTailwindPlugin {
     }
 }
 
-impl Default for FobTailwindPlugin {
-    fn default() -> Self {
-        Self::new(std::path::PathBuf::from("."))
-    }
-}
+// Note: Default is removed since Runtime is required
 
 impl Plugin for FobTailwindPlugin {
     /// Returns the plugin name for debugging and logging
@@ -200,6 +231,7 @@ impl Plugin for FobTailwindPlugin {
     ) -> impl std::future::Future<Output = HookLoadReturn> + Send {
         let id = args.id.to_string();
         let plugin = self.clone();
+        let runtime = Arc::clone(&self.runtime);
 
         async move {
             // Only handle .css files
@@ -207,9 +239,13 @@ impl Plugin for FobTailwindPlugin {
                 return Ok(None);
             }
 
-            // Peek at file to check for @tailwind directives
-            let content = match std::fs::read_to_string(&id) {
-                Ok(c) => c,
+            // Peek at file to check for @tailwind directives using Runtime
+            let file_path = std::path::Path::new(&id);
+            let content = match runtime.read_file(file_path).await {
+                Ok(bytes) => match String::from_utf8(bytes) {
+                    Ok(s) => s,
+                    Err(_) => return Ok(None), // Invalid UTF-8, let other plugins handle
+                },
                 Err(_) => return Ok(None), // Let other plugins handle if we can't read
             };
 
@@ -255,21 +291,37 @@ impl Plugin for FobTailwindPlugin {
     }
 }
 
+impl FobPlugin for FobTailwindPlugin {
+    fn phase(&self) -> PluginPhase {
+        // Tailwind should run before CSS plugin (both Transform phase, but Tailwind has lower priority)
+        // Actually, since phases are the same, order matters - Tailwind should be added first
+        PluginPhase::Transform
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use fob_bundler::Runtime;
     use std::path::PathBuf;
+    use std::sync::Arc;
 
+    #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_plugin_creation() {
-        let plugin = FobTailwindPlugin::new(PathBuf::from("."));
+        use fob_bundler::runtime::BundlerRuntime;
+        let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
+        let plugin = FobTailwindPlugin::new(runtime, PathBuf::from("."));
         assert_eq!(plugin.name(), "fob-tailwind");
     }
 
+    #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_plugin_with_custom_config() {
+        use fob_bundler::runtime::BundlerRuntime;
+        let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
         let config = TailwindConfig::default();
-        let plugin = FobTailwindPlugin::with_config(config, PathBuf::from("."));
+        let plugin = FobTailwindPlugin::with_config(runtime, config, PathBuf::from("."));
         assert_eq!(plugin.name(), "fob-tailwind");
     }
 

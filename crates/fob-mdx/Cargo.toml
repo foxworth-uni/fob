@@ -30,8 +30,6 @@ tracing.workspace = true
 path-clean.workspace = true
 regex.workspace = true
 bon.workspace = true
-winnow.workspace = true
-async-trait.workspace = true
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["rt", "macros"] }

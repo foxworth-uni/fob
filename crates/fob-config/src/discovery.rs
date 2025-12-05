@@ -87,18 +87,15 @@ impl ConfigDiscovery {
 
         let content = fs::read_to_string(path)?;
 
-        let toml_val: toml::Value = toml::from_str(&content).map_err(|e| {
-            ConfigError::InvalidValue {
+        let toml_val: toml::Value =
+            toml::from_str(&content).map_err(|e| ConfigError::InvalidValue {
                 field: "toml".to_string(),
                 hint: Some(format!("Invalid TOML syntax: {}", e)),
-            }
-        })?;
+            })?;
 
-        let value = serde_json::to_value(toml_val).map_err(|e| {
-            ConfigError::InvalidValue {
-                field: "toml".to_string(),
-                hint: Some(format!("TOML to JSON conversion failed: {}", e)),
-            }
+        let value = serde_json::to_value(toml_val).map_err(|e| ConfigError::InvalidValue {
+            field: "toml".to_string(),
+            hint: Some(format!("TOML to JSON conversion failed: {}", e)),
         })?;
 
         JoyConfig::from_value(value)
@@ -107,12 +104,11 @@ impl ConfigDiscovery {
     fn load_from_package_json(&self, path: &Path) -> Result<JoyConfig> {
         let content = fs::read_to_string(path)?;
 
-        let parsed: Value = serde_json::from_str(&content).map_err(|e| {
-            ConfigError::InvalidValue {
+        let parsed: Value =
+            serde_json::from_str(&content).map_err(|e| ConfigError::InvalidValue {
                 field: "package.json".to_string(),
                 hint: Some(format!("Invalid JSON: {}", e)),
-            }
-        })?;
+            })?;
 
         let fob_value = parsed.get("fob").ok_or_else(|| ConfigError::InvalidValue {
             field: "fob".to_string(),

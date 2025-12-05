@@ -8,14 +8,13 @@ use crate::runtime::NativeRuntime;
 use fob_bundler::{BuildOptions, Runtime};
 use fob_plugin_mdx::FobMdxPlugin;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 
 /// Core bundler (no NAPI dependencies)
 pub struct CoreBundler {
     config: BundleConfig,
     runtime: Arc<dyn Runtime>,
-    cwd: PathBuf,
 }
 
 impl CoreBundler {
@@ -33,11 +32,7 @@ impl CoreBundler {
                 .map_err(|e| format!("Failed to create runtime: {}", e))?,
         );
 
-        Ok(Self {
-            config,
-            runtime,
-            cwd,
-        })
+        Ok(Self { config, runtime })
     }
 
     /// Check if MDX should be enabled (explicit config or auto-detect from entries)
@@ -51,8 +46,8 @@ impl CoreBundler {
     }
 
     /// Create MDX plugin from config options
-    fn create_mdx_plugin(mdx_opts: Option<&MdxOptions>, cwd: &Path) -> FobMdxPlugin {
-        let mut plugin = FobMdxPlugin::new(cwd.to_path_buf());
+    fn create_mdx_plugin(mdx_opts: Option<&MdxOptions>, runtime: Arc<dyn Runtime>) -> FobMdxPlugin {
+        let mut plugin = FobMdxPlugin::new(runtime);
 
         if let Some(opts) = mdx_opts {
             if let Some(gfm) = opts.gfm {
@@ -125,9 +120,9 @@ impl CoreBundler {
         // Build
         let build_result = {
             let mut options = if self.config.entries.len() == 1 {
-                BuildOptions::library(self.config.entries[0].clone())
+                BuildOptions::new(self.config.entries[0].clone()).bundle(false)
             } else {
-                BuildOptions::components(self.config.entries.clone())
+                BuildOptions::new_multiple(self.config.entries.clone()).bundle(false)
             };
 
             options = options
@@ -166,7 +161,8 @@ impl CoreBundler {
 
             // Auto-inject MDX plugin if needed
             if Self::should_enable_mdx(&self.config) {
-                let mdx_plugin = Self::create_mdx_plugin(self.config.mdx.as_ref(), &self.cwd);
+                let mdx_plugin =
+                    Self::create_mdx_plugin(self.config.mdx.as_ref(), self.runtime.clone());
                 options = options.plugin(Arc::new(mdx_plugin));
             }
 

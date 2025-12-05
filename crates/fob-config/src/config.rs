@@ -66,12 +66,11 @@ impl JoyConfig {
     /// assert_eq!(config.bundle.entries, vec![PathBuf::from("index.mdx")]);
     /// ```
     pub fn from_value(value: Value) -> ConfigResult<Self> {
-        let mut config: JoyConfig = serde_json::from_value(value).map_err(|e| {
-            ConfigError::InvalidValue {
+        let mut config: JoyConfig =
+            serde_json::from_value(value).map_err(|e| ConfigError::InvalidValue {
                 field: "config".to_string(),
                 hint: Some(e.to_string()),
-            }
-        })?;
+            })?;
         config.promote_top_level_plugins();
         Ok(config)
     }
@@ -190,17 +189,15 @@ fn apply_plugin_profiles(plugins: &mut [PluginOptions], profile: &str) -> Config
         }
 
         let original_profiles = plugin.profiles.clone();
-        let mut merged = serde_json::to_value(&*plugin).map_err(|err| {
-            ConfigError::InvalidProfileOverride {
+        let mut merged =
+            serde_json::to_value(&*plugin).map_err(|err| ConfigError::InvalidProfileOverride {
                 message: err.to_string(),
-            }
-        })?;
+            })?;
         merge_values(&mut merged, &overrides);
-        let mut updated: PluginOptions = serde_json::from_value(merged).map_err(|err| {
-            ConfigError::InvalidProfileOverride {
+        let mut updated: PluginOptions =
+            serde_json::from_value(merged).map_err(|err| ConfigError::InvalidProfileOverride {
                 message: err.to_string(),
-            }
-        })?;
+            })?;
         updated.profiles = original_profiles;
         *plugin = updated;
     }

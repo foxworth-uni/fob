@@ -93,7 +93,8 @@ async fn build_framework(routes: &HashMap<String, PathBuf>) -> Result<PathBuf> {
 
     // Configure build options for meta-framework pattern
     // Using the `app` preset which enables bundling and code splitting
-    BuildOptions::app(route_files)
+    BuildOptions::new_multiple(route_files)
+        .bundle(true)
         .runtime(runtime)
         .outdir(output_dir.clone())
         .minify_level("identifiers")

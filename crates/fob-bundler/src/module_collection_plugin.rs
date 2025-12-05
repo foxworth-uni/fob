@@ -4,6 +4,7 @@ use rolldown_plugin::{
 };
 use std::sync::{Arc, Mutex};
 
+use crate::plugins::{FobPlugin, PluginPhase};
 use fob_graph::collection::{CollectedModule, CollectionState, parse_module_structure};
 
 /// Plugin that collects module information during the bundling process
@@ -124,6 +125,12 @@ impl Plugin for ModuleCollectionPlugin {
             // Don't modify the code
             Ok(None)
         }
+    }
+}
+
+impl FobPlugin for ModuleCollectionPlugin {
+    fn phase(&self) -> PluginPhase {
+        PluginPhase::PostProcess
     }
 }
 

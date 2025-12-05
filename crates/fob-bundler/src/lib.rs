@@ -16,7 +16,9 @@
 //!
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let result = fob::BuildOptions::library("./src/index.js")
+//! let result = fob::BuildOptions::new("./src/index.js")
+//!     .bundle(false)  // Library mode: externalize all dependencies
+//!     .platform(fob::Platform::Node)  // Uses Node.js export conditions
 //!     .external(["react", "react-dom"])
 //!     .sourcemap(true)
 //!     .build()
@@ -26,6 +28,25 @@
 //! for asset in bundle.assets.iter() {
 //!     std::fs::write(format!("dist/{}", asset.filename()), asset.content_as_bytes())?;
 //! }
+//! # Ok(()) }
+//! ```
+//!
+//! ### Using BuildConfig (Recommended for New Code)
+//!
+//! `BuildConfig` provides a cleaner API with better type safety:
+//!
+//! ```no_run
+//! use fob_bundler::BuildConfig;
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let result = BuildConfig::new("./src/index.js")
+//!     .bundle(false)
+//!     .output_dir("dist")
+//!     .build()
+//!     .await?;
+//!
+//! result.write_to("dist", true)?;
 //! # Ok(()) }
 //! ```
 //!
@@ -48,8 +69,11 @@ pub use fob_graph::*;
 
 // Bundler-specific modules
 pub mod builders;
+pub mod config;
 pub mod output;
 pub mod plugins;
+pub mod runtime;
+pub mod target;
 
 // Bundler-specific graph modules
 pub mod from_rolldown;
@@ -85,6 +109,10 @@ pub use rolldown_plugin::{
 pub use builders::{
     BuildOptions, BuildOutput, BuildResult, EntryPoints, MinifyLevel, build, plugin,
 };
+pub use config::{
+    BuildConfig, ExternalPattern, OptimizationConfig, OutputConfig, ResolutionConfig,
+};
+pub use plugins::{FobPlugin, PluginPhase, PluginRegistry};
 
 #[cfg(feature = "dts-generation")]
 pub use builders::DtsOptions;
@@ -104,6 +132,7 @@ pub mod logging;
 pub use logging::{LogLevel, init_logging, init_logging_from_env};
 
 pub use output::{AppBuild, Bundle as JoyBundle, ComponentBuild, ImportMap};
+pub use target::{DeploymentTarget, ExportConditions, NodeBuiltins, RuntimeEnvironment};
 
 // Re-export AnalyzedBundle (bundler-specific analysis result)
 pub use analysis::AnalyzedBundle;

@@ -47,7 +47,8 @@ async fn main() -> Result<()> {
     // =========================================================================
     println!("📦 Building ESM bundle with code splitting...");
 
-    let esm_result = BuildOptions::app(["input/app.js", "input/worker.js"])
+    let esm_result = BuildOptions::new_multiple(["input/app.js", "input/worker.js"])
+        .bundle(true)
         .runtime(runtime.clone())
         .outdir("output/esm")
         .format(OutputFormat::Esm)
@@ -73,7 +74,8 @@ async fn main() -> Result<()> {
     // =========================================================================
     println!("📦 Building CommonJS bundle for Node.js...");
 
-    let cjs_result = BuildOptions::app(["input/app.js"])
+    let cjs_result = BuildOptions::new_multiple(["input/app.js"])
+        .bundle(true)
         .runtime(runtime.clone())
         .outdir("output/cjs")
         .format(OutputFormat::Cjs)
@@ -97,7 +99,8 @@ async fn main() -> Result<()> {
     // =========================================================================
     println!("📦 Building IIFE bundle for browsers...");
 
-    let iife_result = BuildOptions::app(["input/app.js"])
+    let iife_result = BuildOptions::new_multiple(["input/app.js"])
+        .bundle(true)
         .runtime(runtime)
         .outdir("output/iife")
         .format(OutputFormat::Iife)

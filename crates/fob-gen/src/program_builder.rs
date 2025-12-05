@@ -86,12 +86,12 @@ impl<'a> ProgramBuilder<'a> {
         let codegen = Codegen::new();
         let result = codegen.build(&program);
 
-        writer
-            .write_all(result.code.as_bytes())
-            .map_err(|e| crate::error::GenError::CodegenFailed {
+        writer.write_all(result.code.as_bytes()).map_err(|e| {
+            crate::error::GenError::CodegenFailed {
                 context: "Write error".to_string(),
                 reason: Some(e.to_string()),
-            })?;
+            }
+        })?;
 
         Ok(())
     }

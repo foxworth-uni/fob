@@ -16,17 +16,21 @@
 //! ```rust,no_run
 //! use fob_plugin_css::FobCssPlugin;
 //! use std::sync::Arc;
+//! use fob_bundler::runtime::BundlerRuntime; // Import BundlerRuntime
+//! use fob_bundler::Runtime; // Import the Runtime trait
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-//! // Use with your Rolldown bundler configuration
-//! let plugin = Arc::new(FobCssPlugin::new());
+//! // Create a dummy runtime instance for the plugin (e.g., BundlerRuntime for tests)
+//! let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
+//! let plugin = Arc::new(FobCssPlugin::new(runtime)); // Pass the runtime
 //! # Ok(())
 //! # }
 //! ```
 
 use anyhow::Context;
 use fob_bundler::{
-    HookLoadArgs, HookLoadOutput, HookLoadReturn, ModuleType, Plugin, PluginContext,
+    FobPlugin, HookLoadArgs, HookLoadOutput, HookLoadReturn, ModuleType, Plugin, PluginContext,
+    PluginPhase, Runtime,
 };
 use lightningcss::{
     printer::PrinterOptions,
@@ -34,6 +38,7 @@ use lightningcss::{
 };
 use std::borrow::Cow;
 use std::path::Path;
+use std::sync::Arc;
 
 mod config;
 pub use config::CssPluginOptions;
@@ -48,43 +53,63 @@ pub use config::CssPluginOptions;
 /// ```text
 /// .css file → load() hook → lightningcss bundle → minify → target transforms → CSS
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct FobCssPlugin {
     /// Configuration options for CSS processing
     options: CssPluginOptions,
+    /// Runtime for file access (handles virtual files + filesystem)
+    runtime: Arc<dyn Runtime>,
 }
 
 impl FobCssPlugin {
     /// Create a new FobCssPlugin with default options
     ///
+    /// # Arguments
+    ///
+    /// * `runtime` - Runtime for file access (handles virtual files + filesystem)
+    ///
     /// # Example
     ///
     /// ```rust
     /// use fob_plugin_css::FobCssPlugin;
+    /// use fob_bundler::Runtime;
+    /// use std::sync::Arc;
     ///
-    /// let plugin = FobCssPlugin::new();
+    /// # async fn example(runtime: Arc<dyn Runtime>) {
+    /// let plugin = FobCssPlugin::new(runtime);
+    /// # }
     /// ```
-    pub fn new() -> Self {
+    pub fn new(runtime: Arc<dyn Runtime>) -> Self {
         Self {
             options: CssPluginOptions::default(),
+            runtime,
         }
     }
 
     /// Create a new FobCssPlugin with custom options
     ///
+    /// # Arguments
+    ///
+    /// * `runtime` - Runtime for file access (handles virtual files + filesystem)
+    /// * `options` - CSS plugin options
+    ///
     /// # Example
     ///
     /// ```rust
     /// use fob_plugin_css::{FobCssPlugin, CssPluginOptions};
+    /// use fob_bundler::Runtime;
+    /// use std::sync::Arc;
     ///
+    /// # async fn example(runtime: Arc<dyn Runtime>) {
     /// let options = CssPluginOptions::new()
     ///     .with_minify(true)
     ///     .with_targets(vec![">0.2%".to_string(), "not dead".to_string()]);
     ///
-    /// let plugin = FobCssPlugin::with_options(options);
+    /// let plugin = FobCssPlugin::with_options(runtime, options);
+    /// # }
     /// ```
-    pub fn with_options(options: CssPluginOptions) -> Self {
-        Self { options }
+    pub fn with_options(runtime: Arc<dyn Runtime>, options: CssPluginOptions) -> Self {
+        Self { options, runtime }
     }
 
     /// Process a CSS file through lightningcss
@@ -153,11 +178,7 @@ impl FobCssPlugin {
     }
 }
 
-impl Default for FobCssPlugin {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+// Note: Default is removed since Runtime is required
 
 impl Plugin for FobCssPlugin {
     /// Returns the plugin name for debugging and logging
@@ -198,6 +219,7 @@ impl Plugin for FobCssPlugin {
         // Capture data needed for async block to avoid lifetime issues
         let id = args.id.to_string();
         let options = self.options.clone();
+        let runtime = Arc::clone(&self.runtime);
 
         async move {
             // Only handle .css files
@@ -206,15 +228,20 @@ impl Plugin for FobCssPlugin {
             }
 
             // Check if file should be processed
-            let plugin = FobCssPlugin::with_options(options);
+            let plugin = FobCssPlugin::with_options(Arc::clone(&runtime), options);
             if !plugin.should_process(&id) {
                 eprintln!("[fob-css] Skipping excluded file: {}", id);
                 return Ok(None);
             }
 
-            // Read the CSS source file
-            let source = std::fs::read_to_string(&id)
+            // Read the CSS source file using Runtime (handles virtual files + filesystem)
+            let file_path = std::path::Path::new(&id);
+            let content = runtime
+                .read_file(file_path)
+                .await
                 .with_context(|| format!("Failed to read CSS file: {}", id))?;
+            let source = String::from_utf8(content)
+                .with_context(|| format!("CSS file {} contains invalid UTF-8", id))?;
 
             // Save source length before moving
             let source_len = source.len();
@@ -242,49 +269,67 @@ impl Plugin for FobCssPlugin {
     }
 }
 
+impl FobPlugin for FobCssPlugin {
+    fn phase(&self) -> PluginPhase {
+        PluginPhase::Transform
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use fob_bundler::Runtime;
+    use std::sync::Arc;
 
+    #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_plugin_creation() {
-        let plugin = FobCssPlugin::new();
+        use fob_bundler::runtime::BundlerRuntime;
+        let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
+        let plugin = FobCssPlugin::new(runtime);
         assert_eq!(plugin.name(), "fob-css");
     }
 
+    #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_plugin_with_options() {
+        use fob_bundler::runtime::BundlerRuntime;
+        let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
         let options = CssPluginOptions::new().with_minify(true);
-        let plugin = FobCssPlugin::with_options(options);
+        let plugin = FobCssPlugin::with_options(runtime, options);
         assert_eq!(plugin.name(), "fob-css");
         assert!(plugin.options.minify);
     }
 
-    #[test]
-    fn test_plugin_default() {
-        let plugin = FobCssPlugin::default();
-        assert_eq!(plugin.name(), "fob-css");
-    }
-
+    #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_should_process_exclusions() {
-        let plugin = FobCssPlugin::with_options(CssPluginOptions::new().exclude("vendor/"));
+        use fob_bundler::runtime::BundlerRuntime;
+        let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
+        let plugin =
+            FobCssPlugin::with_options(runtime, CssPluginOptions::new().exclude("vendor/"));
 
         assert!(!plugin.should_process("node_modules/vendor/styles.css"));
         assert!(plugin.should_process("src/styles.css"));
     }
 
+    #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_should_process_inclusions() {
-        let plugin = FobCssPlugin::with_options(CssPluginOptions::new().include("src/"));
+        use fob_bundler::runtime::BundlerRuntime;
+        let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
+        let plugin = FobCssPlugin::with_options(runtime, CssPluginOptions::new().include("src/"));
 
         assert!(plugin.should_process("src/styles.css"));
         assert!(!plugin.should_process("vendor/styles.css"));
     }
 
+    #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_process_basic_css() {
-        let plugin = FobCssPlugin::new();
+        use fob_bundler::runtime::BundlerRuntime;
+        let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
+        let plugin = FobCssPlugin::new(runtime);
         let css = "body { color: red; }".to_string();
         let path = Path::new("test.css");
 
@@ -293,9 +338,12 @@ mod tests {
         assert!(result.unwrap().contains("color"));
     }
 
+    #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_process_with_minification() {
-        let plugin = FobCssPlugin::with_options(CssPluginOptions::new().with_minify(true));
+        use fob_bundler::runtime::BundlerRuntime;
+        let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
+        let plugin = FobCssPlugin::with_options(runtime, CssPluginOptions::new().with_minify(true));
 
         let css = "body {\n  color: red;\n  background: blue;\n}";
         let path = Path::new("test.css");

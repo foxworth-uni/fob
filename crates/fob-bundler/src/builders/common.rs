@@ -12,6 +12,7 @@ use crate::analysis::AnalyzedBundle;
 use crate::builders::{asset_plugin::AssetDetectionPlugin, asset_registry::AssetRegistry};
 use crate::diagnostics;
 use crate::module_collection_plugin::ModuleCollectionPlugin;
+use crate::plugins::{PluginPhase, PluginRegistry};
 use crate::{Error, Result};
 use fob_graph::analysis::stats::compute_stats;
 use fob_graph::{AnalysisResult, CacheAnalysis, TransformationTrace};
@@ -79,7 +80,7 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
     let BundlePlan {
         entries,
         mut options,
-        mut plugins,
+        plugins,
         cwd,
         virtual_files,
         runtime,
@@ -144,17 +145,71 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
     );
 
     if options.cwd.is_none() {
-        options.cwd = cwd;
+        options.cwd = cwd.clone();
     }
 
-    // Add VirtualFilePlugin if there are virtual files
-    if !virtual_files.is_empty() {
-        use crate::builders::virtual_file_plugin::VirtualFilePlugin;
-        let virtual_plugin = VirtualFilePlugin::new(virtual_files)?;
-        plugins.push(Arc::new(virtual_plugin));
+    // Create BundlerRuntime - wraps virtual files + filesystem
+    // Auto-inject NativeRuntime on native platforms for convenience.
+    // This allows tests and simple use cases to work without explicit runtime setup.
+    // WASM platforms still require explicit runtime since there's no standard filesystem.
+    // Note: BundlerRuntime handles filesystem access internally, so we don't need to store
+    // the base runtime - it's only used here to ensure one exists for WASM platforms.
+    match runtime {
+        Some(_rt) => {
+            // Runtime provided - BundlerRuntime will use filesystem directly
+        }
+        None => {
+            #[cfg(not(target_family = "wasm"))]
+            {
+                // On native, BundlerRuntime can use filesystem directly
+            }
+            #[cfg(target_family = "wasm")]
+            {
+                return Err(Error::InvalidConfig(
+                    "Runtime is required for asset detection plugin. \
+                    On WASM, you must provide a Runtime implementation via BuildOptions::runtime()."
+                        .to_string(),
+                ));
+            }
+        }
     }
 
-    // Create asset registry and add asset detection plugin
+    // Create BundlerRuntime with cwd
+    let bundler_runtime = Arc::new(crate::runtime::BundlerRuntime::new(scan_cwd.clone()));
+
+    // Register virtual files in BundlerRuntime (with validation)
+    for (path, content) in &virtual_files {
+        // Validate virtual file path
+        if path.contains('\0') {
+            return Err(Error::InvalidOutputPath(
+                "Virtual file path contains null byte".to_string(),
+            ));
+        }
+        if path.len() > 4096 {
+            return Err(Error::InvalidOutputPath(format!(
+                "Virtual file path too long: {} bytes (max 4096)",
+                path.len()
+            )));
+        }
+
+        // Validate virtual file content size (1MB limit)
+        const MAX_VIRTUAL_FILE_SIZE: usize = 1024 * 1024;
+        if content.len() > MAX_VIRTUAL_FILE_SIZE {
+            return Err(Error::WriteFailure(format!(
+                "Virtual file content too large: {} bytes (max {} bytes)",
+                content.len(),
+                MAX_VIRTUAL_FILE_SIZE
+            )));
+        }
+
+        bundler_runtime.add_virtual_file(path, content.as_bytes());
+    }
+
+    // Create RuntimeFilePlugin (Virtual phase - serves virtual files)
+    let runtime_file_plugin =
+        crate::builders::runtime_file_plugin::RuntimeFilePlugin::new(Arc::clone(&bundler_runtime));
+
+    // Create asset registry and asset detection plugin (Assets phase)
     let asset_registry = Arc::new(AssetRegistry::new());
     let asset_extensions = vec![
         ".wasm".to_string(),
@@ -169,26 +224,9 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
         ".woff".to_string(),
         ".woff2".to_string(),
     ];
-    // Auto-inject NativeRuntime on native platforms for convenience.
-    // This allows tests and simple use cases to work without explicit runtime setup.
-    // WASM platforms still require explicit runtime since there's no standard filesystem.
-    let runtime = match runtime {
-        Some(rt) => rt,
-        None => {
-            #[cfg(not(target_family = "wasm"))]
-            {
-                Arc::new(crate::NativeRuntime::new())
-            }
-            #[cfg(target_family = "wasm")]
-            {
-                return Err(Error::InvalidConfig(
-                    "Runtime is required for asset detection plugin. \
-                    On WASM, you must provide a Runtime implementation via BuildOptions::runtime()."
-                        .to_string(),
-                ));
-            }
-        }
-    };
+
+    // Use BundlerRuntime for asset detection (it handles virtual files + filesystem)
+    let runtime: Arc<dyn crate::Runtime> = bundler_runtime;
 
     let asset_plugin = AssetDetectionPlugin::new(
         Arc::clone(&asset_registry),
@@ -196,14 +234,28 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
         asset_extensions,
         Arc::clone(&runtime),
     );
-    plugins.push(Arc::new(asset_plugin));
 
-    // Add module collection plugin to gather module data
-    plugins.push(collection_plugin.clone());
+    // Build plugin registry with guaranteed ordering by phase:
+    // Virtual (0) → Transform (20) → Assets (30) → PostProcess (100)
+    let mut registry = PluginRegistry::new();
+
+    // Built-in plugins use their FobPlugin::phase() for ordering
+    registry.add(runtime_file_plugin); // Virtual = 0
+    registry.add(asset_plugin); // Assets = 30
+    // collection_plugin is already Arc<T>, so use add_with_phase
+    registry.add_with_phase(collection_plugin.clone(), PluginPhase::PostProcess);
+
+    // User plugins default to Transform phase
+    for plugin in plugins {
+        registry.add_with_phase(plugin, PluginPhase::Transform);
+    }
+
+    // Convert to ordered Vec for Rolldown (sorted by phase)
+    let ordered_plugins = registry.into_rolldown_plugins();
 
     let mut bundler = RolldownBundlerBuilder::default()
         .with_options(options)
-        .with_plugins(plugins)
+        .with_plugins(ordered_plugins)
         .build()
         .map_err(|e| Error::from_rolldown_batch(&e))?;
 

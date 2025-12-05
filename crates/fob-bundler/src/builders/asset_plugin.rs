@@ -232,6 +232,7 @@ unsafe impl<F> Send for SendWrapper<F> {}
 // This type alias exists for API consistency but is never used in native builds
 #[cfg(not(target_family = "wasm"))]
 type _SendWrapper<F> = F;
+use crate::plugins::{FobPlugin, PluginPhase};
 use rolldown_common::{EmittedAsset, ModuleType};
 use rolldown_plugin::{
     HookTransformArgs, HookTransformOutput, HookTransformReturn, HookUsage, Plugin,
@@ -658,5 +659,11 @@ mod tests {
                 resolved_path.display()
             );
         }
+    }
+}
+
+impl FobPlugin for AssetDetectionPlugin {
+    fn phase(&self) -> PluginPhase {
+        PluginPhase::Assets
     }
 }

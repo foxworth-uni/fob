@@ -96,10 +96,12 @@ fn returns_not_found_when_no_config() {
 
     let result = discovery.load();
     assert!(result.is_err());
-    assert!(result
-        .unwrap_err()
-        .to_string()
-        .contains("Configuration file not found"));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("Configuration file not found")
+    );
 }
 
 #[test]

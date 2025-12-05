@@ -4,30 +4,7 @@ use anyhow::{Context, Result, anyhow};
 use markdown::mdast::Node;
 use serde_json::Value as JsonValue;
 
-use super::props::PropDefinition;
-use super::props_parser::parse_prop_expression;
 use super::types::{FrontmatterData, FrontmatterFormat};
-
-/// Parse props from frontmatter `props:` section
-fn parse_props_from_data(data: &JsonValue) -> Result<Vec<PropDefinition>> {
-    let Some(props_value) = data.get("props") else {
-        return Ok(Vec::new());
-    };
-
-    let Some(props_obj) = props_value.as_object() else {
-        return Ok(Vec::new());
-    };
-
-    let mut props = Vec::new();
-    for (name, expr) in props_obj {
-        if let Some(expr_str) = expr.as_str() {
-            let prop = parse_prop_expression(name, expr_str)
-                .map_err(|e| anyhow!("Failed to parse prop '{}': {}", name, e))?;
-            props.push(prop);
-        }
-    }
-    Ok(props)
-}
 
 /// Extract and parse frontmatter from an MDX AST
 ///
@@ -78,13 +55,11 @@ pub fn extract_frontmatter(root: &Node) -> Result<(Node, Option<FrontmatterData>
                 let data: JsonValue = serde_saphyr::from_str(&yaml_node.value)
                     .context("Failed to parse YAML frontmatter")?;
 
-                // Parse props from frontmatter
-                let props = parse_props_from_data(&data)?;
-
-                frontmatter = Some(
-                    FrontmatterData::new(FrontmatterFormat::Yaml, data, yaml_node.value.clone())
-                        .with_props(props),
-                );
+                frontmatter = Some(FrontmatterData::new(
+                    FrontmatterFormat::Yaml,
+                    data,
+                    yaml_node.value.clone(),
+                ));
             }
             Node::Toml(toml_node) => {
                 if frontmatter.is_some() {
@@ -101,17 +76,11 @@ pub fn extract_frontmatter(root: &Node) -> Result<(Node, Option<FrontmatterData>
                 let json_data =
                     serde_json::to_value(&data).context("Failed to convert TOML to JSON")?;
 
-                // Parse props from frontmatter
-                let props = parse_props_from_data(&json_data)?;
-
-                frontmatter = Some(
-                    FrontmatterData::new(
-                        FrontmatterFormat::Toml,
-                        json_data,
-                        toml_node.value.clone(),
-                    )
-                    .with_props(props),
-                );
+                frontmatter = Some(FrontmatterData::new(
+                    FrontmatterFormat::Toml,
+                    json_data,
+                    toml_node.value.clone(),
+                ));
             }
             other => {
                 // Keep all non-frontmatter nodes

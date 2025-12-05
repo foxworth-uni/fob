@@ -40,7 +40,8 @@ async fn main() -> Result<()> {
     // Configure library build with multiple entry points
     // This creates a tree-shakeable library structure where consumers
     // can import from specific paths: my-lib, my-lib/Button, my-lib/Card
-    let result = BuildOptions::library("components/index.ts")
+    let result = BuildOptions::new("components/index.ts")
+        .bundle(false)
         // Externalize React dependencies - they're peer dependencies
         // that consumers will provide. This prevents bundling React twice.
         .external(["react", "react-dom"])
@@ -68,7 +69,8 @@ async fn main() -> Result<()> {
 
     // Build the demo as a browser application
     // This bundles the demo app with all its dependencies (including React)
-    let demo_result = BuildOptions::app(["demo/app.tsx"])
+    let demo_result = BuildOptions::new_multiple(["demo/app.tsx"])
+        .bundle(true)
         .runtime(runtime)
         .outdir("demo/dist")
         // No minification - keep readable for development

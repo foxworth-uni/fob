@@ -1,7 +1,8 @@
 /// Modern decorator transformation tests
 #[cfg(not(target_family = "wasm"))]
 mod decorator_tests {
-    use fob_bundler::{BuildOptions, NativeRuntime};
+    use fob_bundler::BuildOptions;
+    use fob_graph::runtime::native::NativeRuntime;
     use std::env;
     use std::path::PathBuf;
     use std::sync::Arc;
@@ -19,7 +20,8 @@ mod decorator_tests {
         let fixture = fixture_path("fixtures/decorators/modern.ts");
 
         // Build with modern decorator support enabled
-        let result = BuildOptions::library(&fixture)
+        let result = BuildOptions::new(&fixture)
+            .bundle(false) // Library mode
             .decorators(true)
             .cwd(env!("CARGO_MANIFEST_DIR"))
             .runtime(Arc::new(NativeRuntime))

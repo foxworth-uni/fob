@@ -34,49 +34,49 @@ fn test_output_format_conversion_default() {
 
 #[test]
 fn test_sourcemap_mode_external() {
-    let base = BuildOptions::library("test.js");
+    let base = BuildOptions::new("test.js").bundle(false);
     let result = convert_sourcemap_mode(base, Some("external".to_string()));
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_sourcemap_mode_true() {
-    let base = BuildOptions::library("test.js");
+    let base = BuildOptions::new("test.js").bundle(false);
     let result = convert_sourcemap_mode(base, Some("true".to_string()));
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_sourcemap_mode_inline() {
-    let base = BuildOptions::library("test.js");
+    let base = BuildOptions::new("test.js").bundle(false);
     let result = convert_sourcemap_mode(base, Some("inline".to_string()));
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_sourcemap_mode_hidden() {
-    let base = BuildOptions::library("test.js");
+    let base = BuildOptions::new("test.js").bundle(false);
     let result = convert_sourcemap_mode(base, Some("hidden".to_string()));
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_sourcemap_mode_false() {
-    let base = BuildOptions::library("test.js");
+    let base = BuildOptions::new("test.js").bundle(false);
     let result = convert_sourcemap_mode(base, Some("false".to_string()));
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_sourcemap_mode_none_defaults_to_disabled() {
-    let base = BuildOptions::library("test.js");
+    let base = BuildOptions::new("test.js").bundle(false);
     let result = convert_sourcemap_mode(base, None);
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_sourcemap_mode_invalid_value() {
-    let base = BuildOptions::library("test.js");
+    let base = BuildOptions::new("test.js").bundle(false);
     let result = convert_sourcemap_mode(base, Some("invalid".to_string()));
     assert!(result.is_err());
     assert!(result.unwrap_err().contains("Invalid sourcemap value"));
@@ -84,7 +84,7 @@ fn test_sourcemap_mode_invalid_value() {
 
 #[test]
 fn test_sourcemap_mode_invalid_returns_helpful_error() {
-    let base = BuildOptions::library("test.js");
+    let base = BuildOptions::new("test.js").bundle(false);
     let result = convert_sourcemap_mode(base, Some("yes".to_string()));
     assert!(result.is_err());
     let error = result.unwrap_err();
@@ -106,7 +106,8 @@ async fn test_bundle_result_conversion_preserves_structure() {
     std::fs::write(cwd.join("index.js"), "export const x = 1;").unwrap();
 
     let runtime = Arc::new(NativeRuntime::new(cwd.clone()).unwrap());
-    let build_result = BuildOptions::library("index.js")
+    let build_result = BuildOptions::new("index.js")
+        .bundle(false)
         .cwd(cwd)
         .runtime(runtime)
         .build()

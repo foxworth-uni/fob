@@ -16,24 +16,29 @@
 //!
 //! ```rust,no_run
 //! use fob_plugin_mdx::FobMdxPlugin;
+//! use fob_bundler::Runtime;
 //! use std::sync::Arc;
-//! use std::path::PathBuf;
 //!
-//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! # #[cfg(not(target_family = "wasm"))]
+//! # fn example() {
+//! use fob_bundler::runtime::BundlerRuntime;
+//! // Create a runtime for file access
+//! let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
 //! // Use with your Rolldown bundler configuration
-//! let plugin = Arc::new(FobMdxPlugin::new(PathBuf::from(".")));
-//! # Ok(())
+//! let plugin = Arc::new(FobMdxPlugin::new(runtime));
 //! # }
 //! ```
 
 use anyhow::Context;
 use fob_bundler::{
-    HookLoadArgs, HookLoadOutput, HookLoadReturn, HookResolveIdArgs, HookResolveIdOutput,
-    HookResolveIdReturn, ModuleType, Plugin, PluginContext,
+    FobPlugin, HookLoadArgs, HookLoadOutput, HookLoadReturn, HookResolveIdArgs,
+    HookResolveIdOutput, HookResolveIdReturn, ModuleType, Plugin, PluginContext, PluginPhase,
+    Runtime,
 };
 use fob_mdx::{compile, MdxCompileOptions};
 use std::borrow::Cow;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 /// Rolldown plugin that compiles MDX files to JSX
 ///
@@ -48,7 +53,7 @@ use std::path::PathBuf;
 ///
 /// The plugin is async-compatible (required by Rolldown) but performs synchronous
 /// compilation internally, which is acceptable for build-time transforms.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct FobMdxPlugin {
     /// Enable GFM (tables, strikethrough, task lists)
     pub gfm: bool,
@@ -62,6 +67,8 @@ pub struct FobMdxPlugin {
     pub use_default_plugins: bool,
     /// Project root for resolving relative file paths
     project_root: PathBuf,
+    /// Runtime for file access (handles virtual files + filesystem)
+    runtime: Arc<dyn Runtime>,
 }
 
 impl FobMdxPlugin {
@@ -74,24 +81,28 @@ impl FobMdxPlugin {
     ///
     /// # Arguments
     ///
-    /// * `project_root` - The root directory of the project, used to resolve relative file paths
+    /// * `runtime` - Runtime for file access (handles virtual files + filesystem)
     ///
     /// # Example
     ///
     /// ```rust
     /// use fob_plugin_mdx::FobMdxPlugin;
-    /// use std::path::PathBuf;
+    /// use fob_bundler::Runtime;
+    /// use std::sync::Arc;
     ///
-    /// let plugin = FobMdxPlugin::new(PathBuf::from("/path/to/project"));
+    /// # async fn example(runtime: Arc<dyn Runtime>) {
+    /// let plugin = FobMdxPlugin::new(runtime);
+    /// # }
     /// ```
-    pub fn new(project_root: PathBuf) -> Self {
+    pub fn new(runtime: Arc<dyn Runtime>) -> Self {
         Self {
             gfm: true,
             footnotes: true,
             math: true,
             jsx_runtime: "react/jsx-runtime".to_string(),
             use_default_plugins: true,
-            project_root,
+            project_root: PathBuf::from("."),
+            runtime,
         }
     }
 
@@ -110,11 +121,7 @@ impl FobMdxPlugin {
     }
 }
 
-impl Default for FobMdxPlugin {
-    fn default() -> Self {
-        Self::new(PathBuf::from("."))
-    }
-}
+// Note: Default is removed since Runtime is required
 
 impl Plugin for FobMdxPlugin {
     /// Returns the plugin name for debugging and logging
@@ -151,6 +158,7 @@ impl Plugin for FobMdxPlugin {
         let specifier = args.specifier.to_string();
         let project_root = self.project_root.clone();
         let importer = args.importer.map(|s| s.to_string());
+        let runtime = Arc::clone(&self.runtime);
 
         async move {
             // Only handle .mdx files
@@ -171,20 +179,27 @@ impl Plugin for FobMdxPlugin {
                 }));
             }
 
+            // Handle virtual file specifiers (e.g., "virtual:content.mdx")
+            // Check if the runtime has this file before falling through to filesystem resolution
+            if runtime.exists(path) {
+                return Ok(Some(HookResolveIdOutput {
+                    id: specifier.into(),
+                    ..Default::default()
+                }));
+            }
+
             // Relative path - resolve against importer's directory (not project_root!)
             if let Some(importer_path) = &importer {
                 if specifier.starts_with("./") || specifier.starts_with("../") {
                     let importer = std::path::Path::new(importer_path);
                     if let Some(importer_dir) = importer.parent() {
                         let resolved = importer_dir.join(&specifier);
-                        if resolved.exists() {
+                        // Use runtime.exists() to check both virtual files and filesystem
+                        if runtime.exists(&resolved) {
+                            // Try to canonicalize for real filesystem paths
+                            let final_path = resolved.canonicalize().unwrap_or(resolved);
                             return Ok(Some(HookResolveIdOutput {
-                                id: resolved
-                                    .canonicalize()
-                                    .unwrap_or(resolved)
-                                    .to_string_lossy()
-                                    .into_owned()
-                                    .into(),
+                                id: final_path.to_string_lossy().into_owned().into(),
                                 ..Default::default()
                             }));
                         }
@@ -194,7 +209,8 @@ impl Plugin for FobMdxPlugin {
 
             // Bare specifier or no importer - resolve against project_root
             let resolved = project_root.join(&specifier);
-            if resolved.exists() {
+            // Use runtime.exists() to check both virtual files and filesystem
+            if runtime.exists(&resolved) {
                 return Ok(Some(HookResolveIdOutput {
                     id: resolved.to_string_lossy().into_owned().into(),
                     ..Default::default()
@@ -239,6 +255,7 @@ impl Plugin for FobMdxPlugin {
         let id = args.id.to_string();
         let options = self.create_options(Some(id.clone()));
         let project_root = self.project_root.clone();
+        let runtime = Arc::clone(&self.runtime);
 
         async move {
             // Only handle .mdx files
@@ -246,16 +263,25 @@ impl Plugin for FobMdxPlugin {
                 return Ok(None);
             }
 
-            // Resolve the file path - handle both absolute and relative paths
-            let file_path = if std::path::Path::new(&id).is_absolute() {
+            // Determine file path for reading
+            // - Virtual files (virtual:xxx): pass through as-is, Runtime handles lookup
+            // - Absolute paths: use directly
+            // - Relative paths: resolve against project_root
+            let file_path = if id.starts_with("virtual:") || std::path::Path::new(&id).is_absolute()
+            {
                 PathBuf::from(&id)
             } else {
                 project_root.join(&id)
             };
 
-            // Read the MDX source file
-            let source = std::fs::read_to_string(&file_path)
+            // Read the MDX source file using Runtime (handles virtual files + filesystem)
+            let content = runtime
+                .read_file(&file_path)
+                .await
                 .with_context(|| format!("Failed to read MDX file: {}", file_path.display()))?;
+            let source = String::from_utf8(content).with_context(|| {
+                format!("MDX file {} contains invalid UTF-8", file_path.display())
+            })?;
 
             // Compile MDX to JSX
             let result = compile(&source, options)
@@ -285,27 +311,288 @@ impl Plugin for FobMdxPlugin {
     }
 }
 
+impl FobPlugin for FobMdxPlugin {
+    fn phase(&self) -> PluginPhase {
+        PluginPhase::Transform
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use fob_bundler::Runtime;
+    use std::sync::Arc;
 
+    #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_plugin_creation() {
-        let plugin = FobMdxPlugin::new(PathBuf::from("."));
+        use fob_bundler::runtime::BundlerRuntime;
+        let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
+        let plugin = FobMdxPlugin::new(runtime);
         assert_eq!(plugin.name(), "fob-mdx");
     }
 
+    #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_plugin_with_custom_options() {
-        let mut plugin = FobMdxPlugin::new(PathBuf::from("."));
+        use fob_bundler::runtime::BundlerRuntime;
+        let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
+        let mut plugin = FobMdxPlugin::new(runtime);
         plugin.gfm = true;
         plugin.math = false;
         assert_eq!(plugin.name(), "fob-mdx");
     }
 
+    #[cfg(not(target_family = "wasm"))]
     #[test]
-    fn test_plugin_default() {
-        let plugin = FobMdxPlugin::default();
-        assert_eq!(plugin.name(), "fob-mdx");
+    fn test_hook_usage_declares_correct_hooks() {
+        use fob_bundler::runtime::BundlerRuntime;
+        use fob_bundler::HookUsage;
+
+        let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
+        let plugin = FobMdxPlugin::new(runtime);
+        let usage = plugin.register_hook_usage();
+
+        // Plugin should register both ResolveId and Load hooks
+        assert!(
+            usage.contains(HookUsage::ResolveId),
+            "Plugin should register ResolveId hook"
+        );
+        assert!(
+            usage.contains(HookUsage::Load),
+            "Plugin should register Load hook"
+        );
+    }
+
+    #[cfg(not(target_family = "wasm"))]
+    #[test]
+    fn test_create_options_with_defaults() {
+        use fob_bundler::runtime::BundlerRuntime;
+
+        let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
+        let plugin = FobMdxPlugin::new(runtime);
+
+        let opts = plugin.create_options(Some("test.mdx".to_string()));
+
+        assert!(opts.gfm, "GFM should be enabled by default");
+        assert!(opts.footnotes, "Footnotes should be enabled by default");
+        assert!(opts.math, "Math should be enabled by default");
+        assert_eq!(opts.filepath.as_deref(), Some("test.mdx"));
+    }
+
+    #[cfg(not(target_family = "wasm"))]
+    #[test]
+    fn test_create_options_with_custom_settings() {
+        use fob_bundler::runtime::BundlerRuntime;
+
+        let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
+        let mut plugin = FobMdxPlugin::new(runtime);
+        plugin.gfm = false;
+        plugin.math = false;
+
+        let opts = plugin.create_options(None);
+
+        assert!(!opts.gfm, "GFM should be disabled when set");
+        assert!(!opts.math, "Math should be disabled when set");
+        assert!(
+            opts.filepath.is_none(),
+            "Filepath should be None when not provided"
+        );
+    }
+
+    // Integration-style unit tests using the full load pipeline
+
+    #[cfg(not(target_family = "wasm"))]
+    mod load_hook_tests {
+        use super::*;
+        use fob_bundler::runtime::BundlerRuntime;
+        use fob_bundler::{BuildOptions, Platform};
+
+        /// Test that MDX compiles to JSX with correct output structure
+        #[tokio::test]
+        async fn test_mdx_compiles_to_jsx() {
+            let bundler_runtime = BundlerRuntime::new(".");
+            bundler_runtime.add_virtual_file(
+                "virtual:test.mdx",
+                b"# Hello World\n\nThis is **bold** text.",
+            );
+
+            let runtime: Arc<dyn Runtime> = Arc::new(bundler_runtime);
+
+            let result = BuildOptions::new("virtual:entry.tsx")
+                .bundle(false)
+                .platform(Platform::Node)
+                .virtual_file(
+                    "virtual:entry.tsx",
+                    "import Content from 'virtual:test.mdx';\nexport { Content };",
+                )
+                .runtime(Arc::clone(&runtime))
+                .plugin(Arc::new(FobMdxPlugin::new(runtime)))
+                .build()
+                .await
+                .expect("MDX should compile successfully");
+
+            let chunk = result.chunks().next().expect("Should have chunk");
+
+            // Verify JSX runtime is imported
+            assert!(
+                chunk.code.contains("jsx") || chunk.code.contains("jsxs"),
+                "Should import JSX runtime functions"
+            );
+
+            // Verify MDXContent function is created
+            assert!(
+                chunk.code.contains("MDXContent"),
+                "Should export MDXContent function"
+            );
+
+            // Verify content is transformed (not raw markdown)
+            assert!(
+                !chunk.code.contains("# Hello World"),
+                "Raw markdown heading should be transformed"
+            );
+            assert!(
+                !chunk.code.contains("**bold**"),
+                "Raw markdown bold should be transformed"
+            );
+        }
+
+        /// Test that non-MDX files are ignored
+        #[tokio::test]
+        async fn test_non_mdx_files_ignored() {
+            let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
+
+            // Build a plain TypeScript file - MDX plugin should ignore it
+            let result = BuildOptions::new("virtual:utils.ts")
+                .bundle(false)
+                .platform(Platform::Node)
+                .virtual_file("virtual:utils.ts", "export const greeting = 'Hello';")
+                .runtime(Arc::clone(&runtime))
+                .plugin(Arc::new(FobMdxPlugin::new(runtime)))
+                .build()
+                .await
+                .expect("TS file should build with MDX plugin present");
+
+            let chunk = result.chunks().next().expect("Should have chunk");
+
+            // Original content should be present (not transformed by MDX)
+            assert!(
+                chunk.code.contains("greeting"),
+                "TS content should pass through unchanged"
+            );
+            // Should NOT have MDX-specific output
+            assert!(
+                !chunk.code.contains("MDXContent"),
+                "Should not have MDXContent for non-MDX files"
+            );
+        }
+
+        /// Test MDX with frontmatter compiles correctly
+        #[tokio::test]
+        async fn test_mdx_with_frontmatter() {
+            let bundler_runtime = BundlerRuntime::new(".");
+            bundler_runtime.add_virtual_file(
+                "virtual:doc.mdx",
+                b"---\ntitle: \"Test Document\"\nauthor: \"Test Author\"\n---\n\n# {frontmatter.title}\n\nBy {frontmatter.author}",
+            );
+
+            let runtime: Arc<dyn Runtime> = Arc::new(bundler_runtime);
+
+            let result = BuildOptions::new("virtual:entry.tsx")
+                .bundle(false)
+                .platform(Platform::Node)
+                .virtual_file(
+                    "virtual:entry.tsx",
+                    "import Doc from 'virtual:doc.mdx';\nexport { Doc };",
+                )
+                .runtime(Arc::clone(&runtime))
+                .plugin(Arc::new(FobMdxPlugin::new(runtime)))
+                .build()
+                .await
+                .expect("MDX with frontmatter should compile");
+
+            let chunk = result.chunks().next().expect("Should have chunk");
+
+            // Frontmatter should be accessible in the output
+            assert!(
+                chunk.code.contains("frontmatter") || chunk.code.contains("Test Document"),
+                "Frontmatter should be processed and accessible"
+            );
+        }
+
+        /// Test MDX with GFM features (tables, task lists)
+        #[tokio::test]
+        async fn test_mdx_with_gfm_features() {
+            let bundler_runtime = BundlerRuntime::new(".");
+            bundler_runtime.add_virtual_file(
+                "virtual:gfm.mdx",
+                b"# GFM Test\n\n- [x] Task complete\n- [ ] Task pending\n\n| Header | Value |\n|--------|-------|\n| A      | 1     |",
+            );
+
+            let runtime: Arc<dyn Runtime> = Arc::new(bundler_runtime);
+
+            let result = BuildOptions::new("virtual:entry.tsx")
+                .bundle(false)
+                .platform(Platform::Node)
+                .virtual_file(
+                    "virtual:entry.tsx",
+                    "import GFM from 'virtual:gfm.mdx';\nexport { GFM };",
+                )
+                .runtime(Arc::clone(&runtime))
+                .plugin(Arc::new(FobMdxPlugin::new(runtime)))
+                .build()
+                .await
+                .expect("MDX with GFM should compile");
+
+            let chunk = result.chunks().next().expect("Should have chunk");
+
+            // GFM features should be transformed to JSX elements
+            assert!(
+                chunk.code.contains("table") || chunk.code.contains("input"),
+                "GFM tables or checkboxes should be in output"
+            );
+        }
+
+        /// Test that malformed MDX produces a clear error
+        #[tokio::test]
+        async fn test_malformed_mdx_error() {
+            let bundler_runtime = BundlerRuntime::new(".");
+            // Invalid JSX - unclosed tag
+            bundler_runtime.add_virtual_file("virtual:bad.mdx", b"# Test\n\n<div>Unclosed tag");
+
+            let runtime: Arc<dyn Runtime> = Arc::new(bundler_runtime);
+
+            let result = BuildOptions::new("virtual:entry.tsx")
+                .bundle(false)
+                .platform(Platform::Node)
+                .virtual_file(
+                    "virtual:entry.tsx",
+                    "import Bad from 'virtual:bad.mdx';\nexport { Bad };",
+                )
+                .runtime(Arc::clone(&runtime))
+                .plugin(Arc::new(FobMdxPlugin::new(runtime)))
+                .build()
+                .await;
+
+            // Note: MDX is forgiving about unclosed tags in some cases
+            // This test documents the behavior - it may succeed or fail
+            // depending on how lenient the MDX compiler is
+            if let Err(e) = result {
+                let err_str = e.to_string();
+                // If it fails, error should mention MDX plugin or compilation
+                assert!(
+                    err_str.contains("compile")
+                        || err_str.contains("parse")
+                        || err_str.contains("MDX")
+                        || err_str.contains("mdx")
+                        || err_str.contains("fob-mdx")
+                        || err_str.contains("threw an error")
+                        || err_str.contains("syntax"),
+                    "Error should indicate MDX compilation issue: {}",
+                    err_str
+                );
+            }
+            // If it succeeds, that's also valid behavior for lenient MDX
+        }
     }
 }

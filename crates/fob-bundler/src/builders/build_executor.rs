@@ -4,7 +4,7 @@
 //! build operations to the appropriate execution path based on the
 //! BuildOptions configuration.
 
-use rolldown::{BundlerOptions, GlobalsOutputOption, IsExternal, ResolveOptions};
+use rolldown::{BundlerOptions, GlobalsOutputOption, IsExternal, Platform, ResolveOptions};
 use rustc_hash::FxHashMap;
 use std::path::{Path, PathBuf};
 
@@ -12,6 +12,7 @@ use crate::Result;
 use crate::analysis::AnalyzedBundle;
 use crate::builders::common::{BundlePlan, EntrySpec, execute_bundle};
 use crate::builders::unified::{BuildOptions, BuildOutput, BuildResult, EntryPoints, MinifyLevel};
+use crate::target::ExportConditions;
 
 #[cfg(feature = "dts-generation")]
 use std::sync::Arc;
@@ -275,19 +276,15 @@ fn configure_rolldown_options(options: &BuildOptions) -> BundlerOptions {
     };
 
     // External packages configuration
+    // IMPORTANT: Always set external explicitly - Rolldown treats None differently from Some([])
     if options.bundle {
-        // When bundling, only externalize explicitly specified packages
-        if !options.external.is_empty() {
-            rolldown_options.external = Some(IsExternal::from(options.external.clone()));
-        }
-        // Otherwise bundle everything (no external configuration = bundle all)
+        // Bundle mode: only externalize what user specified (empty = bundle everything)
+        rolldown_options.external = Some(IsExternal::from(options.external.clone()));
     } else {
-        // When not bundling (library mode), externalize all node_modules
-        // Use a regex pattern that matches all imports from node_modules
-        rolldown_options.external = Some(IsExternal::from(vec![
-            // Match all bare imports (not starting with . or /)
-            "^[^./]".to_string(),
-        ]));
+        // Library mode: externalize all bare imports + user additions
+        let mut patterns = vec!["^[^./]".to_string()];
+        patterns.extend(options.external.clone());
+        rolldown_options.external = Some(IsExternal::from(patterns));
     }
 
     // Globals for IIFE/UMD
@@ -315,9 +312,18 @@ fn configure_rolldown_options(options: &BuildOptions) -> BundlerOptions {
     }
 
     // Module resolution with absolute paths for pnpm/monorepo support
+    // Map Platform to ExportConditions (bridge for BuildOptions compatibility)
+    // Note: BuildConfig uses DeploymentTarget directly for better control
+    let conditions = match options.platform {
+        Platform::Browser => ExportConditions::browser(),
+        Platform::Node => ExportConditions::node(),
+        // Default to browser for other platforms
+        _ => ExportConditions::browser(),
+    };
     rolldown_options.resolve = Some(configure_resolution(
         options.cwd.as_ref(),
         &options.path_aliases,
+        &conditions,
     ));
 
     rolldown_options
@@ -328,9 +334,15 @@ fn configure_rolldown_options(options: &BuildOptions) -> BundlerOptions {
 /// Uses multiple resolution paths to properly handle pnpm symlinks,
 /// monorepos, and nested package structures. Also configures path aliases
 /// for import resolution (e.g., "@/" -> "./src/").
+///
+/// Uses export conditions from the deployment target to determine which
+/// package.json export conditions to try during module resolution.
+/// This fixes platform-specific resolution issues (e.g., Vercel SSR using
+/// Node.js conditions instead of browser conditions).
 fn configure_resolution(
     cwd: Option<&PathBuf>,
     path_aliases: &FxHashMap<String, String>,
+    conditions: &ExportConditions,
 ) -> ResolveOptions {
     // Use multiple paths for modules to handle different package manager layouts
     // Walk up parent directories to find node_modules (matches Node.js resolution)
@@ -362,19 +374,23 @@ fn configure_resolution(
         None
     };
 
-    ResolveOptions {
-        alias: aliases,
-        main_fields: Some(vec![
+    // Determine main_fields based on conditions
+    // For Node.js, prefer "main" over "browser"
+    // For browser/edge, prefer "browser" over "main"
+    let main_fields = if conditions.contains("node") {
+        vec!["module".to_string(), "main".to_string()]
+    } else {
+        vec![
             "browser".to_string(),
             "module".to_string(),
             "main".to_string(),
-        ]),
-        condition_names: Some(vec![
-            "browser".to_string(),
-            "import".to_string(),
-            "module".to_string(),
-            "default".to_string(),
-        ]),
+        ]
+    };
+
+    ResolveOptions {
+        alias: aliases,
+        main_fields: Some(main_fields),
+        condition_names: Some(conditions.to_vec()),
         extensions: Some(vec![
             ".js".to_string(),
             ".json".to_string(),

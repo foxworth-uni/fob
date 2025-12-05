@@ -39,7 +39,8 @@ async fn main() -> Result<()> {
 
     // Configure and run the build
     // This is the simplest way to bundle JavaScript with fob
-    let result = BuildOptions::app(["input/index.js"])
+    let result = BuildOptions::new_multiple(["input/index.js"])
+        .bundle(true)
         .runtime(runtime)
         .outdir("output")
         .format(OutputFormat::Esm)

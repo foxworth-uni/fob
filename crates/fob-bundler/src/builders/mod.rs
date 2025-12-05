@@ -6,22 +6,27 @@
 //! # Examples
 //!
 //! ```no_run
-//! use fob_bundler::BuildOptions;
+//! use fob_bundler::{BuildOptions, Platform};
 //!
 //! # async fn example() -> fob_bundler::Result<()> {
 //! // Library mode: externalize dependencies
-//! let result = BuildOptions::library("./src/index.ts")
+//! let result = BuildOptions::new("./src/index.ts")
+//!     .bundle(false)
+//!     .platform(Platform::Node)
 //!     .build()
 //!     .await?;
 //!
-//! // Bundle everything
+//! // Bundle everything (app mode)
 //! let result = BuildOptions::new("./src/index.js")
 //!     .bundle(true)
+//!     .platform(Platform::Browser)
 //!     .build()
 //!     .await?;
 //!
-//! // App with code splitting
-//! let result = BuildOptions::app(["./src/main.js", "./src/admin.js"])
+//! // Multiple entries with code splitting
+//! let result = BuildOptions::new_multiple(["./src/main.js", "./src/admin.js"])
+//!     .bundle(true)
+//!     .splitting(true)
 //!     .outdir("dist")
 //!     .build()
 //!     .await?;
@@ -31,8 +36,8 @@
 
 pub(crate) mod build_executor;
 pub(crate) mod common;
+pub(crate) mod runtime_file_plugin;
 pub(crate) mod unified;
-mod virtual_file_plugin;
 
 // Asset handling modules
 pub mod asset_plugin;
