@@ -42,7 +42,7 @@ default-members = [
 ]
 
 [workspace.package]
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Taron Foxworth <fox@9generations.com>"]
 edition = "2024"
 rust-version = "1.85"  # MSRV - minimum supported Rust version (edition 2024 requires 1.85+)
@@ -174,11 +174,11 @@ getrandom = { version = "0.3.4", features = ["wasm_js"] }
 # This triggers feature unification, forcing rolldown's transitive uuid to use js feature
 
 # Internal crates
-fob-bundler = { path = "crates/fob-bundler", version = "0.3.0" }
-fob-native = { path = "crates/fob-native", version = "0.3.0" }
-fob-mdx = { path = "crates/fob-mdx", version = "0.3.0" }
-fob-mdx-wasm = { path = "crates/fob-mdx-wasm", version = "0.3.0" }
-fob-mdx-runtime = { path = "crates/fob-mdx-runtime", version = "0.3.0" }
+fob-bundler = { path = "crates/fob-bundler", version = "0.4.0" }
+fob-native = { path = "crates/fob-native", version = "0.4.0" }
+fob-mdx = { path = "crates/fob-mdx", version = "0.4.0" }
+fob-mdx-wasm = { path = "crates/fob-mdx-wasm", version = "0.4.0" }
+fob-mdx-runtime = { path = "crates/fob-mdx-runtime", version = "0.4.0" }
 
 # MDX dependencies
 serde-saphyr = "0.0"
