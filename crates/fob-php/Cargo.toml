@@ -14,8 +14,8 @@ name = "fob_php"
 crate-type = ["cdylib"]
 
 [dependencies]
-fob-bundler = { path = "../fob-bundler", version = "0.4.1", features = ["logging"] }
-fob-graph = { path = "../fob-graph", version = "0.4.1" }
+fob-bundler = { path = "../fob-bundler", version = "0.4.2", features = ["logging"] }
+fob-graph = { path = "../fob-graph", version = "0.4.2" }
 fob-plugin-mdx = { path = "../fob-plugin-mdx" }
 ext-php-rs = "0.15.2"
 serde = { workspace = true, features = ["derive"] }

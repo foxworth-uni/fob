@@ -1,6 +1,6 @@
 [package]
 name = "basic-bundler-example"
-version = "0.4.1"
+version = "0.4.2"
 edition = "2021"
 publish = false
 

@@ -9,7 +9,7 @@ repository.workspace = true
 description = "Deployment target adapters for Fob bundler"
 
 [dependencies]
-fob-bundler = { path = "../fob-bundler", version = "0.4.1" }
+fob-bundler = { path = "../fob-bundler", version = "0.4.2" }
 serde = { workspace = true, features = ["derive"] }
 serde_json = "1"
 tokio = { workspace = true, features = ["fs"] }

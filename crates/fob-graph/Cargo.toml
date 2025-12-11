@@ -10,7 +10,7 @@ description = "Fob graph - Pure graph data structures for module dependency grap
 
 [dependencies]
 # Code generation and AST utilities
-fob-gen = { path = "../fob-gen", version = "0.4.1", features = ["parser", "query-api", "fob_internal"] }
+fob-gen = { path = "../fob-gen", version = "0.4.2", features = ["parser", "query-api", "fob_internal"] }
 
 # Core dependencies (all WASM-compatible)
 thiserror.workspace = true
