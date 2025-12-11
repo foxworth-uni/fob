@@ -1,6 +1,6 @@
 {
   "name": "@fox-uni/fob",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": "Taron Foxworth <fox@9generations.com>",
   "main": "./wrapper.js",
   "types": "./wrapper.d.ts",
