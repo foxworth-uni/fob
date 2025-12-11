@@ -70,9 +70,9 @@ console.log(version()); // "0.1.0"
 Quick helper for single-entry bundling.
 
 ```javascript
-import { bundleSingle, OutputFormat } from '@fox-uni/fob';
+import { bundleSingle } from '@fox-uni/fob';
 
-const result = await bundleSingle('./src/index.js', './dist', OutputFormat.Esm);
+const result = await bundleSingle('./src/index.js', './dist', 'esm');
 console.log(result.outputPath); // "./dist/index.js"
 ```
 
@@ -83,15 +83,14 @@ console.log(result.outputPath); // "./dist/index.js"
 Main bundler class with full configuration.
 
 ```javascript
-import { Fob, OutputFormat, SourceMapMode } from '@fox-uni/fob';
+import { Fob } from '@fox-uni/fob';
 
 const bundler = new Fob({
-  entry: ['./src/index.js'],
-  outDir: './dist',
-  bundle: true,
-  format: OutputFormat.Esm,
+  entries: ['./src/index.js'],
+  outputDir: './dist',
+  format: 'esm',
   platform: 'browser',
-  sourcemap: SourceMapMode.External,
+  sourcemap: 'external',
   minify: false,
 });
 
@@ -99,33 +98,33 @@ const result = await bundler.bundle();
 console.log(`Bundled ${result.moduleCount} modules`);
 ```
 
-### Enums
+### Configuration Values
 
-#### `OutputFormat`
+#### Output Format (string, case-insensitive)
 
-- `OutputFormat.Esm` - ES Modules
-- `OutputFormat.Cjs` - CommonJS
-- `OutputFormat.Iife` - Immediately Invoked Function Expression
+- `'esm'` - ES Modules (default)
+- `'cjs'` - CommonJS
+- `'iife'` - Immediately Invoked Function Expression
 
-#### `SourceMapMode`
+#### Source Map Mode (string)
 
-- `SourceMapMode.External` - Separate .map file
-- `SourceMapMode.Inline` - Inline data URL
-- `SourceMapMode.Hidden` - Generate but don't reference
-- `SourceMapMode.Disabled` - No sourcemap
+- `'external'` or `'true'` - Separate .map file
+- `'inline'` - Inline data URL
+- `'hidden'` - Generate but don't reference
+- `'false'` or `undefined` - No sourcemap (default)
 
 ## Configuration Options
 
 ```typescript
 interface BundleConfig {
-  entry: string[]; // Entry point files
-  outDir: string; // Output directory
-  bundle: boolean; // Bundle dependencies
-  format: OutputFormat; // Output format
-  platform?: 'browser' | 'node'; // Target platform
-  sourcemap?: SourceMapMode; // Sourcemap generation
-  minify?: boolean; // Minify output
-  external?: string[]; // External packages
+  entries: string[];              // Entry point files
+  outputDir?: string;             // Output directory (default: "dist")
+  format?: string;                // 'esm' | 'cjs' | 'iife' (default: 'esm')
+  platform?: string;              // 'browser' | 'node' (default: 'browser')
+  sourcemap?: string;             // 'external' | 'inline' | 'hidden' | 'false'
+  minify?: boolean;               // Minify output
+  external?: string[];            // External packages
+  cwd?: string;                   // Working directory
 }
 ```
 
@@ -237,7 +236,7 @@ Always use camelCase in JavaScript/TypeScript configs:
 const config = {
   entries: ['./src/index.js'],
   outputDir: './dist', // ✅ camelCase
-  format: OutputFormat.Esm,
+  format: 'esm',       // ✅ string, case-insensitive
 };
 ```
 

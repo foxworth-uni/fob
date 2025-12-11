@@ -25,12 +25,12 @@ The package will automatically install the correct native binary for your platfo
 ### Basic Bundle
 
 ```typescript
-import { Fob, OutputFormat } from '@fox-uni/fob';
+import { Fob } from '@fox-uni/fob';
 
 const bundler = new Fob({
   entries: ['./src/index.js'],
   outputDir: './dist',
-  format: OutputFormat.Esm,
+  format: 'esm',
   sourcemap: 'external',
   cwd: process.cwd(),
 });
@@ -42,9 +42,9 @@ console.log(`Built ${result.chunks.length} chunks in ${result.stats.durationMs}m
 ### Quick Single-File Bundle
 
 ```typescript
-import { bundleSingle, OutputFormat } from '@fox-uni/fob';
+import { bundleSingle } from '@fox-uni/fob';
 
-const result = await bundleSingle('./src/index.js', './dist', OutputFormat.Esm);
+const result = await bundleSingle('./src/index.js', './dist', 'esm');
 ```
 
 ## API
@@ -61,7 +61,7 @@ new Fob(config: BundleConfig)
 
 - `entries: string[]` - Entry points to bundle
 - `outputDir?: string` - Output directory (default: `"dist"`)
-- `format?: OutputFormat` - Output format: `Esm`, `Cjs`, or `Iife` (default: `Esm`)
+- `format?: string` - Output format: `'esm'`, `'cjs'`, or `'iife'` (default: `'esm'`, case-insensitive)
 - `sourcemap?: string` - Source map mode: `"external"`, `"inline"`, `"hidden"`, or `"false"` (default: disabled)
 - `cwd?: string` - Working directory for resolution (default: `process.cwd()`)
 
@@ -86,7 +86,7 @@ Quick helper to bundle a single entry:
 bundleSingle(
   entry: string,
   outputDir: string,
-  format?: OutputFormat
+  format?: string  // 'esm' | 'cjs' | 'iife'
 ): Promise<BundleResult>
 ```
 
@@ -100,9 +100,11 @@ version(): string
 
 ## Output Formats
 
-- **`OutputFormat.Esm`** - ECMAScript Module format (default)
-- **`OutputFormat.Cjs`** - CommonJS format
-- **`OutputFormat.Iife`** - Immediately Invoked Function Expression format
+All format strings are **case-insensitive** (`'esm'`, `'ESM'`, `'Esm'` all work).
+
+- **`'esm'`** - ECMAScript Module format (default)
+- **`'cjs'`** - CommonJS format
+- **`'iife'`** - Immediately Invoked Function Expression format
 
 ## Source Map Options
 
