@@ -356,6 +356,74 @@ release-dry level:
     echo "Previewing {{level}} release..."
     cargo release {{level}} --workspace --no-verify
 
+# Tag a release for CI/CD (bumps versions, commits, tags, pushes)
+# Usage: just tag patch|minor|major
+tag level:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    command -v cargo-release >/dev/null || { echo "Install: cargo install cargo-release"; exit 1; }
+
+    echo "Creating {{level}} release tag..."
+
+    # Bump versions (no publish, no tag - we handle tag manually)
+    cargo release {{level}} --workspace --execute --no-confirm --no-verify --no-publish --no-tag
+
+    # Extract version from workspace Cargo.toml
+    VERSION=$(grep -m1 '^version = ' Cargo.toml | cut -d '"' -f2)
+
+    # Sync npm package version
+    node -e "
+      const fs = require('fs');
+      const pkg = JSON.parse(fs.readFileSync('crates/fob-native/package.json'));
+      pkg.version = '$VERSION';
+      fs.writeFileSync('crates/fob-native/package.json', JSON.stringify(pkg, null, 2) + '\n');
+    "
+
+    # Commit all changes
+    git add -A
+    git commit -m "chore: release v$VERSION"
+
+    # Create annotated tag
+    git tag -a "v$VERSION" -m "Release v$VERSION"
+
+    # Push commit and tag
+    git push && git push --tags
+
+    echo "✓ Tagged v$VERSION and pushed. CI/CD will handle publishing."
+
+# Tag with explicit version (for pre-releases or specific versions)
+# Usage: just tag-version 0.4.0-beta.1
+tag-version version:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    command -v cargo-release >/dev/null || { echo "Install: cargo install cargo-release"; exit 1; }
+
+    echo "Creating release tag for v{{version}}..."
+
+    # Set explicit version
+    cargo release version {{version}} --workspace --execute --no-confirm
+
+    # Sync npm package version
+    node -e "
+      const fs = require('fs');
+      const pkg = JSON.parse(fs.readFileSync('crates/fob-native/package.json'));
+      pkg.version = '{{version}}';
+      fs.writeFileSync('crates/fob-native/package.json', JSON.stringify(pkg, null, 2) + '\n');
+    "
+
+    # Commit all changes
+    git add -A
+    git commit -m "chore: release v{{version}}"
+
+    # Create annotated tag
+    git tag -a "v{{version}}" -m "Release v{{version}}"
+
+    # Push commit and tag
+    git push && git push --tags
+
+    echo "✓ Tagged v{{version}} and pushed. CI/CD will handle publishing."
 
 publish:
     #!/usr/bin/env bash

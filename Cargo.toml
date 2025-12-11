@@ -74,6 +74,7 @@ rolldown = { package = "brk_rolldown", version = "0.5.1" }
 rolldown_plugin = { package = "brk_rolldown_plugin", version = "0.5.1" }
 rolldown_common = { package = "brk_rolldown_common", version = "0.5.1" }
 rolldown_error = { package = "brk_rolldown_error", version = "0.5.1" }
+rolldown_fs = { package = "brk_rolldown_fs", version = "=0.5.1" }
 
 # Core dependencies
 rustc-hash = "2.1.1"
