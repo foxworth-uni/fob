@@ -11,6 +11,9 @@
       "types": "./wrapper.d.ts"
     }
   },
+  "engines": {
+    "node": ">=22"
+  },
   "napi": {
     "binaryName": "fob-native",
     "packageName": "@fox-uni/fob",
