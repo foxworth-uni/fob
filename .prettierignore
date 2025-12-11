@@ -15,6 +15,9 @@ coverage
 
 # Dependencies
 node_modules
+vendor
+.venv
+venv
 
 # Logs
 *.log
@@ -36,3 +39,13 @@ fixtures/napi-local-test/fixtures/error-case/
 # NAPI-RS generated bindings (auto-generated, do not format)
 crates/fob-native/index.js
 crates/fob-native/index.d.ts
+
+# Python bindings generated files (PyO3/maturin)
+crates/fob-python/fob.pyi
+crates/fob-python/py.typed
+
+# Ruby bindings generated files (magnus/rb-sys)
+crates/fob-ruby/**/*.rb
+
+# PHP bindings generated files (ext-php-rs)
+crates/fob-php/**/*.php
