@@ -1,6 +1,6 @@
 [package]
 name = "fob-plugin-tailwind"
-version = "0.4.0"
+version = "0.4.1"
 authors.workspace = true
 edition = "2021"
 rust-version = "1.75"
@@ -9,7 +9,7 @@ description = "Rolldown bundler plugin for Tailwind CSS v4"
 publish = false
 
 [dependencies]
-fob-bundler = { path = "../fob-bundler", version = "0.4.0" }
+fob-bundler = { path = "../fob-bundler", version = "0.4.1" }
 
 anyhow.workspace = true
 thiserror.workspace = true

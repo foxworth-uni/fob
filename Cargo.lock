@@ -19,7 +19,7 @@ checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
 
 [[package]]
 name = "advanced-bundler-example"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "fob-bundler",
@@ -606,7 +606,7 @@ checksum = "0e050f626429857a27ddccb31e0aca21356bfa709c04041aefddac081a8f068a"
 
 [[package]]
 name = "basic-bundler-example"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "fob-bundler",
@@ -770,7 +770,7 @@ dependencies = [
 
 [[package]]
 name = "blog-axum"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "askama",
@@ -1517,7 +1517,7 @@ dependencies = [
 
 [[package]]
 name = "component-library-example"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "fob-bundler",
@@ -2233,7 +2233,7 @@ checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
 name = "fob-browser-test"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "async-trait",
  "chromiumoxide",
@@ -2250,7 +2250,7 @@ dependencies = [
 
 [[package]]
 name = "fob-bundler"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "arcstr",
@@ -2293,7 +2293,7 @@ dependencies = [
 
 [[package]]
 name = "fob-cli"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -2329,7 +2329,7 @@ dependencies = [
 
 [[package]]
 name = "fob-cloudflare-worker-example"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -2338,7 +2338,7 @@ dependencies = [
 
 [[package]]
 name = "fob-config"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "figment",
  "indexmap",
@@ -2353,7 +2353,7 @@ dependencies = [
 
 [[package]]
 name = "fob-gen"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "miette",
  "oxc_allocator",
@@ -2369,7 +2369,7 @@ dependencies = [
 
 [[package]]
 name = "fob-graph"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "async-trait",
  "bincode 2.0.1",
@@ -2401,7 +2401,7 @@ dependencies = [
 
 [[package]]
 name = "fob-mdx"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "bon",
@@ -2423,7 +2423,7 @@ dependencies = [
 
 [[package]]
 name = "fob-mdx-runtime"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "bon",
@@ -2438,7 +2438,7 @@ dependencies = [
 
 [[package]]
 name = "fob-mdx-wasm"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "console_error_panic_hook",
  "fob-mdx",
@@ -2453,7 +2453,7 @@ dependencies = [
 
 [[package]]
 name = "fob-native"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2474,7 +2474,7 @@ dependencies = [
 
 [[package]]
 name = "fob-php"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2494,7 +2494,7 @@ dependencies = [
 
 [[package]]
 name = "fob-plugin-css"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "fob-bundler",
@@ -2509,7 +2509,7 @@ dependencies = [
 
 [[package]]
 name = "fob-plugin-mdx"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "fob-bundler",
@@ -2520,7 +2520,7 @@ dependencies = [
 
 [[package]]
 name = "fob-plugin-tailwind"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "fob-bundler",
@@ -2535,7 +2535,7 @@ dependencies = [
 
 [[package]]
 name = "fob-python"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2555,7 +2555,7 @@ dependencies = [
 
 [[package]]
 name = "fob-ruby"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2575,7 +2575,7 @@ dependencies = [
 
 [[package]]
 name = "fob-target"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "fob-bundler",
  "miette",
@@ -3596,7 +3596,7 @@ dependencies = [
 
 [[package]]
 name = "meta-framework-example"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "fob-bundler",
