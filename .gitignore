@@ -10,6 +10,7 @@ rustfmt.toml
 node_modules/
 dist/
 build/
+.next/
 .turbo/
 *.tsbuildinfo
 *.log

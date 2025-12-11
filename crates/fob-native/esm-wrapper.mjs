@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
-const binding = require('./index.js')
+const wrapper = require('./wrapper.js')
 
 export const OutputFormat = Object.freeze({
   Esm: 'esm',
@@ -16,14 +16,16 @@ export const SourceMapMode = Object.freeze({
   Disabled: 'false',
 })
 
-export const Fob = binding.Fob
-export const bundleSingle = binding.bundleSingle
-export const initLogging = binding.initLogging
-export const initLoggingFromEnv = binding.initLoggingFromEnv
-export const version = binding.version
+// Use wrapped Fob class that supports flexible entries
+export const Fob = wrapper.Fob
+export const bundleSingle = wrapper.bundleSingle
+export const initLogging = wrapper.initLogging
+export const initLoggingFromEnv = wrapper.initLoggingFromEnv
+export const version = wrapper.version
+export const normalizeEntries = wrapper.normalizeEntries
 
 export default {
-  ...binding,
+  ...wrapper,
   OutputFormat,
   SourceMapMode,
 }

@@ -1,0 +1,24 @@
+# fob-native (Node.js N-API) build automation
+
+default: build
+
+build:
+    pnpm build:debug
+
+build-release:
+    pnpm build
+
+check:
+    cargo check --package fob-native
+
+clippy:
+    cargo clippy --package fob-native
+
+example: build
+    cd {{justfile_directory()}}/../../examples/js/fob-simple && node bundler.js
+
+example-inline: build
+    cd {{justfile_directory()}}/../../examples/js/fob-simple && node inline-content.js
+
+clean:
+    cargo clean --package fob-native

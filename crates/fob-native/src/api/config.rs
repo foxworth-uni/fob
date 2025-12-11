@@ -2,6 +2,7 @@
 
 use crate::api::primitives::CodeSplittingConfig;
 use napi_derive::napi;
+use std::collections::HashMap;
 
 /// MDX compilation options
 ///
@@ -68,6 +69,11 @@ pub struct BundleConfig {
     /// - true: Read dependencies/peerDependencies from package.json
     /// - false/undefined: Use explicit external list or bundle all
     pub external_from_manifest: Option<bool>,
+
+    /// Virtual files mapping (path → content)
+    /// Used internally when entries have inline content via the JS wrapper.
+    /// Keys should use "virtual:" prefix (e.g., "virtual:main.ts")
+    pub virtual_files: Option<HashMap<String, String>>,
 }
 
 // Note: Builder pattern is not exposed via NAPI due to limitations with moving self.

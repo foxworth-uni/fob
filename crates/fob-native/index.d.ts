@@ -163,6 +163,12 @@ export interface BundleConfig {
    * - false/undefined: Use explicit external list or bundle all
    */
   externalFromManifest?: boolean
+  /**
+   * Virtual files mapping (path → content)
+   * Used internally when entries have inline content via the JS wrapper.
+   * Keys should use "virtual:" prefix (e.g., "virtual:main.ts")
+   */
+  virtualFiles?: Record<string, string>
 }
 
 /** Result of a bundle operation */

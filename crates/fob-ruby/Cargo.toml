@@ -10,7 +10,7 @@ description = "Ruby bindings for Fob bundler core"
 publish = false
 
 [lib]
-name = "fob"
+name = "fob_ruby"
 crate-type = ["cdylib"]
 
 [dependencies]

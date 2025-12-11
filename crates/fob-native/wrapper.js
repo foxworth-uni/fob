@@ -15,8 +15,75 @@ const SourceMapMode = Object.freeze({
   Disabled: 'false',
 });
 
+/**
+ * Normalize flexible entries input to { entries: string[], virtualFiles?: Record<string, string> }
+ * Supports: string, string[], Entry, Entry[]
+ * @param {string | string[] | object | object[]} input
+ * @returns {{ entries: string[], virtualFiles?: Record<string, string> }}
+ */
+function normalizeEntries(input) {
+  const entries = [];
+  const virtualFiles = {};
+  let virtualCounter = 0;
+
+  // Handle undefined/null
+  if (input == null) {
+    throw new Error('entries is required');
+  }
+
+  // Normalize to array
+  const items = Array.isArray(input) ? input : [input];
+
+  for (const item of items) {
+    if (typeof item === 'string') {
+      // Simple file path string
+      entries.push(item);
+    } else if (item && typeof item === 'object') {
+      if (item.content !== undefined) {
+        // Inline content entry
+        const loader = item.loader || 'js';
+        const name = item.name || `entry-${virtualCounter++}.${loader}`;
+        const virtualPath = name.startsWith('virtual:') ? name : `virtual:${name}`;
+        entries.push(virtualPath);
+        virtualFiles[virtualPath] = item.content;
+      } else if (item.path !== undefined) {
+        // Explicit path entry object
+        entries.push(item.path);
+      } else {
+        throw new Error('Entry object must have either "path" or "content" property');
+      }
+    } else {
+      throw new Error(
+        `Invalid entry type: ${typeof item}. Expected string or object with path/content.`
+      );
+    }
+  }
+
+  return {
+    entries,
+    virtualFiles: Object.keys(virtualFiles).length > 0 ? virtualFiles : undefined,
+  };
+}
+
+// Wrap Fob class to support flexible entries
+const OriginalFob = binding.Fob;
+
+class Fob extends OriginalFob {
+  constructor(config) {
+    const { entries, virtualFiles } = normalizeEntries(config.entries);
+    super({
+      ...config,
+      entries,
+      virtualFiles,
+    });
+  }
+}
+
 module.exports = {
   ...binding,
+  Fob,
   OutputFormat,
   SourceMapMode,
+  // Export normalizeEntries for testing/advanced usage
+  normalizeEntries,
 };

@@ -123,6 +123,13 @@ impl CoreBundler {
         }
         // Otherwise external stays as ExternalConfig::None (bundle everything)
 
+        // Add virtual files (for inline content support)
+        if let Some(ref virtual_files) = self.config.virtual_files {
+            for (path, content) in virtual_files {
+                options = options.virtual_file(path, content);
+            }
+        }
+
         options
     }
 
@@ -167,8 +174,12 @@ impl CoreBundler {
             cwd.join("dist")
         };
 
-        // Validate entry paths
+        // Validate entry paths (skip virtual files)
         for entry in &self.config.entries {
+            // Skip validation for virtual file paths
+            if entry.starts_with("virtual:") {
+                continue;
+            }
             let entry_path = PathBuf::from(entry);
             validate_path(&cwd, &entry_path, "entry")
                 .map_err(|e| fob_bundler::Error::InvalidConfig(e.to_string()))?;

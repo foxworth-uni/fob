@@ -1,7 +1,0 @@
-{
-  "/api/compile/route": "/api/compile",
-  "/api/stats/route": "/api/stats",
-  "/api/templates/route": "/api/templates",
-  "/_not-found/page": "/_not-found",
-  "/page": "/"
-}

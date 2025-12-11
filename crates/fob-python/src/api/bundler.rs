@@ -309,6 +309,7 @@ impl Fob {
             entry_mode: Some(EntryMode::Shared),
             code_splitting: None,
             external_from_manifest: None,
+            virtual_files: None,
         };
 
         future_into_py(py, async move {
@@ -379,6 +380,7 @@ impl Fob {
             entry_mode: Some(EntryMode::Shared),
             code_splitting: None,
             external_from_manifest: Some(true),
+            virtual_files: None,
         };
 
         future_into_py(py, async move {
@@ -424,6 +426,7 @@ impl Fob {
             entry_mode: Some(EntryMode::Shared),
             code_splitting: opts.code_splitting,
             external_from_manifest: None,
+            virtual_files: None,
         };
 
         future_into_py(py, async move {
@@ -469,6 +472,7 @@ impl Fob {
             entry_mode: Some(EntryMode::Isolated),
             code_splitting: None,
             external_from_manifest: Some(true),
+            virtual_files: None,
         };
 
         future_into_py(py, async move {

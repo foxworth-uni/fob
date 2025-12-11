@@ -104,6 +104,7 @@ impl Fob {
             entry_mode: Some("shared".to_string()),
             code_splitting: None,
             external_from_manifest: None,
+            virtual_files: None,
         };
 
         let fob = Self::new(config)?;
@@ -137,6 +138,7 @@ impl Fob {
             entry_mode: Some("shared".to_string()),
             code_splitting: None,
             external_from_manifest: Some(true),
+            virtual_files: None,
         };
 
         let fob = Self::new(config)?;
@@ -170,6 +172,7 @@ impl Fob {
             entry_mode: Some("shared".to_string()),
             code_splitting: opts.code_splitting.clone(),
             external_from_manifest: None,
+            virtual_files: None,
         };
 
         let fob = Self::new(config)?;
@@ -205,6 +208,7 @@ impl Fob {
             entry_mode: Some("isolated".to_string()),
             code_splitting: None,
             external_from_manifest: Some(true),
+            virtual_files: None,
         };
 
         let fob = Self::new(config)?;

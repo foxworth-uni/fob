@@ -79,6 +79,7 @@ pub async fn bundle_single(
         entry_mode: None,
         code_splitting: None,
         external_from_manifest: None,
+        virtual_files: None,
     };
 
     let bundler = CoreBundler::new(config).map_err(|e| Error::from_reason(e.to_string()))?;

@@ -7,7 +7,8 @@ use crate::api::utils::{
 };
 use crate::types::OutputFormat;
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::ZendHashTable;
+use ext_php_rs::types::{ZendHashTable, Zval};
+use std::collections::HashMap;
 
 /// MDX compilation options
 #[derive(Debug, Clone, Default)]
@@ -34,6 +35,85 @@ pub struct BundleConfig {
     pub code_splitting: Option<CodeSplittingConfig>,
     pub external: Option<Vec<String>>,
     pub external_from_manifest: Option<bool>,
+    /// Virtual files mapping (path → content)
+    /// Used for inline content entries. Keys use "virtual:" prefix.
+    pub virtual_files: Option<HashMap<String, String>>,
+}
+
+/// Parsed entry configuration with path resolution
+#[derive(Debug)]
+struct ParsedEntries {
+    /// Entry paths including virtual paths (prefixed with "virtual:")
+    paths: Vec<String>,
+    /// Virtual file content mapping (path → content)
+    virtual_files: Option<HashMap<String, String>>,
+}
+
+/// Parse flexible entries input: string, array, or Entry arrays with content
+///
+/// Supports:
+/// - `"src/index.js"` - single string path
+/// - `["a.js", "b.js"]` - array of paths
+/// - `["content" => "console.log('hi');", "name" => "main.js"]` - inline content
+/// - `[["path" => "a.js"], ["content" => "..."]]` - mixed entries
+fn parse_entries_flexible(entries_zval: &Zval) -> PhpResult<ParsedEntries> {
+    let mut paths = Vec::new();
+    let mut virtual_files = HashMap::new();
+    let mut virtual_counter = 0;
+
+    // Try as array first
+    if let Some(entries_arr) = entries_zval.array() {
+        for (_, item) in entries_arr.iter() {
+            if let Some(item_arr) = item.array() {
+                // Entry array with content or path
+                if let Some(content_zval) = item_arr.get("content") {
+                    if let Some(content_str) = zval_to_string(content_zval) {
+                        let loader = item_arr
+                            .get("loader")
+                            .and_then(zval_to_string)
+                            .unwrap_or_else(|| "js".to_string());
+                        let name = item_arr
+                            .get("name")
+                            .and_then(zval_to_string)
+                            .unwrap_or_else(|| format!("entry-{}.{}", virtual_counter, loader));
+
+                        let virtual_path = if name.starts_with("virtual:") {
+                            name
+                        } else {
+                            format!("virtual:{}", name)
+                        };
+                        paths.push(virtual_path.clone());
+                        virtual_files.insert(virtual_path, content_str);
+                        virtual_counter += 1;
+                    }
+                } else if let Some(path_zval) = item_arr.get("path") {
+                    if let Some(path_str) = zval_to_string(path_zval) {
+                        paths.push(path_str);
+                    }
+                } else {
+                    return Err(PhpException::default(
+                        "Entry array must have 'path' or 'content'".to_string(),
+                    ));
+                }
+            } else if let Some(path_str) = zval_to_string(item) {
+                // String entry
+                paths.push(path_str);
+            }
+        }
+    } else if let Some(entry_str) = zval_to_string(entries_zval) {
+        // Single string entry
+        paths.push(entry_str);
+    }
+
+    let vf = if virtual_files.is_empty() {
+        None
+    } else {
+        Some(virtual_files)
+    };
+    Ok(ParsedEntries {
+        paths,
+        virtual_files: vf,
+    })
 }
 
 impl BundleConfig {
@@ -41,13 +121,11 @@ impl BundleConfig {
     pub fn from_php_array(arr: &ZendHashTable) -> PhpResult<Self> {
         let mut config = Self::default();
 
-        // Parse entries - accept both single string and array
+        // Parse entries with flexible input support
         if let Some(entries_zval) = arr.get("entries") {
-            if let Some(entries_arr) = entries_zval.array() {
-                config.entries = crate::api::utils::array_to_strings(entries_arr);
-            } else if let Some(entry_str) = zval_to_string(entries_zval) {
-                config.entries = vec![entry_str];
-            }
+            let parsed = parse_entries_flexible(entries_zval)?;
+            config.entries = parsed.paths;
+            config.virtual_files = parsed.virtual_files;
         }
 
         // Parse optional fields

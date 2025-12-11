@@ -1,4 +1,5 @@
 export * from './index';
+export { Entry, Entries } from './index';
 
 /** Output format enum-like helper */
 export declare const OutputFormat: {
@@ -13,4 +14,13 @@ export declare const SourceMapMode: {
   readonly Inline: 'inline';
   readonly Hidden: 'hidden';
   readonly Disabled: 'false';
+};
+
+/**
+ * Normalize flexible entries input to internal format.
+ * Exported for testing and advanced usage.
+ */
+export declare function normalizeEntries(input: import('./index').Entries): {
+  entries: string[];
+  virtualFiles?: Record<string, string>;
 };

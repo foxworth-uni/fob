@@ -168,8 +168,13 @@ impl CoreBundler {
             cwd.join("dist")
         };
 
-        // Validate entry paths exist
+        // Validate entry paths exist (skip virtual files)
         for entry in &self.config.entries {
+            // Skip validation for virtual file paths
+            if entry.starts_with("virtual:") {
+                continue;
+            }
+
             let entry_path = PathBuf::from(entry);
             let full_path = if entry_path.is_absolute() {
                 entry_path
@@ -189,6 +194,13 @@ impl CoreBundler {
         let build_result = {
             // Determine build constructor based on primitives
             let mut options = self.create_build_options();
+
+            // Add virtual files (for inline content support)
+            if let Some(ref virtual_files) = self.config.virtual_files {
+                for (path, content) in virtual_files {
+                    options = options.virtual_file(path, content);
+                }
+            }
 
             options = options
                 .cwd(cwd)

@@ -117,14 +117,14 @@ console.log(`Bundled ${result.moduleCount} modules`);
 
 ```typescript
 interface BundleConfig {
-  entries: string[];              // Entry point files
-  outputDir?: string;             // Output directory (default: "dist")
-  format?: string;                // 'esm' | 'cjs' | 'iife' (default: 'esm')
-  platform?: string;              // 'browser' | 'node' (default: 'browser')
-  sourcemap?: string;             // 'external' | 'inline' | 'hidden' | 'false'
-  minify?: boolean;               // Minify output
-  external?: string[];            // External packages
-  cwd?: string;                   // Working directory
+  entries: string[]; // Entry point files
+  outputDir?: string; // Output directory (default: "dist")
+  format?: string; // 'esm' | 'cjs' | 'iife' (default: 'esm')
+  platform?: string; // 'browser' | 'node' (default: 'browser')
+  sourcemap?: string; // 'external' | 'inline' | 'hidden' | 'false'
+  minify?: boolean; // Minify output
+  external?: string[]; // External packages
+  cwd?: string; // Working directory
 }
 ```
 
@@ -236,7 +236,7 @@ Always use camelCase in JavaScript/TypeScript configs:
 const config = {
   entries: ['./src/index.js'],
   outputDir: './dist', // ✅ camelCase
-  format: 'esm',       // ✅ string, case-insensitive
+  format: 'esm', // ✅ string, case-insensitive
 };
 ```
 

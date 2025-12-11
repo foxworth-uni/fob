@@ -2,7 +2,8 @@
 
 use crate::api::primitives::{CodeSplittingConfig, EntryMode};
 use crate::types::OutputFormat;
-use magnus::{RHash, Ruby, TryConvert};
+use magnus::{RArray, RHash, Ruby, TryConvert, Value};
+use std::collections::HashMap;
 
 /// MDX compilation options
 #[derive(Debug, Clone, Default)]
@@ -29,6 +30,84 @@ pub struct BundleConfig {
     pub code_splitting: Option<CodeSplittingConfig>,
     pub external: Option<Vec<String>>,
     pub external_from_manifest: Option<bool>,
+    /// Virtual files mapping (path → content)
+    /// Used for inline content entries. Keys use "virtual:" prefix.
+    pub virtual_files: Option<HashMap<String, String>>,
+}
+
+/// Parsed entry configuration with path resolution
+#[derive(Debug)]
+struct ParsedEntries {
+    /// Entry paths including virtual paths (prefixed with "virtual:")
+    paths: Vec<String>,
+    /// Virtual file content mapping (path → content)
+    virtual_files: Option<HashMap<String, String>>,
+}
+
+/// Parse flexible entries input: string, array, or Entry hashes with content
+///
+/// Supports:
+/// - `"src/index.js"` - single string path
+/// - `["a.js", "b.js"]` - array of paths
+/// - `{ content: "console.log('hi');", name: "main.js" }` - inline content
+/// - `[{ path: "a.js" }, { content: "..." }]` - mixed entries
+fn parse_entries_flexible(ruby: &Ruby, entries_val: Value) -> Result<ParsedEntries, magnus::Error> {
+    let mut paths = Vec::new();
+    let mut virtual_files = HashMap::new();
+    let mut virtual_counter = 0;
+
+    // Try as array first, then single value
+    let items: Vec<Value> = if let Ok(array) = RArray::try_convert(entries_val) {
+        array.into_iter().collect()
+    } else {
+        vec![entries_val]
+    };
+
+    for item in items {
+        if let Ok(hash) = RHash::try_convert(item) {
+            // Entry hash with content or path
+            if let Some(content_val) = hash.get(ruby.sym_new("content")) {
+                let content_str = String::try_convert(content_val)?;
+                let loader = hash
+                    .get(ruby.sym_new("loader"))
+                    .and_then(|v| String::try_convert(v).ok())
+                    .unwrap_or_else(|| "js".to_string());
+                let name = hash
+                    .get(ruby.sym_new("name"))
+                    .and_then(|v| String::try_convert(v).ok())
+                    .unwrap_or_else(|| format!("entry-{}.{}", virtual_counter, loader));
+
+                let virtual_path = if name.starts_with("virtual:") {
+                    name
+                } else {
+                    format!("virtual:{}", name)
+                };
+                paths.push(virtual_path.clone());
+                virtual_files.insert(virtual_path, content_str);
+                virtual_counter += 1;
+            } else if let Some(path_val) = hash.get(ruby.sym_new("path")) {
+                paths.push(String::try_convert(path_val)?);
+            } else {
+                return Err(magnus::Error::new(
+                    ruby.exception_arg_error(),
+                    "Entry hash must have :path or :content",
+                ));
+            }
+        } else {
+            // String entry
+            paths.push(String::try_convert(item)?);
+        }
+    }
+
+    let vf = if virtual_files.is_empty() {
+        None
+    } else {
+        Some(virtual_files)
+    };
+    Ok(ParsedEntries {
+        paths,
+        virtual_files: vf,
+    })
 }
 
 impl BundleConfig {
@@ -36,13 +115,11 @@ impl BundleConfig {
     pub fn from_ruby_hash(ruby: &Ruby, hash: RHash) -> Result<Self, magnus::Error> {
         let mut config = Self::default();
 
-        // Parse entries - accept both single string and array
+        // Parse entries with flexible input support
         if let Some(entries_val) = hash.get(ruby.sym_new("entries")) {
-            if let Ok(entries_array) = TryConvert::try_convert(entries_val) {
-                config.entries = entries_array;
-            } else if let Ok(entry_string) = String::try_convert(entries_val) {
-                config.entries = vec![entry_string];
-            }
+            let parsed = parse_entries_flexible(ruby, entries_val)?;
+            config.entries = parsed.paths;
+            config.virtual_files = parsed.virtual_files;
         }
 
         // Parse optional fields

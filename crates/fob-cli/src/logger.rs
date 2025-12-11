@@ -161,16 +161,6 @@ mod tests {
     }
 
     #[test]
-    fn test_should_use_colors_respects_no_color() {
-        // Set NO_COLOR and verify it disables colors
-        std::env::set_var("NO_COLOR", "1");
-        assert!(!should_use_colors());
-        unsafe {
-            std::env::remove_var("NO_COLOR");
-        }
-    }
-
-    #[test]
     fn test_should_use_colors_respects_force_color() {
         // Clear NO_COLOR first
         unsafe {

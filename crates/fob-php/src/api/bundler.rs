@@ -152,6 +152,7 @@ pub fn bundle_entry(entry: String, options: Option<&ZendHashTable>) -> PhpResult
         entry_mode: Some(EntryMode::Shared),
         code_splitting: None,
         external_from_manifest: None,
+        virtual_files: None,
     };
 
     let bundler = RUNTIME.block_on(async {
@@ -186,6 +187,7 @@ pub fn library(entry: String, options: Option<&ZendHashTable>) -> PhpResult<Zval
         entry_mode: Some(EntryMode::Shared),
         code_splitting: None,
         external_from_manifest: Some(true),
+        virtual_files: None,
     };
 
     let bundler = RUNTIME.block_on(async {
@@ -221,6 +223,7 @@ pub fn app(entries: &ZendHashTable, options: Option<&ZendHashTable>) -> PhpResul
         entry_mode: Some(EntryMode::Shared),
         code_splitting: opts.code_splitting,
         external_from_manifest: None,
+        virtual_files: None,
     };
 
     let bundler = RUNTIME.block_on(async {
@@ -256,6 +259,7 @@ pub fn components(entries: &ZendHashTable, options: Option<&ZendHashTable>) -> P
         entry_mode: Some(EntryMode::Isolated),
         code_splitting: None,
         external_from_manifest: Some(true),
+        virtual_files: None,
     };
 
     let bundler = RUNTIME.block_on(async {

@@ -10,7 +10,7 @@ description = "PHP bindings for Fob bundler core"
 publish = false
 
 [lib]
-name = "fob"
+name = "fob_php"
 crate-type = ["cdylib"]
 
 [dependencies]

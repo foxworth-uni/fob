@@ -1,37 +1,31 @@
 # fob-php development commands
 
-# Default recipe - show available commands
 default:
     @just --list
 
-# Build debug
 build:
     cargo build --package fob-php
 
-# Build release
 build-release:
     cargo build --release --package fob-php
 
-# Check compilation
 check:
     cargo check --package fob-php
 
-# Run clippy
 clippy:
     cargo clippy --package fob-php
 
-# Run example (builds release first)
 example: build-release
-    php -d extension=../../target/release/libfob.dylib ../../examples/php/fob-simple/bundler.php
+    php -d extension=../../target/release/libfob_php.dylib ../../examples/php/fob-simple/bundler.php
 
-# Test extension loads
-test-load:
-    php -d extension=../../target/release/libfob.dylib -r "var_dump(extension_loaded('fob-php'));"
+example-inline: build-release
+    php -d extension=../../target/release/libfob_php.dylib ../../examples/php/fob-simple/inline_content.php
 
-# List exported functions
-list-functions:
-    php -d extension=../../target/release/libfob.dylib -r "print_r(get_extension_funcs('fob-php'));"
+test-load: build-release
+    php -d extension=../../target/release/libfob_php.dylib -r "var_dump(extension_loaded('fob-php'));"
 
-# Show version
-version:
-    php -d extension=../../target/release/libfob.dylib -r "echo version() . PHP_EOL;"
+list-functions: build-release
+    php -d extension=../../target/release/libfob_php.dylib -r "print_r(get_extension_funcs('fob-php'));"
+
+version: build-release
+    php -d extension=../../target/release/libfob_php.dylib -r "echo version() . PHP_EOL;"

@@ -1,0 +1,24 @@
+# fob-python (PyO3/maturin) build automation
+
+default: build
+
+build:
+    maturin develop --manifest-path {{justfile_directory()}}/Cargo.toml
+
+build-release:
+    maturin build --release --manifest-path {{justfile_directory()}}/Cargo.toml
+
+check:
+    cargo check --package fob-python
+
+clippy:
+    cargo clippy --package fob-python
+
+example: build
+    cd {{justfile_directory()}}/../../examples/python/fob-simple && python3 bundler.py
+
+example-inline: build
+    cd {{justfile_directory()}}/../../examples/python/fob-simple && python3 inline_content.py
+
+clean:
+    cargo clean --package fob-python

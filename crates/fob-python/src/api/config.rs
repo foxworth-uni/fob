@@ -8,7 +8,8 @@ use crate::api::utils::{
 use crate::types::OutputFormat;
 use pyo3::Bound;
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::types::{PyDict, PyList};
+use std::collections::HashMap;
 
 /// MDX compilation options
 #[derive(Debug, Clone, Default)]
@@ -35,6 +36,89 @@ pub struct BundleConfig {
     pub code_splitting: Option<CodeSplittingConfig>,
     pub external: Option<Vec<String>>,
     pub external_from_manifest: Option<bool>,
+    /// Virtual files mapping (path → content)
+    /// Used for inline content entries. Keys use "virtual:" prefix.
+    pub virtual_files: Option<HashMap<String, String>>,
+}
+
+/// Parsed entry configuration with path resolution
+#[derive(Debug)]
+struct ParsedEntries {
+    /// Entry paths including virtual paths (prefixed with "virtual:")
+    paths: Vec<String>,
+    /// Virtual file content mapping (path → content)
+    virtual_files: Option<HashMap<String, String>>,
+}
+
+/// Parse flexible entries input: string, Path, list, or Entry dicts with content
+///
+/// Supports:
+/// - `"src/index.js"` - single string path
+/// - `Path("src/index.js")` - pathlib.Path
+/// - `["a.js", "b.js"]` - list of paths
+/// - `{"content": "console.log('hi');", "name": "main.js"}` - inline content
+/// - `[{"path": "a.js"}, {"content": "..."}]` - mixed entries
+fn parse_entries_flexible(entries_obj: &Bound<'_, PyAny>) -> PyResult<ParsedEntries> {
+    let mut paths = Vec::new();
+    let mut virtual_files = HashMap::new();
+    let mut virtual_counter = 0;
+
+    // Normalize to list
+    let items: Vec<Bound<'_, PyAny>> = if let Ok(list) = entries_obj.cast::<PyList>() {
+        list.iter().collect()
+    } else {
+        vec![entries_obj.clone()]
+    };
+
+    for item in items {
+        if let Ok(dict) = item.cast::<PyDict>() {
+            // Entry dict with content or path
+            if let Some(content) = dict.get_item("content")? {
+                // Inline content entry
+                let content_str: String = content.extract()?;
+                let loader: String = dict
+                    .get_item("loader")?
+                    .map(|l| l.extract().unwrap_or_else(|_| "js".to_string()))
+                    .unwrap_or_else(|| "js".to_string());
+                let name: String = dict
+                    .get_item("name")?
+                    .map(|n| {
+                        n.extract()
+                            .unwrap_or_else(|_| format!("entry-{}.{}", virtual_counter, loader))
+                    })
+                    .unwrap_or_else(|| format!("entry-{}.{}", virtual_counter, loader));
+
+                let virtual_path = if name.starts_with("virtual:") {
+                    name
+                } else {
+                    format!("virtual:{}", name)
+                };
+                paths.push(virtual_path.clone());
+                virtual_files.insert(virtual_path, content_str);
+                virtual_counter += 1;
+            } else if let Some(path) = dict.get_item("path")? {
+                // Explicit path entry
+                paths.push(py_to_path_string(&path)?);
+            } else {
+                return Err(pyo3::exceptions::PyValueError::new_err(
+                    "Entry dict must have 'path' or 'content'",
+                ));
+            }
+        } else {
+            // String or Path entry
+            paths.push(py_to_path_string(&item)?);
+        }
+    }
+
+    let vf = if virtual_files.is_empty() {
+        None
+    } else {
+        Some(virtual_files)
+    };
+    Ok(ParsedEntries {
+        paths,
+        virtual_files: vf,
+    })
 }
 
 impl BundleConfig {
@@ -42,17 +126,11 @@ impl BundleConfig {
     pub fn from_py_dict(dict: &Bound<'_, PyDict>) -> PyResult<Self> {
         let mut config = Self::default();
 
-        // Parse entries - accept both single string/path and list
-        if let Some(entries) = dict.get_item("entries")? {
-            match py_to_path_strings(&entries) {
-                Ok(paths) => config.entries = paths,
-                Err(_) => {
-                    // Try as single string
-                    if let Ok(single) = py_to_path_string(&entries) {
-                        config.entries = vec![single];
-                    }
-                }
-            }
+        // Parse entries with flexible input support
+        if let Some(entries_obj) = dict.get_item("entries")? {
+            let parsed = parse_entries_flexible(&entries_obj)?;
+            config.entries = parsed.paths;
+            config.virtual_files = parsed.virtual_files;
         }
 
         // Parse optional fields with path support

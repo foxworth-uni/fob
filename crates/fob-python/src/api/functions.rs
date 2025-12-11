@@ -104,6 +104,7 @@ pub fn bundle_single<'py>(
         entry_mode: None,
         code_splitting: None,
         external_from_manifest: None,
+        virtual_files: None,
     };
 
     future_into_py(py, async move {
