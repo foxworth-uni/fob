@@ -6,7 +6,10 @@
 //! Note: `BuildOptions` remains the public API for backward compatibility.
 //! `BuildConfig` is available for advanced use cases and future migration.
 
-use crate::builders::unified::{EntryPoints, MinifyLevel};
+use crate::builders::unified::{
+    EntryPoints, MinifyLevel,
+    primitives::{CodeSplittingConfig, EntryMode, ExternalConfig},
+};
 use crate::target::{ExportConditions, NodeBuiltins};
 use crate::{OutputFormat, SourceMapType};
 use rustc_hash::FxHashMap;
@@ -285,11 +288,30 @@ impl BuildConfig {
             ExportConditions::Edge | ExportConditions::Browser => Platform::Browser,
         };
 
-        crate::BuildOptions {
-            entry: self.entries,
-            bundle: self.optimization.bundle,
-            splitting: self.output.splitting,
-            external: self
+        // Map old bundle/splitting to new primitives
+        let external = if self.optimization.bundle {
+            ExternalConfig::None
+        } else {
+            ExternalConfig::List(vec![])
+        };
+
+        // Determine entry mode and code splitting based on entries and splitting
+        let (entry_mode, code_splitting) = match &self.entries {
+            EntryPoints::Single(_) => (EntryMode::Shared, None),
+            EntryPoints::Multiple(_) | EntryPoints::Named(_) => {
+                if self.output.splitting {
+                    (EntryMode::Shared, Some(CodeSplittingConfig::default()))
+                } else {
+                    (EntryMode::Isolated, None)
+                }
+            }
+        };
+
+        // Convert external patterns to ExternalConfig
+        let external_config = if self.resolution.external.is_empty() {
+            external
+        } else {
+            let packages: Vec<String> = self
                 .resolution
                 .external
                 .into_iter()
@@ -297,7 +319,15 @@ impl BuildConfig {
                     ExternalPattern::Exact(s) => s,
                     ExternalPattern::Pattern(s) => s,
                 })
-                .collect(),
+                .collect();
+            ExternalConfig::List(packages)
+        };
+
+        crate::BuildOptions {
+            entry: self.entries,
+            entry_mode,
+            code_splitting,
+            external: external_config,
             outdir: Some(self.output.dir),
             outfile: None,
             platform,
@@ -318,6 +348,9 @@ impl BuildConfig {
             decorator: None,
             #[cfg(feature = "dts-generation")]
             dts: None,
+            cache: None,
+            incremental: None,
+            max_parallel_builds: None,
         }
     }
 }

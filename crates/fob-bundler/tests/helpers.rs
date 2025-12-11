@@ -25,11 +25,11 @@ pub fn fixture_path(relative: &str) -> PathBuf {
 
 /// Create a BuildOptions with sensible defaults for testing
 ///
-/// Uses library mode (bundle: false) and Node platform by default
+/// Uses library mode (externalize dependencies) and Node platform by default
 /// since most tests are verifying transformation, not bundling.
 pub fn test_build_options(entry: impl AsRef<Path>) -> BuildOptions {
     BuildOptions::new(entry.as_ref())
-        .bundle(false)
+        .externalize_from("package.json") // Externalize all dependencies (library mode)
         .platform(Platform::Node)
         .cwd(env!("CARGO_MANIFEST_DIR"))
         .runtime(Arc::new(NativeRuntime))

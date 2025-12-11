@@ -14,6 +14,17 @@ pub struct MdxOptions {
     pub output_format: OutputFormat,
     /// Pre-extracted frontmatter (passed from compile() to avoid double extraction)
     pub frontmatter: Option<FrontmatterData>,
+    /// Provider import source for component injection (e.g., "gumbo/mdx", "@mdx-js/react")
+    ///
+    /// When set, the compiled MDX will include:
+    /// ```javascript
+    /// import {useMDXComponents as _provideComponents} from '{source}';
+    /// ```
+    ///
+    /// And components will be merged: `_provideComponents()` → `props.components`
+    ///
+    /// This follows the MDX v3 pattern used by Next.js and @mdx-js/react.
+    pub provider_import_source: Option<String>,
 }
 
 impl Default for MdxOptions {
@@ -23,6 +34,7 @@ impl Default for MdxOptions {
             jsx_runtime: "react/jsx-runtime".to_string(),
             output_format: OutputFormat::default(),
             frontmatter: None,
+            provider_import_source: None,
         }
     }
 }

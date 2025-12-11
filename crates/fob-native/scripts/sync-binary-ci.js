@@ -131,7 +131,7 @@ const findPnpmLocations = (dir, depth = 0) => {
         }
       }
     }
-  } catch (err) {
+  } catch {
     // Ignore permission errors
   }
 };

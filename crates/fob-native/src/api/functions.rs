@@ -3,7 +3,7 @@
 use crate::api::config::BundleConfig;
 use crate::conversion::result::BundleResult;
 use crate::core::bundler::CoreBundler;
-use crate::types::{LogLevel, OutputFormat};
+use crate::types::parse_log_level;
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
@@ -11,6 +11,8 @@ use napi_derive::napi;
 ///
 /// Call this once at application startup before any fob operations.
 /// It is safe to call multiple times - only the first call takes effect.
+///
+/// @param level - "silent" | "error" | "warn" | "info" | "debug" (case-insensitive, default: "info")
 ///
 /// @example
 /// ```typescript
@@ -21,8 +23,8 @@ use napi_derive::napi;
 /// initLogging('debug');
 /// ```
 #[napi]
-pub fn init_logging(level: Option<LogLevel>) {
-    let level: fob_bundler::LogLevel = level.unwrap_or_default().into();
+pub fn init_logging(level: Option<String>) {
+    let level = parse_log_level(level.as_deref());
     fob_bundler::init_logging(level);
 }
 
@@ -44,11 +46,13 @@ pub fn init_logging_from_env() {
 }
 
 /// Quick helper to bundle a single entry
+///
+/// @param format - "esm" | "cjs" | "iife" (case-insensitive, default: "esm")
 #[napi]
 pub async fn bundle_single(
     entry: String,
     output_dir: String,
-    format: Option<OutputFormat>,
+    format: Option<String>,
 ) -> Result<BundleResult> {
     // Derive cwd from entry file's parent directory
     let entry_path = std::path::Path::new(&entry);
@@ -71,6 +75,10 @@ pub async fn bundle_single(
         minify: None,
         cwd,
         mdx: None, // Auto-detect from entry extension
+        // Use defaults for composable primitives
+        entry_mode: None,
+        code_splitting: None,
+        external_from_manifest: None,
     };
 
     let bundler = CoreBundler::new(config).map_err(|e| Error::from_reason(e.to_string()))?;

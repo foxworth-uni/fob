@@ -41,10 +41,9 @@ async fn main() -> Result<()> {
     // This creates a tree-shakeable library structure where consumers
     // can import from specific paths: my-lib, my-lib/Button, my-lib/Card
     let result = BuildOptions::new("components/index.ts")
-        .bundle(false)
         // Externalize React dependencies - they're peer dependencies
         // that consumers will provide. This prevents bundling React twice.
-        .external(["react", "react-dom"])
+        .externalize(["react", "react-dom"])
         .outdir("dist")
         .sourcemap(true)
         .runtime(runtime.clone())
@@ -69,8 +68,7 @@ async fn main() -> Result<()> {
 
     // Build the demo as a browser application
     // This bundles the demo app with all its dependencies (including React)
-    let demo_result = BuildOptions::new_multiple(["demo/app.tsx"])
-        .bundle(true)
+    let demo_result = BuildOptions::new("demo/app.tsx")
         .runtime(runtime)
         .outdir("demo/dist")
         // No minification - keep readable for development

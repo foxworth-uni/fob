@@ -92,9 +92,8 @@ async fn build_framework(routes: &HashMap<String, PathBuf>) -> Result<PathBuf> {
     let runtime = Arc::new(NativeRuntime);
 
     // Configure build options for meta-framework pattern
-    // Using the `app` preset which enables bundling and code splitting
+    // Using new_app which enables bundling and automatic code splitting
     BuildOptions::new_multiple(route_files)
-        .bundle(true)
         .runtime(runtime)
         .outdir(output_dir.clone())
         .minify_level("identifiers")

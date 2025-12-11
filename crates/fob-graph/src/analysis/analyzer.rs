@@ -223,6 +223,7 @@ impl Analyzer<Configured> {
             {
                 graph
                     .apply_framework_rules(options.framework_rules)
+                    .await
                     .map_err(|e| {
                         Error::Operation(format!("Failed to apply framework rules: {}", e))
                     })?;

@@ -1,6 +1,0 @@
-shared-version = true
-consolidate-commits = true
-tag = false
-sign-commit = false
-sign-tag = false
-push = false

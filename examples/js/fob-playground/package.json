@@ -1,0 +1,16 @@
+{
+  "name": "fob-playground",
+  "version": "1.0.0",
+  "description": "Interactive code playground powered by Fob bundler - compile user code on-demand",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@fox-uni/fob": "workspace:*",
+    "@hono/node-server": "^1.13.7",
+    "hono": "^4.6.12"
+  }
+}

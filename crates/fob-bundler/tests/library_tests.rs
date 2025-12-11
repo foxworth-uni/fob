@@ -38,7 +38,7 @@ async fn library_builder_produces_assets() {
     let project = create_library_project();
 
     let result = BuildOptions::new(project.path().join("src/index.js"))
-        .bundle(false)
+        .externalize_from("package.json")
         .platform(Platform::Node)
         .cwd(project.path())
         .sourcemap(true)
@@ -64,7 +64,7 @@ async fn library_builder_accepts_globals_and_minify() {
     let project = create_library_project();
 
     let result = BuildOptions::new(project.path().join("src/index.js"))
-        .bundle(false)
+        .externalize_from("package.json")
         .platform(Platform::Node)
         .cwd(project.path())
         .globals_map([("react", "React")])
@@ -82,7 +82,7 @@ async fn virtual_file_basic() {
     let project = create_library_project();
 
     let result = BuildOptions::new("virtual:entry.js")
-        .bundle(false)
+        .externalize_from("package.json")
         .platform(Platform::Node)
         .virtual_file(
             "virtual:entry.js",
@@ -106,7 +106,7 @@ async fn virtual_file_mixed_with_physical() {
 
     // Virtual file imports physical file
     let result = BuildOptions::new("virtual:entry.js")
-        .bundle(false)
+        .externalize_from("package.json")
         .platform(Platform::Node)
         .virtual_file(
             "virtual:entry.js",
@@ -128,7 +128,7 @@ async fn virtual_file_multiple() {
     let project = create_library_project();
 
     let result = BuildOptions::new("virtual:main.js")
-        .bundle(false)
+        .externalize_from("package.json")
         .platform(Platform::Node)
         .virtual_file(
             "virtual:main.js",
@@ -152,7 +152,7 @@ async fn virtual_file_size_limit() {
     let huge_content = "export const x = 1;".to_string() + &"//comment\n".repeat(120_000);
 
     let result = BuildOptions::new("virtual:huge.js")
-        .bundle(false)
+        .externalize_from("package.json")
         .platform(Platform::Node)
         .virtual_file("virtual:huge.js", huge_content)
         .build()
@@ -172,7 +172,7 @@ async fn virtual_file_size_limit() {
 #[tokio::test]
 async fn virtual_file_invalid_module_id() {
     let result = BuildOptions::new("virtual:bad\0file.js")
-        .bundle(false)
+        .externalize_from("package.json")
         .platform(Platform::Node)
         .virtual_file("virtual:bad\0file.js", "export const x = 1;")
         .build()
@@ -194,7 +194,7 @@ async fn virtual_file_with_typescript() {
     let project = create_library_project();
 
     let result = BuildOptions::new("virtual:entry.ts")
-        .bundle(false)
+        .externalize_from("package.json")
         .platform(Platform::Node)
         .virtual_file(
             "virtual:entry.ts",

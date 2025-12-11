@@ -42,7 +42,7 @@ impl<'a> Traversal<'a> {
         &self,
         runtime: Arc<dyn Runtime>,
     ) -> Result<CollectionState, WalkerError> {
-        let mut collection = CollectionState::new();
+        let collection = CollectionState::new();
         let mut visited = FxHashSet::default();
         let mut queue = VecDeque::new();
         let mut depth_map: HashMap<PathBuf, usize> = HashMap::new();

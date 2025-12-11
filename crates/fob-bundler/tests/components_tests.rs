@@ -54,8 +54,6 @@ async fn components_builder_creates_multiple_bundles() {
         project.path().join("src/button.js"),
         project.path().join("src/badge.js"),
     ])
-    .bundle(true)
-    .splitting(false)
     .cwd(project.path())
     .runtime(Arc::new(NativeRuntime::new()))
     .build()
@@ -78,8 +76,6 @@ async fn components_builder_accumulates_shared_graph() {
         project.path().join("src/button.js"),
         project.path().join("src/badge.js"),
     ])
-    .bundle(true)
-    .splitting(false)
     .cwd(project.path())
     .runtime(Arc::new(NativeRuntime::new()))
     .build()

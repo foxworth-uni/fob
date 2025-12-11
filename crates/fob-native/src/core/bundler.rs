@@ -5,6 +5,8 @@ use crate::conversion::format::convert_format;
 use crate::conversion::sourcemap::convert_sourcemap_mode;
 use crate::core::validator::validate_path;
 use crate::runtime::NativeRuntime;
+use crate::types::parse_entry_mode;
+use fob_bundler::ExternalConfig;
 use fob_bundler::{BuildOptions, Runtime};
 use fob_plugin_mdx::FobMdxPlugin;
 use std::io;
@@ -70,6 +72,60 @@ impl CoreBundler {
         plugin
     }
 
+    /// Create BuildOptions using the new composable primitives.
+    ///
+    /// Converts from NAPI BundleConfig to core BuildOptions using:
+    /// - entry_mode: "shared" | "isolated" string
+    /// - code_splitting: Option<CodeSplittingConfig>
+    /// - external: ExternalConfig (None, List, FromManifest)
+    fn create_build_options(&self) -> BuildOptions {
+        let entries = &self.config.entries;
+
+        // Determine entry mode (default: Shared for single entry, Isolated for multiple)
+        let default_mode = if entries.len() == 1 {
+            "shared"
+        } else {
+            "isolated"
+        };
+        let entry_mode_str = self.config.entry_mode.as_deref().unwrap_or(default_mode);
+
+        // Convert entry mode string to core type
+        let core_entry_mode = parse_entry_mode(Some(entry_mode_str));
+
+        // Create base options based on entry count
+        let mut options = if entries.len() == 1 {
+            BuildOptions::new(&entries[0])
+        } else {
+            BuildOptions::new_multiple(entries)
+        };
+
+        // Set entry mode
+        options.entry_mode = core_entry_mode;
+
+        // Set code splitting
+        if let Some(code_splitting) = &self.config.code_splitting {
+            options.code_splitting = Some(code_splitting.clone().into());
+        }
+
+        // Set external configuration
+        if let Some(true) = self.config.external_from_manifest {
+            // Externalize from package.json
+            let cwd = self
+                .runtime
+                .get_cwd()
+                .unwrap_or_else(|_| PathBuf::from("."));
+            options.external = ExternalConfig::FromManifest(cwd.join("package.json"));
+        } else if let Some(external_packages) = &self.config.external {
+            if !external_packages.is_empty() {
+                // Externalize specific packages
+                options.external = ExternalConfig::List(external_packages.clone());
+            }
+        }
+        // Otherwise external stays as ExternalConfig::None (bundle everything)
+
+        options
+    }
+
     /// Bundle the configured entries
     pub async fn bundle(
         &self,
@@ -96,7 +152,8 @@ impl CoreBundler {
             }
         }
 
-        let format = convert_format(self.config.format.clone());
+        let format = convert_format(self.config.format.as_deref())
+            .map_err(fob_bundler::Error::InvalidConfig)?;
         let cwd = self.runtime.get_cwd().map_err(|e| {
             fob_bundler::Error::Io(io::Error::other(format!("Failed to get cwd: {}", e)))
         })?;
@@ -119,11 +176,8 @@ impl CoreBundler {
 
         // Build
         let build_result = {
-            let mut options = if self.config.entries.len() == 1 {
-                BuildOptions::new(self.config.entries[0].clone()).bundle(false)
-            } else {
-                BuildOptions::new_multiple(self.config.entries.clone()).bundle(false)
-            };
+            // Determine build constructor based on primitives
+            let mut options = self.create_build_options();
 
             options = options
                 .cwd(cwd)
@@ -134,10 +188,7 @@ impl CoreBundler {
             options = convert_sourcemap_mode(options, self.config.sourcemap.clone())
                 .map_err(fob_bundler::Error::InvalidConfig)?;
 
-            // Set external packages
-            if let Some(external) = &self.config.external {
-                options = options.external(external.clone());
-            }
+            // External packages are already set in create_build_options()
 
             // Set platform
             if let Some(platform_str) = &self.config.platform {

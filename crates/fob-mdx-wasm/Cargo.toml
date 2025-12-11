@@ -29,6 +29,9 @@ js-sys = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }  # Used for frontmatter data
 
+# Random number generation for wasm32-unknown-unknown targets
+getrandom = { workspace = true }
+
 # Optional features
 console_error_panic_hook = { workspace = true, optional = true }
 

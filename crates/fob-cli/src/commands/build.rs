@@ -85,10 +85,10 @@ pub async fn execute(args: BuildArgs) -> Result<()> {
 
 /// Unified build function that returns the BuildResult.
 ///
-/// Builds based on configuration, not mode detection:
-/// - Single entry → BuildOptions::new()
-/// - Multiple entries → BuildOptions::new_multiple()
-/// - Applies bundle, splitting, platform, etc. from config
+/// Builds based on configuration using the new composable primitives API:
+/// - bundle=false → new_library (externalize deps)
+/// - splitting=true with multiple entries → new_app (code splitting)
+/// - Otherwise → new_multiple (separate bundles) or new (single entry)
 ///
 /// This version returns the BuildResult for dev server use.
 pub(crate) async fn build_with_result(
@@ -106,26 +106,52 @@ pub(crate) async fn build_with_result(
             ui::info(&format!("  - {}", entry));
         }
     }
-    ui::info(&format!("Bundle: {}", config.bundle));
+
+    // Display mode info based on config
+    let mode = if !config.bundle {
+        "library (externalize deps)"
+    } else if config.splitting && config.entry.len() > 1 {
+        "app (code splitting)"
+    } else if config.entry.len() > 1 {
+        "components (separate bundles)"
+    } else {
+        "standalone"
+    };
+    ui::info(&format!("Mode: {}", mode));
     ui::info(&format!("Format: {:?}", config.format));
-    if config.splitting {
-        ui::info("Code splitting: enabled");
-    }
     ui::info(&format!("Output: {}", config.out_dir.display()));
 
-    // Create builder based on entry count
-    let mut builder = if config.entry.len() == 1 {
-        fob_bundler::BuildOptions::new(&config.entry[0])
-    } else {
+    // Create builder based on config using new composable primitives
+    // Map old config fields to new constructor patterns:
+    // - bundle=false → externalize_from("package.json")
+    // - splitting=true with multiple entries → bundle_together().with_code_splitting()
+    // - multiple entries without splitting → bundle_separately()
+    // - single entry with bundle=true → new (standard bundle)
+    let mut builder = if !config.bundle {
+        // Library mode: externalize dependencies
+        if config.entry.len() == 1 {
+            fob_bundler::BuildOptions::new(&config.entry[0]).externalize_from("package.json")
+        } else {
+            // Multiple library entries - use new_multiple with externalize
+            fob_bundler::BuildOptions::new_multiple(&config.entry).externalize_from("package.json")
+        }
+    } else if config.splitting && config.entry.len() > 1 {
+        // App mode: multiple entries with code splitting
         fob_bundler::BuildOptions::new_multiple(&config.entry)
+            .bundle_together()
+            .with_code_splitting()
+    } else if config.entry.len() > 1 {
+        // Components mode: multiple separate bundles
+        fob_bundler::BuildOptions::new_multiple(&config.entry).bundle_separately()
+    } else {
+        // Standalone: single entry, full bundling
+        fob_bundler::BuildOptions::new(&config.entry[0])
     };
 
-    // Apply configuration
+    // Apply common configuration
     builder = builder
-        .bundle(config.bundle)
         .format(convert_format(config.format))
         .platform(convert_platform(config.platform))
-        .splitting(config.splitting)
         .cwd(cwd)
         .runtime(Arc::new(NativeRuntime));
 
@@ -145,7 +171,7 @@ pub(crate) async fn build_with_result(
 
     // Externals
     if !config.external.is_empty() {
-        builder = builder.external(&config.external);
+        builder = builder.externalize(&config.external);
     }
 
     // Global name for IIFE
@@ -180,10 +206,10 @@ pub(crate) async fn build_with_result(
 
 /// Unified build function that applies configuration directly.
 ///
-/// Builds based on configuration, not mode detection:
-/// - Single entry → BuildOptions::new()
-/// - Multiple entries → BuildOptions::new_multiple()
-/// - Applies bundle, splitting, platform, etc. from config
+/// Builds based on configuration using composable primitives:
+/// - bundle=false → library mode (externalize deps)
+/// - splitting=true → app mode (code splitting)
+/// - Otherwise → components or standalone mode
 pub(crate) async fn build(config: &FobConfig, cwd: &std::path::Path) -> Result<()> {
     build_with_result(config, cwd).await?;
     Ok(())

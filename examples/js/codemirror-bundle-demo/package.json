@@ -5,8 +5,8 @@
   "description": "Example of bundling CodeMirror with fob (cleaner implementation of https://codemirror.net/examples/bundle/)",
   "type": "module",
   "scripts": {
-    "build": "../../../target/debug/fob-cli build",
-    "dev": "../../../target/debug/fob-cli dev"
+    "build": "../../../target/debug/fob build",
+    "dev": "../../../target/debug/fob dev"
   },
   "dependencies": {
     "@codemirror/state": "^6.4.1",

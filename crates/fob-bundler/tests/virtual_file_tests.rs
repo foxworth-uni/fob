@@ -15,7 +15,7 @@ mod virtual_file_tests {
     #[tokio::test]
     async fn test_virtual_tsx() {
         let result = BuildOptions::new("virtual:entry.tsx")
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .virtual_file(
                 "virtual:entry.tsx",
@@ -52,7 +52,7 @@ export default function App() {
     #[tokio::test]
     async fn test_virtual_jsx() {
         let result = BuildOptions::new("virtual:entry.jsx")
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .virtual_file(
                 "virtual:entry.jsx",
@@ -83,7 +83,7 @@ export function Button({ label }) {
     #[tokio::test]
     async fn test_virtual_typescript() {
         let result = BuildOptions::new("virtual:utils.ts")
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .virtual_file(
                 "virtual:utils.ts",
@@ -118,7 +118,7 @@ export function greet(user: User): string {
     #[tokio::test]
     async fn test_virtual_file_chain() {
         let result = BuildOptions::new("virtual:entry.tsx")
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .virtual_file(
                 "virtual:entry.tsx",
@@ -201,7 +201,7 @@ export function Page() {
         let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new(temp_dir.path()));
 
         let result = BuildOptions::new(temp_dir.path().join("entry.tsx"))
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .cwd(temp_dir.path())
             .runtime(Arc::clone(&runtime))
@@ -263,7 +263,7 @@ export function BlogPage() {
         let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new(temp_dir.path()));
 
         let result = BuildOptions::new(temp_dir.path().join("entry.tsx"))
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .cwd(temp_dir.path())
             .runtime(Arc::clone(&runtime))
@@ -298,7 +298,7 @@ export function BlogPage() {
         let runtime: Arc<dyn Runtime> = Arc::new(bundler_runtime);
 
         let result = BuildOptions::new("virtual:entry.tsx")
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .virtual_file(
                 "virtual:entry.tsx",
@@ -355,7 +355,7 @@ export function BlogPage() {
         let runtime: Arc<dyn Runtime> = Arc::new(bundler_runtime);
 
         let result = BuildOptions::new("virtual:app.tsx")
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .virtual_file(
                 "virtual:app.tsx",
@@ -403,7 +403,7 @@ This is content from a **disk file**.
         let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new(temp_dir.path()));
 
         let result = BuildOptions::new("virtual:entry.tsx")
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .virtual_file(
                 "virtual:entry.tsx",

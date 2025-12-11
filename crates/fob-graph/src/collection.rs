@@ -15,7 +15,7 @@
 //! silently accepting invalid syntax. Callers should handle parse errors
 //! appropriately for their use case.
 
-use std::collections::{HashMap, HashSet};
+use dashmap::{DashMap, DashSet};
 use thiserror::Error;
 
 /// Errors that can occur during module collection
@@ -85,28 +85,33 @@ pub enum CollectedExport {
 }
 
 /// Shared state for collecting module information during bundling or analysis
-#[derive(Debug, Default)]
+///
+/// Uses concurrent collections (DashMap/DashSet) for thread-safe access during parallel bundling.
+#[derive(Debug)]
 pub struct CollectionState {
-    pub modules: HashMap<String, CollectedModule>,
-    pub entry_points: Vec<String>,
+    pub modules: DashMap<String, CollectedModule>,
+    pub entry_points: DashSet<String>,
     /// Resolved entry IDs from the load hook (absolute paths)
-    pub resolved_entry_ids: HashSet<String>,
+    pub resolved_entry_ids: DashSet<String>,
 }
 
 impl CollectionState {
     pub fn new() -> Self {
         Self {
-            modules: HashMap::new(),
-            entry_points: Vec::new(),
-            resolved_entry_ids: HashSet::new(),
+            modules: DashMap::new(),
+            entry_points: DashSet::new(),
+            resolved_entry_ids: DashSet::new(),
         }
     }
 
-    pub fn add_module(&mut self, id: String, module: CollectedModule) {
+    pub fn add_module(&self, id: String, module: CollectedModule) {
         self.modules.insert(id, module);
     }
 
-    pub fn get_module(&self, id: &str) -> Option<&CollectedModule> {
+    pub fn get_module(
+        &self,
+        id: &str,
+    ) -> Option<dashmap::mapref::one::Ref<'_, String, CollectedModule>> {
         self.modules.get(id)
     }
 
@@ -115,10 +120,8 @@ impl CollectionState {
     /// Note: This method allows marking modules as entry points before they are added
     /// to the collection, which is useful during initial setup. Entry points should be
     /// validated after collection is complete.
-    pub fn mark_entry(&mut self, id: String) {
-        if !self.entry_points.contains(&id) {
-            self.entry_points.push(id);
-        }
+    pub fn mark_entry(&self, id: String) {
+        self.entry_points.insert(id);
     }
 
     /// Validate that all entry points exist in the module collection
@@ -128,12 +131,18 @@ impl CollectionState {
     /// Returns `CollectionError::ModuleNotFound` for any entry point that doesn't have
     /// a corresponding module in the collection.
     pub fn validate_entry_points(&self) -> Result<(), CollectionError> {
-        for entry in &self.entry_points {
-            if !self.modules.contains_key(entry) {
-                return Err(CollectionError::ModuleNotFound(entry.clone()));
+        for entry in self.entry_points.iter() {
+            if !self.modules.contains_key(entry.key()) {
+                return Err(CollectionError::ModuleNotFound(entry.key().clone()));
             }
         }
         Ok(())
+    }
+}
+
+impl Default for CollectionState {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

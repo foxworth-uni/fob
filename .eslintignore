@@ -1,0 +1,38 @@
+# Build outputs
+dist/
+build/
+target/
+pkg/
+pkg-*/
+**/pkg-*/
+.turbo/
+.next/
+out/
+.vercel/
+coverage/
+*.min.js
+*.min.css
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Rust
+Cargo.lock
+
+# Test fixtures
+examples/fixtures/
+fixtures/
+
+# NAPI-RS generated bindings (auto-generated, do not lint)
+crates/fob-native/index.js
+crates/fob-native/index.d.ts

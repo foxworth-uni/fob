@@ -1,82 +1,114 @@
 //! Type conversion tests for fob-native.
 //!
-//! Tests conversion between NAPI types and fob-bundler types.
+//! Tests conversion between string types and fob-bundler types.
 
 use fob_bundler::{BuildOptions, OutputFormat as BundlerOutputFormat};
 use fob_native::conversion::format::convert_format;
 use fob_native::conversion::sourcemap::convert_sourcemap_mode;
-use fob_native::types::OutputFormat;
 
 #[test]
 fn test_output_format_conversion_esm() {
-    let result = convert_format(Some(OutputFormat::Esm));
+    let result = convert_format(Some("esm")).unwrap();
     assert!(matches!(result, BundlerOutputFormat::Esm));
 }
 
 #[test]
 fn test_output_format_conversion_cjs() {
-    let result = convert_format(Some(OutputFormat::Cjs));
+    let result = convert_format(Some("cjs")).unwrap();
     assert!(matches!(result, BundlerOutputFormat::Cjs));
 }
 
 #[test]
 fn test_output_format_conversion_iife() {
-    let result = convert_format(Some(OutputFormat::Iife));
+    let result = convert_format(Some("iife")).unwrap();
     assert!(matches!(result, BundlerOutputFormat::Iife));
 }
 
 #[test]
 fn test_output_format_conversion_default() {
     // None should default to ESM
-    let result = convert_format(None);
+    let result = convert_format(None).unwrap();
     assert!(matches!(result, BundlerOutputFormat::Esm));
 }
 
 #[test]
+fn test_output_format_case_insensitive() {
+    // Test uppercase
+    assert!(matches!(
+        convert_format(Some("ESM")).unwrap(),
+        BundlerOutputFormat::Esm
+    ));
+    assert!(matches!(
+        convert_format(Some("CJS")).unwrap(),
+        BundlerOutputFormat::Cjs
+    ));
+    // Test mixed case
+    assert!(matches!(
+        convert_format(Some("Esm")).unwrap(),
+        BundlerOutputFormat::Esm
+    ));
+    assert!(matches!(
+        convert_format(Some("Iife")).unwrap(),
+        BundlerOutputFormat::Iife
+    ));
+}
+
+#[test]
+fn test_output_format_invalid_is_error() {
+    let result = convert_format(Some("invalid"));
+    assert!(result.is_err());
+    assert!(
+        result
+            .unwrap_err()
+            .contains("Invalid format 'invalid'. Expected: esm, cjs, iife")
+    );
+}
+
+#[test]
 fn test_sourcemap_mode_external() {
-    let base = BuildOptions::new("test.js").bundle(false);
+    let base = BuildOptions::new("test.js");
     let result = convert_sourcemap_mode(base, Some("external".to_string()));
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_sourcemap_mode_true() {
-    let base = BuildOptions::new("test.js").bundle(false);
+    let base = BuildOptions::new("test.js");
     let result = convert_sourcemap_mode(base, Some("true".to_string()));
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_sourcemap_mode_inline() {
-    let base = BuildOptions::new("test.js").bundle(false);
+    let base = BuildOptions::new("test.js");
     let result = convert_sourcemap_mode(base, Some("inline".to_string()));
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_sourcemap_mode_hidden() {
-    let base = BuildOptions::new("test.js").bundle(false);
+    let base = BuildOptions::new("test.js");
     let result = convert_sourcemap_mode(base, Some("hidden".to_string()));
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_sourcemap_mode_false() {
-    let base = BuildOptions::new("test.js").bundle(false);
+    let base = BuildOptions::new("test.js");
     let result = convert_sourcemap_mode(base, Some("false".to_string()));
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_sourcemap_mode_none_defaults_to_disabled() {
-    let base = BuildOptions::new("test.js").bundle(false);
+    let base = BuildOptions::new("test.js");
     let result = convert_sourcemap_mode(base, None);
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_sourcemap_mode_invalid_value() {
-    let base = BuildOptions::new("test.js").bundle(false);
+    let base = BuildOptions::new("test.js");
     let result = convert_sourcemap_mode(base, Some("invalid".to_string()));
     assert!(result.is_err());
     assert!(result.unwrap_err().contains("Invalid sourcemap value"));
@@ -84,7 +116,7 @@ fn test_sourcemap_mode_invalid_value() {
 
 #[test]
 fn test_sourcemap_mode_invalid_returns_helpful_error() {
-    let base = BuildOptions::new("test.js").bundle(false);
+    let base = BuildOptions::new("test.js");
     let result = convert_sourcemap_mode(base, Some("yes".to_string()));
     assert!(result.is_err());
     let error = result.unwrap_err();
@@ -107,7 +139,6 @@ async fn test_bundle_result_conversion_preserves_structure() {
 
     let runtime = Arc::new(NativeRuntime::new(cwd.clone()).unwrap());
     let build_result = BuildOptions::new("index.js")
-        .bundle(false)
         .cwd(cwd)
         .runtime(runtime)
         .build()

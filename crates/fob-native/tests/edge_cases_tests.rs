@@ -1,6 +1,5 @@
 //! Edge case and error scenario tests for fob-native.
 
-use fob_native::types::OutputFormat;
 use fob_native::{BundleConfig, Fob};
 use tempfile::TempDir;
 
@@ -18,13 +17,14 @@ async fn test_bundle_with_missing_file() {
     let config = BundleConfig {
         entries: vec!["nonexistent.js".to_string()],
         output_dir: Some("dist".to_string()),
-        format: Some(OutputFormat::Esm),
+        format: Some("esm".to_string()),
         sourcemap: None,
         cwd: Some(cwd),
         external: None,
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -60,13 +60,14 @@ async fn test_bundle_with_syntax_error() {
     let config = BundleConfig {
         entries: vec!["index.js".to_string()],
         output_dir: Some("dist".to_string()),
-        format: Some(OutputFormat::Esm),
+        format: Some("esm".to_string()),
         sourcemap: None,
         cwd: Some(cwd),
         external: None,
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -107,13 +108,14 @@ async fn test_bundle_with_circular_import() {
     let config = BundleConfig {
         entries: vec!["a.js".to_string()],
         output_dir: Some("dist".to_string()),
-        format: Some(OutputFormat::Esm),
+        format: Some("esm".to_string()),
         sourcemap: None,
         cwd: Some(cwd),
         external: None,
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -138,13 +140,14 @@ async fn test_bundle_with_unresolved_import() {
     let config = BundleConfig {
         entries: vec!["index.js".to_string()],
         output_dir: Some("dist".to_string()),
-        format: Some(OutputFormat::Esm),
+        format: Some("esm".to_string()),
         sourcemap: None,
         cwd: Some(cwd),
         external: None,
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -174,13 +177,14 @@ async fn test_bundle_with_empty_file() {
     let config = BundleConfig {
         entries: vec!["index.js".to_string()],
         output_dir: Some("dist".to_string()),
-        format: Some(OutputFormat::Esm),
+        format: Some("esm".to_string()),
         sourcemap: None,
         cwd: Some(cwd),
         external: None,
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -211,13 +215,14 @@ async fn test_bundle_with_very_long_path() {
     let config = BundleConfig {
         entries: vec![format!("{}/index.js", deep_path)],
         output_dir: Some("dist".to_string()),
-        format: Some(OutputFormat::Esm),
+        format: Some("esm".to_string()),
         sourcemap: None,
         cwd: Some(cwd),
         external: None,
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -240,13 +245,14 @@ async fn test_bundle_with_special_characters_in_path() {
     let config = BundleConfig {
         entries: vec!["test-file.js".to_string()],
         output_dir: Some("dist".to_string()),
-        format: Some(OutputFormat::Esm),
+        format: Some("esm".to_string()),
         sourcemap: None,
         cwd: Some(cwd),
         external: None,
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -267,13 +273,14 @@ async fn test_bundle_output_dir_creation() {
     let config = BundleConfig {
         entries: vec!["index.js".to_string()],
         output_dir: Some("dist/new/subdir".to_string()),
-        format: Some(OutputFormat::Esm),
+        format: Some("esm".to_string()),
         sourcemap: None,
         cwd: Some(cwd),
         external: None,
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = Fob::new(config).unwrap();

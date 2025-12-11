@@ -1,0 +1,22 @@
+{
+  "name": "fob-nextjs-playground",
+  "version": "1.0.0",
+  "description": "Next.js code playground powered by Fob bundler",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@fox-uni/fob": "workspace:*",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.1",
+    "typescript": "^5.7.2"
+  }
+}

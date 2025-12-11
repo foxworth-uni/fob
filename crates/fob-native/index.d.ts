@@ -2,10 +2,81 @@
 /* eslint-disable */
 /** Fob bundler for Node.js */
 export declare class Fob {
-  /** Create a new bundler instance */
+  /** Create a new bundler instance with full configuration control. */
   constructor(config: BundleConfig)
-  /** Bundle the configured entries and return detailed bundle information */
+  /** Bundle the configured entries and return detailed bundle information. */
   bundle(): Promise<BundleResult>
+  /**
+   * Build a standalone bundle (single entry, full bundling).
+   *
+   * Best for: Applications, scripts, or single-file outputs.
+   *
+   * ```typescript
+   * const result = await Fob.bundleEntry("src/index.ts", { outDir: "dist" });
+   * ```
+   */
+  static bundleEntry(entry: string, options?: BuildOptions | undefined | null): Promise<BundleResult>
+  /**
+   * Build a library (single entry, externalize dependencies).
+   *
+   * Best for: npm packages, reusable libraries.
+   * Dependencies are marked as external and not bundled.
+   *
+   * ```typescript
+   * const result = await Fob.library("src/index.ts", {
+   *   outDir: "dist",
+   *   external: ["react", "react-dom"]
+   * });
+   * ```
+   */
+  static library(entry: string, options?: BuildOptions | undefined | null): Promise<BundleResult>
+  /**
+   * Build an app with code splitting (multiple entries, unified output).
+   *
+   * Best for: Web applications with multiple pages/routes.
+   * Shared dependencies are extracted into common chunks.
+   *
+   * ```typescript
+   * const result = await Fob.app(["src/client.tsx", "src/worker.ts"], {
+   *   outDir: "dist",
+   *   chunking: { minSize: 20000, minShareCount: 2 }
+   * });
+   * ```
+   */
+  static app(entries: Array<string>, options?: AppOptions | undefined | null): Promise<BundleResult>
+  /**
+   * Build a component library (multiple entries, separate bundles).
+   *
+   * Best for: UI component libraries, design systems.
+   * Each entry produces an independent bundle with no shared chunks.
+   *
+   * ```typescript
+   * const result = await Fob.components(["src/Button.tsx", "src/Card.tsx"], {
+   *   outDir: "dist"
+   * });
+   * ```
+   */
+  static components(entries: Array<string>, options?: BuildOptions | undefined | null): Promise<BundleResult>
+}
+
+/** Options for app builds with code splitting. */
+export interface AppOptions {
+  /** Output directory (defaults to "dist") */
+  outDir?: string
+  /** Output format: "esm" (default), "cjs", or "iife" */
+  format?: string
+  /** Source map generation: "true", "false", "inline", "hidden" */
+  sourcemap?: string
+  /** Packages to externalize */
+  external?: Array<string>
+  /** Target platform: "browser" (default) or "node" */
+  platform?: string
+  /** Enable minification */
+  minify?: boolean
+  /** Working directory for resolution */
+  cwd?: string
+  /** Code splitting configuration */
+  codeSplitting?: CodeSplittingConfig
 }
 
 /** Asset information */
@@ -14,6 +85,24 @@ export interface AssetInfo {
   relativePath: string
   size: number
   format?: string
+}
+
+/** Common build options shared by preset functions. */
+export interface BuildOptions {
+  /** Output directory (defaults to "dist") */
+  outDir?: string
+  /** Output format: "esm" (default), "cjs", or "iife" */
+  format?: string
+  /** Source map generation: "true", "false", "inline", "hidden" */
+  sourcemap?: string
+  /** Packages to externalize (not bundled) */
+  external?: Array<string>
+  /** Target platform: "browser" (default) or "node" */
+  platform?: string
+  /** Enable minification */
+  minify?: boolean
+  /** Working directory for resolution */
+  cwd?: string
 }
 
 /** Build statistics */
@@ -31,16 +120,14 @@ export interface BundleConfig {
   entries: Array<string>
   /** Output directory (defaults to "dist" if not provided) */
   outputDir?: string
-  /** Output format ("esm" | "cjs" | "iife") */
-  format?: OutputFormat
+  /** Output format: "esm" | "cjs" | "iife" (case-insensitive, default: "esm") */
+  format?: string
   /**
    * Source map generation mode
    * Accepts: "true", "false", "external", "inline", "hidden"
    * Default: disabled (no source maps)
    */
   sourcemap?: string
-  /** Packages to externalize (not bundled) */
-  external?: Array<string>
   /** Target platform ("browser" | "node", default: "browser") */
   platform?: string
   /** Enable minification (default: false) */
@@ -52,6 +139,30 @@ export interface BundleConfig {
    * If None, MDX is auto-enabled when .mdx entries are detected
    */
   mdx?: MdxOptions
+  /**
+   * Entry mode: "shared" | "isolated" (case-insensitive, default: "shared")
+   * - shared: Entries can share chunks
+   * - isolated: Each entry stands alone
+   */
+  entryMode?: string
+  /**
+   * Code splitting configuration
+   * - None/undefined: No code splitting
+   * - Object: Enable code splitting with specified thresholds
+   */
+  codeSplitting?: CodeSplittingConfig
+  /**
+   * External packages (simplified for JS)
+   * - None/undefined: Bundle everything
+   * - Array: Externalize specific packages
+   */
+  external?: Array<string>
+  /**
+   * Externalize dependencies from package.json manifest
+   * - true: Read dependencies/peerDependencies from package.json
+   * - false/undefined: Use explicit external list or bundle all
+   */
+  externalFromManifest?: boolean
 }
 
 /** Result of a bundle operation */
@@ -68,8 +179,12 @@ export interface BundleResult {
   moduleCount: number
 }
 
-/** Quick helper to bundle a single entry */
-export declare function bundleSingle(entry: string, outputDir: string, format?: OutputFormat | undefined | null): Promise<BundleResult>
+/**
+ * Quick helper to bundle a single entry
+ *
+ * @param format - "esm" | "cjs" | "iife" (case-insensitive, default: "esm")
+ */
+export declare function bundleSingle(entry: string, outputDir: string, format?: string | undefined | null): Promise<BundleResult>
 
 /** Detailed chunk information */
 export interface ChunkInfo {
@@ -102,10 +217,29 @@ export interface ChunkMetadata {
 }
 
 /**
+ * Configuration for code splitting.
+ *
+ * Code splitting extracts shared dependencies into separate chunks.
+ */
+export interface CodeSplittingConfig {
+  /** Minimum chunk size in bytes (default: 20000 = 20KB) */
+  minSize: number
+  /**
+   * Minimum number of entry points that must import the same module (default: 2)
+   *
+   * This was previously called `min_share_count` but `min_imports` is clearer
+   * about what's being counted.
+   */
+  minImports: number
+}
+
+/**
  * Initialize fob logging with specified level
  *
  * Call this once at application startup before any fob operations.
  * It is safe to call multiple times - only the first call takes effect.
+ *
+ * @param level - "silent" | "error" | "warn" | "info" | "debug" (case-insensitive, default: "info")
  *
  * @example
  * ```typescript
@@ -116,7 +250,7 @@ export interface ChunkMetadata {
  * initLogging('debug');
  * ```
  */
-export declare function initLogging(level?: LogLevel | undefined | null): void
+export declare function initLogging(level?: string | undefined | null): void
 
 /**
  * Initialize logging from RUST_LOG environment variable
@@ -133,24 +267,6 @@ export declare function initLogging(level?: LogLevel | undefined | null): void
  * ```
  */
 export declare function initLoggingFromEnv(): void
-
-/**
- * Log level for fob output
- *
- * Controls the verbosity of logging during bundling operations.
- */
-export declare const enum LogLevel {
-  /** No logging output */
-  Silent = 'Silent',
-  /** Only errors */
-  Error = 'Error',
-  /** Errors and warnings */
-  Warn = 'Warn',
-  /** Errors, warnings, and info (default) */
-  Info = 'Info',
-  /** All logs including debug */
-  Debug = 'Debug'
-}
 
 /** Bundle manifest */
 export interface ManifestInfo {
@@ -204,16 +320,6 @@ export interface ModuleInfo {
   size?: number
   /** Has side effects (None if unavailable) */
   hasSideEffects?: boolean
-}
-
-/** Output format for bundled code */
-export declare const enum OutputFormat {
-  /** ES Module format */
-  Esm = 'Esm',
-  /** CommonJS format */
-  Cjs = 'Cjs',
-  /** Immediately Invoked Function Expression format */
-  Iife = 'Iife'
 }
 
 /** Get the bundler version */

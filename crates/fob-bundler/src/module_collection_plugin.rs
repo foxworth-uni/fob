@@ -2,31 +2,58 @@ use rolldown_plugin::{
     HookLoadArgs, HookLoadReturn, HookResolveIdArgs, HookResolveIdReturn, HookTransformArgs,
     HookTransformReturn, HookUsage, Plugin, PluginContext, TransformPluginContext,
 };
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use crate::plugins::{FobPlugin, PluginPhase};
 use fob_graph::collection::{CollectedModule, CollectionState, parse_module_structure};
 
 /// Plugin that collects module information during the bundling process
+///
+/// Uses concurrent collections (DashMap/DashSet) internally for thread-safe access
+/// during parallel bundling, eliminating the need for Mutex locks.
 #[derive(Debug)]
 pub struct ModuleCollectionPlugin {
-    state: Arc<Mutex<CollectionState>>,
+    state: Arc<CollectionState>,
 }
 
 impl ModuleCollectionPlugin {
     pub fn new() -> Self {
         Self {
-            state: Arc::new(Mutex::new(CollectionState::new())),
+            state: Arc::new(CollectionState::new()),
         }
     }
 
-    pub fn state(&self) -> Arc<Mutex<CollectionState>> {
+    pub fn state(&self) -> Arc<CollectionState> {
         Arc::clone(&self.state)
     }
 
+    /// Extract the collected data.
+    ///
+    /// Creates a new CollectionState with cloned data from the concurrent collections.
+    /// The original state remains intact (since it's behind an Arc).
     pub fn take_data(&self) -> CollectionState {
-        let mut state = self.state.lock().unwrap();
-        std::mem::take(&mut *state)
+        // Clone the data from DashMap/DashSet into a new CollectionState
+        // This preserves the concurrent collections for potential future use
+        let new_state = CollectionState::new();
+
+        // Clone modules
+        for entry in self.state.modules.iter() {
+            new_state
+                .modules
+                .insert(entry.key().clone(), entry.value().clone());
+        }
+
+        // Clone entry points
+        for entry in self.state.entry_points.iter() {
+            new_state.entry_points.insert(entry.key().clone());
+        }
+
+        // Clone resolved entry IDs
+        for entry in self.state.resolved_entry_ids.iter() {
+            new_state.resolved_entry_ids.insert(entry.key().clone());
+        }
+
+        new_state
     }
 }
 
@@ -51,7 +78,6 @@ impl Plugin for ModuleCollectionPlugin {
         async move {
             // Track entry specifiers - we'll match resolved IDs in load hook
             if is_entry {
-                let mut state = state.lock().unwrap();
                 state.mark_entry(specifier);
             }
 
@@ -70,17 +96,11 @@ impl Plugin for ModuleCollectionPlugin {
 
         async move {
             // Check if this resolved ID corresponds to an entry point
-            let is_entry = {
-                let state = state.lock().unwrap();
-                // Match against stored entry specifiers
-                state
-                    .entry_points
-                    .iter()
-                    .any(|spec| id.ends_with(spec) || id.contains(spec) || spec == &id)
-            };
+            let is_entry = state.entry_points.iter().any(|spec| {
+                id.ends_with(spec.key()) || id.contains(spec.key()) || spec.key() == &id
+            });
 
             if is_entry {
-                let mut state = state.lock().unwrap();
                 state.resolved_entry_ids.insert(id);
             }
 
@@ -104,10 +124,7 @@ impl Plugin for ModuleCollectionPlugin {
             let (imports, exports, has_side_effects) =
                 parse_module_structure(&code).unwrap_or_else(|_| (vec![], vec![], true));
 
-            let is_entry = {
-                let state = state.lock().unwrap();
-                state.resolved_entry_ids.contains(&id)
-            };
+            let is_entry = state.resolved_entry_ids.contains(&id);
 
             let module = CollectedModule {
                 id: id.clone(),
@@ -119,7 +136,6 @@ impl Plugin for ModuleCollectionPlugin {
                 has_side_effects,
             };
 
-            let mut state = state.lock().unwrap();
             state.add_module(id, module);
 
             // Don't modify the code

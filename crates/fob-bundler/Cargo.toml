@@ -46,6 +46,12 @@ parking_lot.workspace = true
 sha2.workspace = true
 regex.workspace = true
 
+# Build cache dependencies
+blake3.workspace = true
+bincode.workspace = true
+redb.workspace = true
+arcstr = "1.2"
+
 # UUID for WASM compatibility
 uuid.workspace = true
 
@@ -67,7 +73,8 @@ test-utils = []
 
 # Platform-specific dependencies for native runtime
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
-tokio = { workspace = true, features = ["rt", "fs"] }
+tokio = { workspace = true, features = ["rt", "fs", "sync"] }
+num_cpus = "1.16"
 
 [dev-dependencies]
 tempfile.workspace = true

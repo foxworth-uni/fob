@@ -220,26 +220,81 @@ pub mod oxc {
     //! OXC (Oxidation Compiler) foundation types re-exported for workspace consistency.
     //!
     //! This ensures all workspace crates use the same OXC version for types that
-    //! cross crate boundaries. Specialized OXC crates (like `oxc_isolated_declarations`)
-    //! should still be imported directly by crates that need them.
+    //! cross crate boundaries. Upstream consumers can use `fob_bundler::oxc::*`
+    //! instead of importing oxc crates directly.
+    //!
+    //! # Example
+    //!
+    //! ```ignore
+    //! use fob_bundler::oxc::{Allocator, Parser, SourceType, Codegen};
+    //!
+    //! let allocator = Allocator::default();
+    //! let source = "const x = 1;";
+    //! let ret = Parser::new(&allocator, source, SourceType::mjs()).parse();
+    //! ```
 
-    /// Re-export allocator - required for all OXC AST operations
+    // =========================================================================
+    // Core: Allocator & Spans
+    // =========================================================================
+
+    /// Arena allocator for AST nodes
     pub use oxc_allocator::Allocator;
 
-    /// Re-export AST types
+    /// Span types for source location tracking
+    pub use oxc_span::{CompactStr, GetSpan, SourceType, Span};
+
+    // =========================================================================
+    // Parsing & AST
+    // =========================================================================
+
+    /// AST node types
     pub use oxc_ast::ast;
 
-    /// Re-export AST visitor trait
+    /// AST visitor trait
     pub use oxc_ast_visit::Visit;
 
-    /// Re-export span types for source location tracking
-    pub use oxc_span::{GetSpan, SourceType, Span};
-
-    /// Re-export parser for code analysis
+    /// JavaScript/TypeScript parser
     pub use oxc_parser::{Parser, ParserReturn};
 
-    /// Re-export semantic analysis
-    pub use oxc_semantic::{ScopeFlags, SemanticBuilder};
+    // =========================================================================
+    // Semantic Analysis
+    // =========================================================================
+
+    /// Semantic analysis (scopes, symbols, references)
+    pub use oxc_semantic::{
+        ScopeFlags, Semantic, SemanticBuilder, SemanticBuilderReturn, SymbolFlags,
+    };
+
+    // =========================================================================
+    // Code Generation
+    // =========================================================================
+
+    /// Code generator (AST to string)
+    pub use oxc_codegen::{Codegen, CodegenOptions, CodegenReturn};
+
+    // =========================================================================
+    // Minification
+    // =========================================================================
+
+    /// JavaScript minifier
+    pub use oxc_minifier::{Minifier, MinifierOptions, MinifierReturn};
+
+    // =========================================================================
+    // Transformation
+    // =========================================================================
+
+    /// AST transformer (JSX, TypeScript, etc.)
+    pub use oxc_transformer::{TransformOptions, Transformer};
+
+    /// AST traversal utilities
+    pub use oxc_traverse::{Traverse, TraverseCtx};
+
+    // =========================================================================
+    // TypeScript Declarations
+    // =========================================================================
+
+    /// Isolated declarations (.d.ts generation)
+    pub use oxc_isolated_declarations::{IsolatedDeclarations, IsolatedDeclarationsOptions};
 }
 
 /// Error types for fob operations.

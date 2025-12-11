@@ -4,6 +4,20 @@ use miette::Diagnostic;
 use std::path::PathBuf;
 use thiserror::Error;
 
+/// Format the v3 error message with nicely formatted directives
+fn format_v3_error(file_path: &str, detected_directives: &[String]) -> String {
+    let directives_list = detected_directives
+        .iter()
+        .map(|d| format!("  - {}", d))
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    format!(
+        "Tailwind CSS v3 syntax detected in {}\n\nFound these v3 directives:\n{}\n\nFob requires Tailwind CSS v4. Please upgrade:\n  Replace @tailwind directives with: @import \"tailwindcss\"\n\nSee: https://tailwindcss.com/docs/upgrade-guide",
+        file_path, directives_list
+    )
+}
+
 /// Errors that can occur during Tailwind CSS generation
 #[derive(Error, Debug, Diagnostic)]
 pub enum GeneratorError {
@@ -75,6 +89,17 @@ pub enum GeneratorError {
         help("Try increasing the timeout or check if Tailwind is stuck")
     )]
     Timeout { timeout_secs: u64 },
+
+    /// Tailwind CSS v3 syntax detected (not supported)
+    #[error("{}", format_v3_error(.file_path, .detected_directives))]
+    #[diagnostic(
+        code(fob::tailwind::v3_not_supported),
+        help("Upgrade to Tailwind CSS v4 and replace @tailwind directives with @import \"tailwindcss\"")
+    )]
+    V3NotSupported {
+        file_path: String,
+        detected_directives: Vec<String>,
+    },
 }
 
 impl GeneratorError {
@@ -103,5 +128,12 @@ impl GeneratorError {
 
     pub fn timeout(timeout_secs: u64) -> Self {
         Self::Timeout { timeout_secs }
+    }
+
+    pub fn v3_not_supported(file_path: String, detected_directives: Vec<String>) -> Self {
+        Self::V3NotSupported {
+            file_path,
+            detected_directives,
+        }
     }
 }

@@ -7,65 +7,68 @@
 use rolldown::{BundlerOptions, GlobalsOutputOption, IsExternal, Platform, ResolveOptions};
 use rustc_hash::FxHashMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use crate::Result;
 use crate::analysis::AnalyzedBundle;
 use crate::builders::common::{BundlePlan, EntrySpec, execute_bundle};
+use crate::builders::unified::primitives::{EntryMode, ExternalConfig};
 use crate::builders::unified::{BuildOptions, BuildOutput, BuildResult, EntryPoints, MinifyLevel};
 use crate::target::ExportConditions;
-
-#[cfg(feature = "dts-generation")]
-use std::sync::Arc;
 
 #[cfg(feature = "dts-generation")]
 use crate::DtsEmitPlugin;
 
 /// Execute a build with the given options.
 ///
-/// Dispatches to the appropriate build mode based on configuration.
+/// Dispatches to the appropriate execution path based on EntryMode:
+/// - `Shared`: All entries share one bundle context (with optional code splitting)
+/// - `Isolated`: Each entry is built independently
 pub async fn execute_build(options: BuildOptions) -> Result<BuildResult> {
-    match (&options.entry, options.bundle, options.splitting) {
-        // Library mode: don't bundle dependencies
-        (EntryPoints::Single(_), false, _) => execute_library_build(options).await,
-
-        // Components mode: Multiple entries, each bundled independently
-        (EntryPoints::Multiple(_) | EntryPoints::Named(_), true, false) => {
-            execute_components_build(options).await
-        }
-
-        // App mode: Multiple entries with code splitting
-        (EntryPoints::Multiple(_) | EntryPoints::Named(_), true, true) => {
-            execute_app_build(options).await
-        }
-
-        // Single entry, bundled (standalone build)
-        (EntryPoints::Single(_), true, _) => execute_single_bundle(options).await,
-
-        // Multiple entries without bundling (multiple libraries)
-        (EntryPoints::Multiple(_) | EntryPoints::Named(_), false, _) => {
-            execute_multiple_libraries(options).await
-        }
+    match options.entry_mode {
+        EntryMode::Shared => execute_unified_build(options).await,
+        EntryMode::Isolated => execute_separate_builds(options).await,
     }
 }
 
-/// Execute a library build (bundle: false, single entry).
-async fn execute_library_build(options: BuildOptions) -> Result<BuildResult> {
-    let entry = match &options.entry {
-        EntryPoints::Single(e) => e,
-        _ => unreachable!("execute_library_build called with non-single entry"),
+/// Execute a unified build (all entries share one bundle context).
+///
+/// This mode supports code splitting via the chunking strategy.
+async fn execute_unified_build(options: BuildOptions) -> Result<BuildResult> {
+    let entries = match &options.entry {
+        EntryPoints::Single(e) => vec![EntrySpec {
+            name: None,
+            import: e.clone(),
+        }],
+        EntryPoints::Multiple(v) => v
+            .iter()
+            .map(|e| EntrySpec {
+                name: None,
+                import: e.clone(),
+            })
+            .collect(),
+        EntryPoints::Named(m) => m
+            .iter()
+            .map(|(name, import)| EntrySpec {
+                name: Some(name.clone()),
+                import: import.clone(),
+            })
+            .collect(),
     };
 
-    let rolldown_options = configure_rolldown_options(&options);
+    let mut rolldown_options = configure_rolldown_options(&options);
 
-    // Library mode: externalize all dependencies
-    // Don't set external here - Rolldown will handle it based on resolve failure
-    // when bundle: false, imports that can't be resolved locally become external
+    // Apply code splitting configuration
+    rolldown_options.advanced_chunks = options
+        .code_splitting
+        .as_ref()
+        .map(|c| c.to_rolldown_options());
 
     // Add DTS plugin if enabled
     #[cfg(feature = "dts-generation")]
     let plugins = if let Some(dts_opts) = &options.dts {
         let mut plugins = options.plugins.clone();
-        if let Some(plugin) = configure_dts_plugin(dts_opts, entry) {
+        if let Some(plugin) = configure_dts_plugin(dts_opts, &entries) {
             plugins.push(plugin);
         }
         plugins
@@ -77,80 +80,195 @@ async fn execute_library_build(options: BuildOptions) -> Result<BuildResult> {
     let plugins = options.plugins.clone();
 
     let plan = BundlePlan {
-        entries: vec![EntrySpec {
-            name: None,
-            import: entry.clone(),
-        }],
+        entries,
         options: rolldown_options,
         plugins,
         cwd: options.cwd.clone(),
         virtual_files: options.virtual_files.clone(),
         runtime: options.runtime.clone(),
+        cache: options.cache.clone(),
+        incremental: options.incremental.clone(),
     };
 
     let analyzed = execute_bundle(plan).await?;
     Ok(build_result_from_analyzed(analyzed, BuildOutput::Single))
 }
 
-/// Execute a components build (multiple independent bundles).
-async fn execute_components_build(options: BuildOptions) -> Result<BuildResult> {
+/// Execute separate builds (each entry is built independently).
+///
+/// No code sharing between bundles; each is self-contained.
+/// On native platforms, builds run in parallel for 2-3x speedup.
+/// On WASM, builds run sequentially (single-threaded).
+async fn execute_separate_builds(options: BuildOptions) -> Result<BuildResult> {
     let entries = match &options.entry {
-        EntryPoints::Multiple(v) => v,
-        EntryPoints::Named(m) => &m.values().cloned().collect::<Vec<_>>(),
-        _ => unreachable!("execute_components_build called with single entry"),
+        EntryPoints::Multiple(v) => v.clone(),
+        EntryPoints::Named(m) => m.values().cloned().collect::<Vec<_>>(),
+        EntryPoints::Single(_) => {
+            // validate() prevents this
+            unreachable!("EntryMode::Isolated with Single entry caught by validate()")
+        }
     };
+
+    // Execute builds (parallel on native, sequential on WASM)
+    let results = execute_builds_concurrent(&options, &entries).await;
+
+    // Merge results in original order for determinism
+    merge_build_results(results, &entries)
+}
+
+/// Execute builds concurrently using tokio task spawning (native only).
+///
+/// Uses `JoinSet` with `Semaphore` for structured concurrency with bounded parallelism.
+#[cfg(not(target_family = "wasm"))]
+async fn execute_builds_concurrent(
+    options: &BuildOptions,
+    entries: &[String],
+) -> Vec<(String, Result<AnalyzedBundle>)> {
+    use tokio::sync::Semaphore;
+    use tokio::task::JoinSet;
+
+    let max_parallel = options
+        .max_parallel_builds
+        .unwrap_or_else(|| num_cpus::get().min(8));
+
+    let mut join_set = JoinSet::new();
+    let semaphore = Arc::new(Semaphore::new(max_parallel));
+
+    // Spawn tasks with semaphore to limit concurrency
+    for entry in entries.iter() {
+        let entry = entry.clone();
+        let opts = options.clone();
+        let permit = Arc::clone(&semaphore);
+
+        join_set.spawn(async move {
+            // Acquire permit before starting build
+            let _permit = permit
+                .acquire()
+                .await
+                .expect("semaphore closed unexpectedly");
+            let result = build_single_component(&opts, &entry).await;
+            (entry, result)
+        });
+    }
+
+    // Collect results
+    let mut results = Vec::with_capacity(entries.len());
+    while let Some(res) = join_set.join_next().await {
+        match res {
+            Ok(result) => results.push(result),
+            Err(join_err) => {
+                // Task panicked - convert to error
+                let err = crate::Error::Bundler(vec![crate::diagnostics::ExtractedDiagnostic {
+                    kind: crate::diagnostics::DiagnosticKind::Other("PanicDuringBuild".to_string()),
+                    severity: crate::diagnostics::DiagnosticSeverity::Error,
+                    message: format!("Build task panicked: {}", join_err),
+                    file: None,
+                    line: None,
+                    column: None,
+                    help: Some("This is a bug in fob. Please report it.".to_string()),
+                    context: None,
+                    error_chain: Vec::new(),
+                }]);
+                results.push(("unknown".to_string(), Err(err)));
+            }
+        }
+    }
+
+    results
+}
+
+/// Sequential fallback for WASM (single-threaded).
+#[cfg(target_family = "wasm")]
+async fn execute_builds_concurrent(
+    options: &BuildOptions,
+    entries: &[String],
+) -> Vec<(String, Result<AnalyzedBundle>)> {
+    let mut results = Vec::with_capacity(entries.len());
+    for entry in entries {
+        let result = build_single_component(options, entry).await;
+        results.push((entry.clone(), result));
+    }
+    results
+}
+
+/// Merge build results in original entry order for deterministic output.
+fn merge_build_results(
+    results: Vec<(String, Result<AnalyzedBundle>)>,
+    original_order: &[String],
+) -> Result<BuildResult> {
+    // Convert to map for O(1) lookup
+    let mut results_map: FxHashMap<String, Result<AnalyzedBundle>> = results.into_iter().collect();
 
     let mut bundles = FxHashMap::default();
     let merged_graph = fob_graph::ModuleGraph::new()?;
     let mut all_entry_points = Vec::new();
     let mut all_warnings = Vec::new();
     let mut all_errors = Vec::new();
+    let mut build_errors = Vec::new();
     let mut first_cache = None;
     let mut first_trace = None;
     let mut first_asset_registry = None;
 
-    for entry in entries {
-        let analyzed = build_single_component(&options, entry).await?;
+    // Process in original order for determinism
+    for entry in original_order {
         let name = entry_to_name(entry);
 
-        // Merge this component's graph into the accumulated graph
-        let modules = analyzed.analysis.graph.modules()?;
-        let entry_points_set: std::collections::HashSet<_> = analyzed
-            .analysis
-            .graph
-            .entry_points()?
-            .into_iter()
-            .collect();
-        for module in modules {
-            let module_id = module.id.clone();
-            merged_graph.add_module(module)?;
-            // Add entry points from this component
-            if entry_points_set.contains(&module_id) {
-                merged_graph.add_entry_point(module_id.clone())?;
+        match results_map.remove(entry) {
+            Some(Ok(analyzed)) => {
+                // Merge this component's graph into the accumulated graph
+                let modules = analyzed.analysis.graph.modules()?;
+                let entry_points_set: std::collections::HashSet<_> = analyzed
+                    .analysis
+                    .graph
+                    .entry_points()?
+                    .into_iter()
+                    .collect();
+
+                for module in modules {
+                    let module_id = module.id.clone();
+                    merged_graph.add_module(module)?;
+                    if entry_points_set.contains(&module_id) {
+                        merged_graph.add_entry_point(module_id.clone())?;
+                    }
+
+                    let deps = analyzed.analysis.graph.dependencies(&module_id)?;
+                    for dep in deps {
+                        merged_graph.add_dependency(module_id.clone(), dep)?;
+                    }
+                }
+
+                all_entry_points.extend(analyzed.analysis.entry_points);
+                all_warnings.extend(analyzed.analysis.warnings);
+                all_errors.extend(analyzed.analysis.errors);
+
+                if first_cache.is_none() {
+                    first_cache = Some(analyzed.cache);
+                }
+                if first_trace.is_none() {
+                    first_trace = Some(analyzed.trace);
+                }
+                if first_asset_registry.is_none() {
+                    first_asset_registry = analyzed.asset_registry;
+                }
+
+                bundles.insert(name, analyzed.bundle);
             }
-
-            // Merge dependencies for this module
-            let deps = analyzed.analysis.graph.dependencies(&module_id)?;
-            for dep in deps {
-                merged_graph.add_dependency(module_id.clone(), dep)?;
+            Some(Err(e)) => {
+                build_errors.push(format!("{}: {}", entry, e));
+            }
+            None => {
+                build_errors.push(format!("{}: missing result", entry));
             }
         }
+    }
 
-        all_entry_points.extend(analyzed.analysis.entry_points);
-        all_warnings.extend(analyzed.analysis.warnings);
-        all_errors.extend(analyzed.analysis.errors);
-
-        if first_cache.is_none() {
-            first_cache = Some(analyzed.cache);
-        }
-        if first_trace.is_none() {
-            first_trace = Some(analyzed.trace);
-        }
-        if first_asset_registry.is_none() {
-            first_asset_registry = analyzed.asset_registry;
-        }
-
-        bundles.insert(name, analyzed.bundle);
+    // Report collected errors
+    if !build_errors.is_empty() {
+        return Err(crate::Error::InvalidConfig(format!(
+            "Build failed for {} entries:\n{}",
+            build_errors.len(),
+            build_errors.join("\n")
+        )));
     }
 
     let stats = fob_graph::analysis::stats::compute_stats(&merged_graph)?;
@@ -187,84 +305,11 @@ async fn build_single_component(options: &BuildOptions, entry: &str) -> Result<A
         cwd: options.cwd.clone(),
         virtual_files: options.virtual_files.clone(),
         runtime: options.runtime.clone(),
+        cache: options.cache.clone(),
+        incremental: options.incremental.clone(),
     };
 
     execute_bundle(plan).await
-}
-
-/// Execute an app build with code splitting.
-async fn execute_app_build(options: BuildOptions) -> Result<BuildResult> {
-    let entries = match &options.entry {
-        EntryPoints::Multiple(v) => v
-            .iter()
-            .map(|e| EntrySpec {
-                name: None,
-                import: e.clone(),
-            })
-            .collect(),
-        EntryPoints::Named(m) => m
-            .iter()
-            .map(|(name, import)| EntrySpec {
-                name: Some(name.clone()),
-                import: import.clone(),
-            })
-            .collect(),
-        _ => unreachable!("execute_app_build called with single entry"),
-    };
-
-    let mut rolldown_options = configure_rolldown_options(&options);
-    rolldown_options.advanced_chunks = Some(rolldown::AdvancedChunksOptions {
-        min_size: Some(20000.0),                // 20KB minimum chunk size
-        min_share_count: Some(2),               // Shared by at least 2 chunks
-        max_size: None,                         // No maximum chunk size limit
-        min_module_size: None,                  // No minimum module size for splitting
-        max_module_size: None,                  // No maximum module size limit
-        include_dependencies_recursively: None, // Use default behavior
-        groups: Some(vec![]),                   // No custom chunk groups
-    });
-
-    let plan = BundlePlan {
-        entries,
-        options: rolldown_options,
-        plugins: options.plugins.clone(),
-        cwd: options.cwd.clone(),
-        virtual_files: options.virtual_files.clone(),
-        runtime: options.runtime.clone(),
-    };
-
-    let analyzed = execute_bundle(plan).await?;
-    Ok(build_result_from_analyzed(analyzed, BuildOutput::Single))
-}
-
-/// Execute a single bundled entry (not library mode).
-async fn execute_single_bundle(options: BuildOptions) -> Result<BuildResult> {
-    let entry = match &options.entry {
-        EntryPoints::Single(e) => e,
-        _ => unreachable!("execute_single_bundle called with non-single entry"),
-    };
-
-    let rolldown_options = configure_rolldown_options(&options);
-
-    let plan = BundlePlan {
-        entries: vec![EntrySpec {
-            name: None,
-            import: entry.clone(),
-        }],
-        options: rolldown_options,
-        plugins: options.plugins.clone(),
-        cwd: options.cwd.clone(),
-        virtual_files: options.virtual_files.clone(),
-        runtime: options.runtime.clone(),
-    };
-
-    let analyzed = execute_bundle(plan).await?;
-    Ok(build_result_from_analyzed(analyzed, BuildOutput::Single))
-}
-
-/// Execute multiple independent library builds.
-async fn execute_multiple_libraries(options: BuildOptions) -> Result<BuildResult> {
-    // For now, treat this similar to components but without bundling
-    execute_components_build(options).await
 }
 
 /// Configure Rolldown options from BuildOptions.
@@ -276,16 +321,22 @@ fn configure_rolldown_options(options: &BuildOptions) -> BundlerOptions {
     };
 
     // External packages configuration
-    // IMPORTANT: Always set external explicitly - Rolldown treats None differently from Some([])
-    if options.bundle {
-        // Bundle mode: only externalize what user specified (empty = bundle everything)
-        rolldown_options.external = Some(IsExternal::from(options.external.clone()));
-    } else {
-        // Library mode: externalize all bare imports + user additions
-        let mut patterns = vec!["^[^./]".to_string()];
-        patterns.extend(options.external.clone());
-        rolldown_options.external = Some(IsExternal::from(patterns));
-    }
+    rolldown_options.external = Some(match &options.external {
+        ExternalConfig::None => {
+            // Bundle everything: no externals
+            IsExternal::from(vec![])
+        }
+        ExternalConfig::List(packages) => {
+            // Externalize specific packages
+            IsExternal::from(packages.clone())
+        }
+        ExternalConfig::FromManifest(_path) => {
+            // Externalize dependencies from package.json
+            // TODO: Read package.json and extract dependencies/peerDependencies
+            // For now, fall back to externalizing all bare imports
+            IsExternal::from(vec!["^[^./]".to_string()])
+        }
+    });
 
     // Globals for IIFE/UMD
     if !options.globals.is_empty() {
@@ -311,13 +362,10 @@ fn configure_rolldown_options(options: &BuildOptions) -> BundlerOptions {
         rolldown_options.transform = Some(transform);
     }
 
-    // Module resolution with absolute paths for pnpm/monorepo support
-    // Map Platform to ExportConditions (bridge for BuildOptions compatibility)
-    // Note: BuildConfig uses DeploymentTarget directly for better control
+    // Module resolution
     let conditions = match options.platform {
         Platform::Browser => ExportConditions::browser(),
         Platform::Node => ExportConditions::node(),
-        // Default to browser for other platforms
         _ => ExportConditions::browser(),
     };
     rolldown_options.resolve = Some(configure_resolution(
@@ -330,28 +378,15 @@ fn configure_rolldown_options(options: &BuildOptions) -> BundlerOptions {
 }
 
 /// Configure module resolution options.
-///
-/// Uses multiple resolution paths to properly handle pnpm symlinks,
-/// monorepos, and nested package structures. Also configures path aliases
-/// for import resolution (e.g., "@/" -> "./src/").
-///
-/// Uses export conditions from the deployment target to determine which
-/// package.json export conditions to try during module resolution.
-/// This fixes platform-specific resolution issues (e.g., Vercel SSR using
-/// Node.js conditions instead of browser conditions).
 fn configure_resolution(
     cwd: Option<&PathBuf>,
     path_aliases: &FxHashMap<String, String>,
     conditions: &ExportConditions,
 ) -> ResolveOptions {
-    // Use multiple paths for modules to handle different package manager layouts
-    // Walk up parent directories to find node_modules (matches Node.js resolution)
-    // This supports pnpm/yarn/npm workspaces and monorepos
     let modules = if let Some(cwd_path) = cwd {
         let mut paths = vec![];
         let mut current = cwd_path.as_path();
 
-        // Search current and all parent directories for node_modules
         loop {
             paths.push(current.join("node_modules").to_string_lossy().to_string());
 
@@ -361,22 +396,18 @@ fn configure_resolution(
             }
         }
 
-        paths.push("node_modules".to_string()); // Relative fallback
+        paths.push("node_modules".to_string());
         paths
     } else {
         vec!["node_modules".to_string()]
     };
 
-    // Convert path aliases to absolute paths for Rolldown
     let aliases = if !path_aliases.is_empty() {
         Some(convert_aliases_to_absolute(path_aliases, cwd))
     } else {
         None
     };
 
-    // Determine main_fields based on conditions
-    // For Node.js, prefer "main" over "browser"
-    // For browser/edge, prefer "browser" over "main"
     let main_fields = if conditions.contains("node") {
         vec!["module".to_string(), "main".to_string()]
     } else {
@@ -400,21 +431,12 @@ fn configure_resolution(
             ".mdx".to_string(),
         ]),
         modules: Some(modules),
-        symlinks: Some(true), // Follow symlinks (important for pnpm)
+        symlinks: Some(true),
         ..Default::default()
     }
 }
 
 /// Convert path aliases to absolute paths.
-///
-/// Path aliases from tsconfig.json or user configuration are typically relative.
-/// Rolldown requires absolute paths for alias resolution. This function converts
-/// relative paths to absolute paths based on the current working directory.
-///
-/// Example:
-/// - Input: `{"@": "./src", "~": "./lib"}`
-/// - CWD: `/Users/fox/project`
-/// - Output: `{"@": "/Users/fox/project/src", "~": "/Users/fox/project/lib"}`
 fn convert_aliases_to_absolute(
     aliases: &FxHashMap<String, String>,
     cwd: Option<&PathBuf>,
@@ -433,7 +455,6 @@ fn convert_aliases_to_absolute(
                 base_dir.join(target_path)
             };
 
-            // Rolldown expects Vec<Option<String>> for each alias to support multiple targets
             (
                 alias.clone(),
                 vec![Some(absolute_target.to_string_lossy().to_string())],
@@ -446,10 +467,11 @@ fn convert_aliases_to_absolute(
 #[cfg(feature = "dts-generation")]
 fn configure_dts_plugin(
     dts_opts: &crate::builders::unified::DtsOptions,
-    entry: &str,
+    entries: &[EntrySpec],
 ) -> Option<crate::SharedPluginable> {
-    // Auto-detect TypeScript if emit is None
-    let should_emit = dts_opts.emit.unwrap_or_else(|| is_typescript_entry(entry));
+    let should_emit = dts_opts
+        .emit
+        .unwrap_or_else(|| entries.iter().any(|e| is_typescript_entry(&e.import)));
 
     if should_emit {
         let plugin = DtsEmitPlugin::new(

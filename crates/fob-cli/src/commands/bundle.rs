@@ -3,8 +3,7 @@ use std::path::PathBuf;
 use anyhow::{anyhow, Context, Result};
 use console::style;
 use indicatif::{ProgressBar, ProgressStyle};
-use fob_bundler::output::Bundle as LibraryBuild;
-use fob_bundler::library;
+use fob_bundler::{BuildOptions, BuildResult};
 use tokio::fs;
 
 use crate::analysis::AnalysisDocument;
@@ -44,7 +43,7 @@ impl BundleCommand {
         pb.set_message(format!("Bundling {}", entry));
         pb.enable_steady_tick(std::time::Duration::from_millis(120));
 
-        let mut builder = library(&entry);
+        let mut builder = BuildOptions::new_library(&entry);
 
         match self.args.sourcemap {
             SourceMapSetting::File => {
@@ -65,18 +64,18 @@ impl BundleCommand {
             builder = builder.minify_level("identifiers");
         }
 
-        let bundle = builder
-            .bundle()
+        let result = builder
+            .build()
             .await
             .with_context(|| format!("Failed to bundle entry '{}'.", entry))?;
 
         let out_dir = PathBuf::from(&self.args.out_dir);
-        write_assets(&bundle, &out_dir).await?;
+        write_assets(&result, &out_dir).await?;
         pb.finish_and_clear();
 
-        print_summary(&bundle, &out_dir);
+        print_summary(&result, &out_dir);
 
-        let analysis = AnalysisDocument::from_library_bundle(&bundle);
+        let analysis = AnalysisDocument::from_build_result(&result);
 
         if let Some(path) = &self.args.json {
             write_analysis_json(path, &analysis).await?;
@@ -95,12 +94,14 @@ impl BundleCommand {
     }
 }
 
-async fn write_assets(bundle: &LibraryBuild, out_dir: &PathBuf) -> Result<()> {
+async fn write_assets(result: &BuildResult, out_dir: &PathBuf) -> Result<()> {
     fs::create_dir_all(out_dir)
         .await
         .with_context(|| format!("Unable to create output directory '{}'.", out_dir.display()))?;
 
-    for asset in bundle.output().assets.iter() {
+    // Get assets from the build result
+    let bundle = result.output.as_single().expect("single bundle for library build");
+    for asset in bundle.assets.iter() {
         let path = out_dir.join(asset.filename());
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent)
@@ -126,9 +127,9 @@ async fn write_analysis_json(path: &str, analysis: &AnalysisDocument) -> Result<
     Ok(())
 }
 
-fn print_summary(bundle: &LibraryBuild, out_dir: &PathBuf) {
-    let stats = bundle.stats();
-    let cache = bundle.cache();
+fn print_summary(result: &BuildResult, out_dir: &PathBuf) {
+    let stats = result.stats();
+    let cache = result.cache();
 
     println!(
         "{} Bundle complete → {}",

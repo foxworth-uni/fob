@@ -21,7 +21,7 @@ mod decorator_tests {
 
         // Build with modern decorator support enabled
         let result = BuildOptions::new(&fixture)
-            .bundle(false) // Library mode
+            .externalize_from("package.json")
             .decorators(true)
             .cwd(env!("CARGO_MANIFEST_DIR"))
             .runtime(Arc::new(NativeRuntime))

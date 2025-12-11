@@ -79,7 +79,6 @@ impl BuildResult {
     /// # use fob_bundler::BuildOptions;
     /// # async fn example() -> fob_bundler::Result<()> {
     /// let result = BuildOptions::new("./src/main.js")
-    ///     .bundle(false)  // Library mode
     ///     .build()
     ///     .await?;
     /// for chunk in result.chunks() {

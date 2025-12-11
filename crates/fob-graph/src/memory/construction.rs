@@ -45,7 +45,9 @@ impl ModuleGraph {
         let mut pending_modules: Vec<(ModuleId, Module, Vec<PendingImport>)> = Vec::new();
 
         // First pass: create module IDs and identify externals
-        for (path, collected) in &collection.modules {
+        for entry in collection.modules.iter() {
+            let path = entry.key();
+            let collected = entry.value();
             if collected.is_external {
                 continue;
             }
@@ -56,7 +58,9 @@ impl ModuleGraph {
         }
 
         // Second pass: convert modules
-        for (path, collected) in &collection.modules {
+        for entry in collection.modules.iter() {
+            let path = entry.key();
+            let collected = entry.value();
             if collected.is_external {
                 continue;
             }

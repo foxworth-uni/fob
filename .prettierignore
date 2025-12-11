@@ -6,6 +6,12 @@ pkg
 pkg-*
 **/pkg-*
 .turbo
+.next
+out
+.vercel
+coverage
+*.min.js
+*.min.css
 
 # Dependencies
 node_modules

@@ -2,7 +2,6 @@
 //!
 //! These tests verify the actual NAPI bindings work correctly.
 
-use fob_native::types::OutputFormat;
 use fob_native::{BundleConfig, Fob, bundle_single, version};
 use tempfile::TempDir;
 
@@ -28,13 +27,14 @@ async fn test_fob_constructor_with_valid_config() {
     let config = BundleConfig {
         entries: vec!["index.js".to_string()],
         output_dir: Some("dist".to_string()),
-        format: Some(OutputFormat::Esm),
+        format: Some("esm".to_string()),
         sourcemap: Some("external".to_string()),
         cwd: Some(cwd),
         external: None,
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let result = Fob::new(config);
@@ -55,6 +55,7 @@ async fn test_fob_constructor_rejects_empty_entries() {
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = Fob::new(config);
@@ -84,13 +85,14 @@ async fn test_fob_bundle_success() {
     let config = BundleConfig {
         entries: vec!["index.js".to_string()],
         output_dir: Some("dist".to_string()),
-        format: Some(OutputFormat::Esm),
+        format: Some("esm".to_string()),
         sourcemap: Some("external".to_string()),
         cwd: Some(cwd.clone()),
         external: None,
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -116,25 +118,30 @@ async fn test_fob_bundle_with_all_formats() {
     let (_temp, cwd) = create_test_project();
     create_test_file(&cwd, "index.js", "export const hello = 'world';");
 
-    let formats = vec![OutputFormat::Esm, OutputFormat::Cjs, OutputFormat::Iife];
+    let formats = vec!["esm", "cjs", "iife"];
 
     for format in formats {
         let config = BundleConfig {
             entries: vec!["index.js".to_string()],
             output_dir: Some("dist".to_string()),
-            format: Some(format),
+            format: Some(format.to_string()),
             sourcemap: Some("external".to_string()),
             cwd: Some(cwd.clone()),
             external: None,
             minify: None,
             platform: None,
             mdx: None,
+            ..Default::default()
         };
 
         let bundler = Fob::new(config).unwrap();
         let result = bundler.bundle().await;
 
-        assert!(result.is_ok(), "Bundle should succeed for format");
+        assert!(
+            result.is_ok(),
+            "Bundle should succeed for format {}",
+            format
+        );
     }
 }
 
@@ -154,13 +161,14 @@ async fn test_fob_bundle_with_all_sourcemap_modes() {
         let config = BundleConfig {
             entries: vec!["index.js".to_string()],
             output_dir: Some("dist".to_string()),
-            format: Some(OutputFormat::Esm),
+            format: Some("esm".to_string()),
             sourcemap: mode,
             cwd: Some(cwd.clone()),
             external: None,
             minify: None,
             platform: None,
             mdx: None,
+            ..Default::default()
         };
 
         let bundler = Fob::new(config).unwrap();
@@ -179,13 +187,14 @@ async fn test_fob_bundle_multiple_entries() {
     let config = BundleConfig {
         entries: vec!["a.js".to_string(), "b.js".to_string()],
         output_dir: Some("dist".to_string()),
-        format: Some(OutputFormat::Esm),
+        format: Some("esm".to_string()),
         sourcemap: Some("external".to_string()),
         cwd: Some(cwd),
         external: None,
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -207,7 +216,7 @@ async fn test_bundle_single_function() {
     let (_temp, cwd) = create_test_project();
     let entry = create_test_file(&cwd, "index.js", "export const hello = 'world';");
 
-    let result = bundle_single(entry, cwd.clone() + "/dist", Some(OutputFormat::Esm)).await;
+    let result = bundle_single(entry, cwd.clone() + "/dist", Some("esm".to_string())).await;
 
     match &result {
         Ok(bundle_result) => {
@@ -224,10 +233,10 @@ async fn test_bundle_single_with_different_formats() {
     let (_temp, cwd) = create_test_project();
     let entry = create_test_file(&cwd, "index.js", "export const hello = 'world';");
 
-    let formats = vec![
-        Some(OutputFormat::Esm),
-        Some(OutputFormat::Cjs),
-        Some(OutputFormat::Iife),
+    let formats: Vec<Option<String>> = vec![
+        Some("esm".to_string()),
+        Some("cjs".to_string()),
+        Some("iife".to_string()),
         None, // Should default to ESM
     ];
 
@@ -257,13 +266,14 @@ async fn test_fob_bundle_error_serialization() {
     let config = BundleConfig {
         entries: vec!["nonexistent.js".to_string()],
         output_dir: Some("dist".to_string()),
-        format: Some(OutputFormat::Esm),
+        format: Some("esm".to_string()),
         sourcemap: None,
         cwd: Some(cwd),
         external: None,
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = Fob::new(config).unwrap();
@@ -313,6 +323,7 @@ async fn test_fob_bundle_with_defaults() {
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = Fob::new(config).unwrap();

@@ -50,7 +50,7 @@ async fn test_library_auto_detects_typescript_and_generates_dts() {
 
     // Auto-detection should enable .d.ts generation for .ts files
     let result = fob::BuildOptions::new(entry)
-        .bundle(false)
+        .externalize_from("package.json")
         .platform(Platform::Node)
         .emit_dts(true)
         .cwd(project.path())
@@ -86,7 +86,7 @@ async fn test_library_respects_emit_dts_false() {
 
     // Explicitly disable .d.ts generation
     let result = fob::BuildOptions::new(entry)
-        .bundle(false)
+        .externalize_from("package.json")
         .platform(Platform::Node)
         .emit_dts(false)
         .cwd(project.path())
@@ -118,7 +118,7 @@ async fn test_library_explicit_emit_dts_true() {
 
     // Explicitly enable .d.ts generation
     let result = fob::BuildOptions::new(entry)
-        .bundle(false)
+        .externalize_from("package.json")
         .platform(Platform::Node)
         .emit_dts(true)
         .cwd(project.path())
@@ -144,7 +144,7 @@ async fn test_library_strip_internal_declarations() {
 
     // Enable strip_internal
     let result = fob::BuildOptions::new(entry)
-        .bundle(false)
+        .externalize_from("package.json")
         .platform(Platform::Node)
         .emit_dts(true)
         .strip_internal(true)
@@ -180,7 +180,7 @@ async fn test_library_custom_dts_dir() {
 
     // Specify custom .d.ts output directory
     let result = fob::BuildOptions::new(entry)
-        .bundle(false)
+        .externalize_from("package.json")
         .platform(Platform::Node)
         .emit_dts(true)
         .dts_outdir("types")
@@ -225,7 +225,7 @@ async fn test_javascript_entry_no_dts_by_default() {
 
     // JavaScript files should NOT auto-generate .d.ts
     let result = fob::BuildOptions::new(entry)
-        .bundle(false)
+        .externalize_from("package.json")
         .platform(Platform::Node)
         .cwd(dir.path())
         .sourcemap(false)
@@ -272,7 +272,7 @@ export function Button(props: ButtonProps): JSX.Element {
 
     // TSX files should auto-generate .d.ts
     let result = fob::BuildOptions::new(entry)
-        .bundle(false)
+        .externalize_from("package.json")
         .platform(Platform::Node)
         .emit_dts(true)
         .cwd(dir.path())

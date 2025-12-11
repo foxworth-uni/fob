@@ -17,9 +17,8 @@
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let result = fob::BuildOptions::new("./src/index.js")
-//!     .bundle(false)  // Library mode: externalize all dependencies
 //!     .platform(fob::Platform::Node)  // Uses Node.js export conditions
-//!     .external(["react", "react-dom"])
+//!     .externalize(["react", "react-dom"])
 //!     .sourcemap(true)
 //!     .build()
 //!     .await?;
@@ -69,6 +68,7 @@ pub use fob_graph::*;
 
 // Bundler-specific modules
 pub mod builders;
+pub mod cache;
 pub mod config;
 pub mod output;
 pub mod plugins;
@@ -107,8 +107,10 @@ pub use rolldown_plugin::{
 
 // Re-export bundler APIs
 pub use builders::{
-    BuildOptions, BuildOutput, BuildResult, EntryPoints, MinifyLevel, build, plugin,
+    BuildOptions, BuildOutput, BuildResult, CodeSplittingConfig, EntryMode, EntryPoints,
+    ExternalConfig, IncrementalConfig, MinifyLevel, build, plugin,
 };
+pub use cache::{CacheConfig, CacheKey};
 pub use config::{
     BuildConfig, ExternalPattern, OptimizationConfig, OutputConfig, ResolutionConfig,
 };

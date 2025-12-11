@@ -1,0 +1,7 @@
+{
+  "name": "fob-ruby-simple-example",
+  "version": "1.0.0",
+  "description": "Simple example demonstrating Fob bundler Ruby bindings",
+  "private": true,
+  "type": "module"
+}

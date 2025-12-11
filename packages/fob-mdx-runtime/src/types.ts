@@ -49,7 +49,7 @@ export interface MDXComponents {
   CodeBlock?: ComponentType<CodeBlockProps>;
 
   // Custom components (user-defined)
-  [componentName: string]: ComponentType<any> | undefined;
+  custom?: Record<string, ComponentType<unknown>>;
 }
 
 /**

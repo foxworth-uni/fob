@@ -230,7 +230,12 @@ async fn test_walk_marks_entry_points() {
     let collection = walker.walk(runtime).await.unwrap();
 
     assert_eq!(collection.entry_points.len(), 1);
-    assert!(collection.entry_points[0].contains("index.ts"));
+    assert!(
+        collection
+            .entry_points
+            .iter()
+            .any(|ep| ep.key().contains("index.ts"))
+    );
 }
 
 #[tokio::test]

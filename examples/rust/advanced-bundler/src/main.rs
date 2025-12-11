@@ -48,13 +48,12 @@ async fn main() -> Result<()> {
     println!("📦 Building ESM bundle with code splitting...");
 
     let esm_result = BuildOptions::new_multiple(["input/app.js", "input/worker.js"])
-        .bundle(true)
         .runtime(runtime.clone())
         .outdir("output/esm")
         .format(OutputFormat::Esm)
-        .external(["lodash"]) // Don't bundle lodash (assume it's from CDN or npm)
+        .externalize(["lodash"]) // Don't bundle lodash (assume it's from CDN or npm)
         .path_alias("@lib", "./input/lib") // Use @lib/ instead of ./lib/
-        .splitting(true) // Enable code splitting
+        // new_app() enables code splitting with OutputStructure::Unified
         .sourcemap(true)
         .minify_level("identifiers")
         .build()
@@ -74,8 +73,7 @@ async fn main() -> Result<()> {
     // =========================================================================
     println!("📦 Building CommonJS bundle for Node.js...");
 
-    let cjs_result = BuildOptions::new_multiple(["input/app.js"])
-        .bundle(true)
+    let cjs_result = BuildOptions::new("input/app.js")
         .runtime(runtime.clone())
         .outdir("output/cjs")
         .format(OutputFormat::Cjs)
@@ -99,8 +97,7 @@ async fn main() -> Result<()> {
     // =========================================================================
     println!("📦 Building IIFE bundle for browsers...");
 
-    let iife_result = BuildOptions::new_multiple(["input/app.js"])
-        .bundle(true)
+    let iife_result = BuildOptions::new("input/app.js")
         .runtime(runtime)
         .outdir("output/iife")
         .format(OutputFormat::Iife)

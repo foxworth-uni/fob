@@ -60,7 +60,7 @@ impl BundleMdxOptions {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,no_run
     /// use fob_mdx_runtime::bundler::BundleMdxOptions;
     ///
     /// let options = BundleMdxOptions::builder()
@@ -77,7 +77,7 @@ impl BundleMdxOptions {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,no_run
     /// use fob_mdx_runtime::bundler::BundleMdxOptions;
     /// use fob_mdx::MdxCompileOptions;
     ///

@@ -58,16 +58,14 @@ pub fn mdast_to_jsx_with_options(root: &Node, options: &crate::MdxOptions) -> Re
     let mut jsx_elements = Vec::new();
     let mut ctx = CodegenContext::new();
 
-    // NOTE: For remote MDX, we don't import useMDXComponents here
-    // because MDXRemote handles all component resolution.
-    // These imports would cause Server Component boundary issues.
-
-    // imports.push(
-    //     "import {useMDXComponents as _provideComponents} from '@fob/mdx-runtime';".to_string(),
-    // );
-    // imports.push(
-    //     "import {useTaskListContext as _useTaskListContext} from '@fob/mdx-runtime';".to_string(),
-    // );
+    // Add provider import if configured (MDX v3 pattern)
+    // This allows frameworks like Gumbo to inject component customization at compile time
+    if let Some(ref source) = options.provider_import_source {
+        imports.push(format!(
+            "import {{useMDXComponents as _provideComponents}} from '{}';",
+            source
+        ));
+    }
 
     if let Node::Root(root_node) = &cleaned_root {
         for child in &root_node.children {
@@ -150,16 +148,32 @@ pub fn mdast_to_jsx_with_options(root: &Node, options: &crate::MdxOptions) -> Re
     // Data props destructuring (empty since providers are removed)
     let data_props_destructure = String::new();
 
-    // Build MDXContent function body (shared between formats)
-    let mdx_content_body = format!(
-        r#"function MDXContent({{components: _cProp = {{}}, _dataProps = {{}}, ...props}}) {{{data_props}
-  const _components = Object.assign({{
+    // Component merge: when provider is configured, merge provider components between defaults and props
+    // Order: defaults < _provideComponents() < props.components (later wins)
+    let component_merge = if options.provider_import_source.is_some() {
+        // With provider: merge defaults + provider + props
+        r#"const _components = Object.assign({
     h1: "h1", h2: "h2", h3: "h3", h4: "h4", h5: "h5", h6: "h6",
     p: "p", a: "a", strong: "strong", em: "em", code: "code", pre: "pre",
     blockquote: "blockquote", ul: "ul", ol: "ol", li: "li",
     table: "table", thead: "thead", tbody: "tbody", tr: "tr", th: "th", td: "td",
     hr: "hr", br: "br", img: "img", del: "del", div: "div", span: "span", sup: "sup", input: "input"
-  }}, _cProp);
+  }, _provideComponents(), _cProp);"#
+    } else {
+        // Without provider: just merge defaults + props
+        r#"const _components = Object.assign({
+    h1: "h1", h2: "h2", h3: "h3", h4: "h4", h5: "h5", h6: "h6",
+    p: "p", a: "a", strong: "strong", em: "em", code: "code", pre: "pre",
+    blockquote: "blockquote", ul: "ul", ol: "ol", li: "li",
+    table: "table", thead: "thead", tbody: "tbody", tr: "tr", th: "th", td: "td",
+    hr: "hr", br: "br", img: "img", del: "del", div: "div", span: "span", sup: "sup", input: "input"
+  }, _cProp);"#
+    };
+
+    // Build MDXContent function body (shared between formats)
+    let mdx_content_body = format!(
+        r#"function MDXContent({{components: _cProp = {{}}, _dataProps = {{}}, ...props}}) {{{data_props}
+  {component_merge}
   const _taskListCtx = null; // Task list context disabled for now
   const _handleTaskToggle = (e) => {{
     const taskId = e.target.getAttribute('data-task-id');
@@ -170,6 +184,7 @@ pub fn mdast_to_jsx_with_options(root: &Node, options: &crate::MdxOptions) -> Re
   return {content};
 }}"#,
         data_props = data_props_destructure,
+        component_merge = component_merge,
         content = content
     );
 

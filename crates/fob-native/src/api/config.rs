@@ -1,6 +1,6 @@
 //! Bundle configuration types
 
-use crate::types::OutputFormat;
+use crate::api::primitives::CodeSplittingConfig;
 use napi_derive::napi;
 
 /// MDX compilation options
@@ -29,19 +29,18 @@ pub struct MdxOptions {
 
 /// Bundle configuration
 #[napi(object)]
+#[derive(Debug, Clone, Default)]
 pub struct BundleConfig {
     /// Entry points to bundle
     pub entries: Vec<String>,
     /// Output directory (defaults to "dist" if not provided)
     pub output_dir: Option<String>,
-    /// Output format ("esm" | "cjs" | "iife")
-    pub format: Option<OutputFormat>,
+    /// Output format: "esm" | "cjs" | "iife" (case-insensitive, default: "esm")
+    pub format: Option<String>,
     /// Source map generation mode
     /// Accepts: "true", "false", "external", "inline", "hidden"
     /// Default: disabled (no source maps)
     pub sourcemap: Option<String>,
-    /// Packages to externalize (not bundled)
-    pub external: Option<Vec<String>>,
     /// Target platform ("browser" | "node", default: "browser")
     pub platform: Option<String>,
     /// Enable minification (default: false)
@@ -51,6 +50,24 @@ pub struct BundleConfig {
     /// MDX compilation options
     /// If None, MDX is auto-enabled when .mdx entries are detected
     pub mdx: Option<MdxOptions>,
+
+    // === Composable Primitives ===
+    /// Entry mode: "shared" | "isolated" (case-insensitive, default: "shared")
+    /// - shared: Entries can share chunks
+    /// - isolated: Each entry stands alone
+    pub entry_mode: Option<String>,
+    /// Code splitting configuration
+    /// - None/undefined: No code splitting
+    /// - Object: Enable code splitting with specified thresholds
+    pub code_splitting: Option<CodeSplittingConfig>,
+    /// External packages (simplified for JS)
+    /// - None/undefined: Bundle everything
+    /// - Array: Externalize specific packages
+    pub external: Option<Vec<String>>,
+    /// Externalize dependencies from package.json manifest
+    /// - true: Read dependencies/peerDependencies from package.json
+    /// - false/undefined: Use explicit external list or bundle all
+    pub external_from_manifest: Option<bool>,
 }
 
 // Note: Builder pattern is not exposed via NAPI due to limitations with moving self.

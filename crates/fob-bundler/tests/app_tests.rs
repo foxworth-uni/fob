@@ -54,8 +54,8 @@ async fn app_builder_produces_analysis_bundle() {
         project.path().join("src/main.js"),
         project.path().join("src/dashboard.js"),
     ])
-    .bundle(true)
-    .splitting(true)
+    .bundle_together()
+    .with_code_splitting()
     .cwd(project.path())
     .runtime(Arc::new(NativeRuntime::new()))
     .build()

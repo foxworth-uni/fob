@@ -39,6 +39,7 @@ async fn test_core_bundler_without_napi() {
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = CoreBundler::new(config).unwrap();
@@ -67,7 +68,6 @@ async fn test_single_entry_bundle() {
     // Build
     let runtime = Arc::new(NativeRuntime::new(cwd.clone()).unwrap());
     let result = BuildOptions::new(entry)
-        .bundle(false)
         .cwd(cwd)
         .runtime(runtime)
         .build()
@@ -94,7 +94,6 @@ async fn test_multiple_entry_bundle() {
 
     let runtime = Arc::new(NativeRuntime::new(cwd.clone()).unwrap());
     let result = BuildOptions::new_multiple(vec![cwd.join("a.js"), cwd.join("b.js")])
-        .bundle(false)
         .cwd(cwd)
         .runtime(runtime)
         .build()
@@ -116,7 +115,6 @@ async fn test_bundle_with_sourcemap() {
 
     let runtime = Arc::new(NativeRuntime::new(cwd.clone()).unwrap());
     let result = BuildOptions::new(entry)
-        .bundle(false)
         .cwd(cwd)
         .sourcemap(true)
         .runtime(runtime)
@@ -150,7 +148,6 @@ async fn test_bundle_different_formats() {
     for format in formats {
         let runtime = Arc::new(NativeRuntime::new(cwd.clone()).unwrap());
         let result = BuildOptions::new(entry.clone())
-            .bundle(false)
             .cwd(cwd.clone())
             .format(format)
             .runtime(runtime)
@@ -177,9 +174,8 @@ async fn test_bundle_with_external_dependencies() {
 
     let runtime = Arc::new(NativeRuntime::new(cwd.clone()).unwrap());
     let result = BuildOptions::new(entry)
-        .bundle(false)
         .cwd(cwd)
-        .external(vec!["external".to_string()])
+        .externalize(["external"])
         .runtime(runtime)
         .build()
         .await;

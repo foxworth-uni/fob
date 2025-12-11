@@ -1,21 +1,24 @@
-//! Rolldown plugin implementation for Tailwind CSS.
+//! Rolldown plugin implementation for Tailwind CSS v4.
 //!
-//! This module provides a Rolldown plugin that integrates Tailwind CSS processing
+//! This module provides a Rolldown plugin that integrates Tailwind CSS v4 processing
 //! into the Rolldown bundler pipeline. It uses the `load` hook to intercept
-//! `.css` files with `@tailwind` directives and process them using the Tailwind CLI.
+//! `.css` files with Tailwind v4 `@import "tailwindcss"` syntax and process them
+//! using the Tailwind CLI.
 //!
 //! ## Architecture
 //!
 //! ```text
-//! CSS file → load() → contains @tailwind? → YES → process with CLI (file path) → CSS
+//! CSS file → load() → detect syntax → v3? → ERROR (not supported)
 //!                                   ↓
-//!                                   NO → skip (let other plugins handle)
+//!                                  v4? → YES → process with CLI (file path) → CSS
+//!                                   ↓
+//!                                  NO → skip (let other plugins handle)
 //! ```
 //!
 //! ## Plugin Order
 //!
 //! This plugin should be registered BEFORE the CSS plugin so it can claim
-//! `@tailwind` files. Files without `@tailwind` directives fall through to
+//! Tailwind v4 files. Files without Tailwind syntax fall through to
 //! the CSS plugin for processing with lightningcss.
 //!
 //! ## Example Usage
@@ -39,6 +42,7 @@ use fob_bundler::{
     FobPlugin, HookLoadArgs, HookLoadOutput, HookLoadReturn, ModuleType, Plugin, PluginContext,
     PluginPhase, Runtime,
 };
+use regex::Regex;
 use std::borrow::Cow;
 use std::path::Path;
 use std::sync::Arc;
@@ -53,12 +57,67 @@ pub use config::TailwindConfig;
 pub use error::GeneratorError;
 pub use generator::{PackageManager, TailwindGenerator};
 
-/// Rolldown plugin that processes Tailwind CSS
+/// Result of detecting Tailwind syntax in CSS content
+#[derive(Debug, PartialEq)]
+enum TailwindDetection {
+    /// No Tailwind syntax detected
+    None,
+    /// Tailwind CSS v3 syntax detected (not supported)
+    V3(Vec<String>),
+    /// Tailwind CSS v4 syntax detected (supported)
+    V4,
+}
+
+/// Detect Tailwind CSS syntax in CSS content
+///
+/// This function checks for both v3 and v4 syntax patterns:
+/// - v3: `@tailwind base|components|utilities|variants`
+/// - v4: `@import "tailwindcss"` or `@import "tailwindcss/utilities"`
+///
+/// Detection order is important: we check for v3 first to provide
+/// helpful migration guidance if unsupported syntax is found.
+fn detect_tailwind_syntax(content: &str) -> TailwindDetection {
+    // Lazy static patterns using regex
+    // We use lazy initialization to compile regex patterns once
+    use std::sync::OnceLock;
+
+    static V3_PATTERN: OnceLock<Regex> = OnceLock::new();
+    static V4_PATTERN: OnceLock<Regex> = OnceLock::new();
+
+    // v3 pattern: @tailwind followed by whitespace and one of the layer names
+    let v3_re = V3_PATTERN
+        .get_or_init(|| Regex::new(r"@tailwind\s+(base|components|utilities|variants)").unwrap());
+
+    // v4 pattern: @import "tailwindcss" or @import "tailwindcss/utilities"
+    let v4_re = V4_PATTERN
+        .get_or_init(|| Regex::new(r#"@import\s+["']tailwindcss(?:/[a-z]+)?["']"#).unwrap());
+
+    // Check v3 FIRST - we want to reject unsupported syntax early
+    let v3_matches: Vec<String> = v3_re
+        .captures_iter(content)
+        .map(|cap| format!("@tailwind {}", &cap[1]))
+        .collect();
+
+    if !v3_matches.is_empty() {
+        return TailwindDetection::V3(v3_matches);
+    }
+
+    // Check v4 syntax
+    if v4_re.is_match(content) {
+        return TailwindDetection::V4;
+    }
+
+    // No Tailwind syntax found
+    TailwindDetection::None
+}
+
+/// Rolldown plugin that processes Tailwind CSS v4
 ///
 /// This plugin:
-/// 1. Scans for CSS files with `@tailwind` directives.
-/// 2. Invokes the Tailwind CSS CLI to process them, which handles content
-///    scanning and CSS generation based on the project's `tailwind.config.js`.
+/// 1. Scans for CSS files with Tailwind v4 `@import "tailwindcss"` syntax.
+/// 2. Rejects Tailwind v3 `@tailwind` directives with a helpful migration message.
+/// 3. Invokes the Tailwind CSS CLI to process v4 files, which handles content
+///    scanning and CSS generation based on the project's configuration.
 #[derive(Clone, Debug)]
 pub struct FobTailwindPlugin {
     /// Configuration options for Tailwind CSS
@@ -216,14 +275,16 @@ impl Plugin for FobTailwindPlugin {
         fob_bundler::HookUsage::Load
     }
 
-    /// Load hook - processes CSS files with `@tailwind` directives.
+    /// Load hook - processes CSS files with Tailwind v4 syntax.
     ///
     /// This hook runs BEFORE the CSS plugin's load hook (if registered first).
-    /// It peeks at CSS files and claims those with `@tailwind` directives,
-    /// processing them directly with the Tailwind CLI using the file path.
+    /// It peeks at CSS files and:
+    /// - Claims those with v4 `@import "tailwindcss"` syntax for processing
+    /// - Rejects those with v3 `@tailwind` directives (returns error)
+    /// - Skips files without Tailwind syntax (allows fallthrough to CSS plugin)
     ///
-    /// Files without `@tailwind` directives are skipped (return None),
-    /// allowing them to fall through to the CSS plugin.
+    /// Files with v4 syntax are processed directly with the Tailwind CLI
+    /// using the file path.
     fn load(
         &self,
         _ctx: &PluginContext,
@@ -239,7 +300,7 @@ impl Plugin for FobTailwindPlugin {
                 return Ok(None);
             }
 
-            // Peek at file to check for @tailwind directives using Runtime
+            // Peek at file to detect Tailwind syntax using Runtime
             let file_path = std::path::Path::new(&id);
             let content = match runtime.read_file(file_path).await {
                 Ok(bytes) => match String::from_utf8(bytes) {
@@ -249,12 +310,22 @@ impl Plugin for FobTailwindPlugin {
                 Err(_) => return Ok(None), // Let other plugins handle if we can't read
             };
 
-            if !content.contains("@tailwind") {
-                // No @tailwind directives - let CSS plugin handle it
-                return Ok(None);
+            // Detect Tailwind syntax version
+            match detect_tailwind_syntax(&content) {
+                TailwindDetection::None => {
+                    // No Tailwind syntax - let CSS plugin handle it
+                    return Ok(None);
+                }
+                TailwindDetection::V3(directives) => {
+                    // v3 syntax not supported - return helpful error
+                    let error = GeneratorError::v3_not_supported(id.clone(), directives);
+                    return Err(error.into());
+                }
+                TailwindDetection::V4 => {
+                    // v4 syntax detected - proceed with processing
+                    debug!("[fob-tailwind] Loading Tailwind v4 CSS file: {}", id);
+                }
             }
-
-            debug!("[fob-tailwind] Loading @tailwind CSS file: {}", id);
 
             // Process with Tailwind CLI using FILE PATH (not stdin)
             let path = std::path::PathBuf::from(&id);
@@ -333,5 +404,178 @@ mod tests {
 
         assert_eq!(config.package_manager, Some("pnpm".to_string()));
         assert!(config.minify);
+    }
+
+    // Tailwind syntax detection tests
+
+    #[test]
+    fn test_detects_v4_import_syntax() {
+        let css = r#"
+            @import "tailwindcss";
+
+            .my-class {
+                color: red;
+            }
+        "#;
+
+        assert_eq!(detect_tailwind_syntax(css), TailwindDetection::V4);
+    }
+
+    #[test]
+    fn test_detects_v4_granular_imports() {
+        let test_cases = vec![
+            r#"@import "tailwindcss/utilities";"#,
+            r#"@import "tailwindcss/base";"#,
+            r#"@import "tailwindcss/components";"#,
+            r#"@import 'tailwindcss/utilities';"#, // single quotes
+            r#"
+                @import "tailwindcss/base";
+                @import "tailwindcss/utilities";
+            "#,
+        ];
+
+        for css in test_cases {
+            assert_eq!(
+                detect_tailwind_syntax(css),
+                TailwindDetection::V4,
+                "Failed to detect v4 syntax in: {}",
+                css
+            );
+        }
+    }
+
+    #[test]
+    fn test_rejects_v3_directives() {
+        let css = r#"
+            @tailwind base;
+            @tailwind components;
+            @tailwind utilities;
+
+            .my-class {
+                color: red;
+            }
+        "#;
+
+        match detect_tailwind_syntax(css) {
+            TailwindDetection::V3(directives) => {
+                assert_eq!(directives.len(), 3);
+                assert!(directives.contains(&"@tailwind base".to_string()));
+                assert!(directives.contains(&"@tailwind components".to_string()));
+                assert!(directives.contains(&"@tailwind utilities".to_string()));
+            }
+            other => panic!("Expected V3 detection, got: {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_rejects_v3_single_directive() {
+        let css = r#"
+            @tailwind utilities;
+        "#;
+
+        match detect_tailwind_syntax(css) {
+            TailwindDetection::V3(directives) => {
+                assert_eq!(directives.len(), 1);
+                assert_eq!(directives[0], "@tailwind utilities");
+            }
+            other => panic!("Expected V3 detection, got: {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_rejects_v3_variants() {
+        let css = r#"
+            @tailwind base;
+            @tailwind variants;
+        "#;
+
+        match detect_tailwind_syntax(css) {
+            TailwindDetection::V3(directives) => {
+                assert_eq!(directives.len(), 2);
+                assert!(directives.contains(&"@tailwind base".to_string()));
+                assert!(directives.contains(&"@tailwind variants".to_string()));
+            }
+            other => panic!("Expected V3 detection, got: {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_no_tailwind_returns_none() {
+        let css = r#"
+            .my-class {
+                color: red;
+                font-size: 16px;
+            }
+
+            @media (min-width: 768px) {
+                .my-class {
+                    font-size: 20px;
+                }
+            }
+        "#;
+
+        assert_eq!(detect_tailwind_syntax(css), TailwindDetection::None);
+    }
+
+    #[test]
+    fn test_no_tailwind_with_other_imports() {
+        let css = r#"
+            @import "normalize.css";
+            @import url("https://fonts.googleapis.com/css2?family=Inter");
+
+            .my-class {
+                color: red;
+            }
+        "#;
+
+        assert_eq!(detect_tailwind_syntax(css), TailwindDetection::None);
+    }
+
+    #[test]
+    fn test_v3_takes_precedence_over_v4() {
+        // Edge case: if someone has both v3 and v4 syntax (migration in progress),
+        // we should detect v3 first and error
+        let css = r#"
+            @tailwind base;
+            @import "tailwindcss";
+        "#;
+
+        match detect_tailwind_syntax(css) {
+            TailwindDetection::V3(directives) => {
+                assert_eq!(directives.len(), 1);
+                assert_eq!(directives[0], "@tailwind base");
+            }
+            other => panic!("Expected V3 detection to take precedence, got: {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_whitespace_handling() {
+        let test_cases = vec![
+            "@tailwind   base;",
+            "@tailwind\tcomponents;",
+            "@tailwind\nutilities;",
+            "@import  \"tailwindcss\";",
+            "@import\t\"tailwindcss/utilities\";",
+        ];
+
+        for css in &test_cases[..3] {
+            // v3 cases
+            assert!(
+                matches!(detect_tailwind_syntax(css), TailwindDetection::V3(_)),
+                "Failed to detect v3 with whitespace: {}",
+                css
+            );
+        }
+
+        for css in &test_cases[3..] {
+            // v4 cases
+            assert_eq!(
+                detect_tailwind_syntax(css),
+                TailwindDetection::V4,
+                "Failed to detect v4 with whitespace: {}",
+                css
+            );
+        }
     }
 }

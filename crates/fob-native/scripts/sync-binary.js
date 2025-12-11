@@ -83,7 +83,7 @@ const findPnpmLocations = (dir, depth = 0) => {
         }
       }
     }
-  } catch (err) {
+  } catch {
     // Ignore permission errors
   }
 };
@@ -113,7 +113,7 @@ if (fs.existsSync(rootPnpmDir)) {
         }
       }
     }
-  } catch (err) {
+  } catch {
     // Ignore errors
   }
 }

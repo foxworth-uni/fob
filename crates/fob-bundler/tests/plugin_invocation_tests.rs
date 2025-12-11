@@ -51,7 +51,7 @@ const code = "block";
         let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new(temp_dir.path()));
 
         let result = BuildOptions::new(temp_dir.path().join("entry.tsx"))
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .cwd(temp_dir.path())
             .runtime(Arc::clone(&runtime))
@@ -118,7 +118,7 @@ const code = "block";
 
         // Use virtual: prefix consistently for imports
         let result = BuildOptions::new("virtual:entry.js")
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .virtual_file(
                 "virtual:entry.js",
@@ -159,7 +159,7 @@ const code = "block";
         .expect("write entry");
 
         let result = BuildOptions::new(temp_dir.path().join("entry.tsx"))
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .cwd(temp_dir.path())
             // NOTE: NO MDX plugin registered!
@@ -223,7 +223,7 @@ Some **content** here.
         let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new(temp_dir.path()));
 
         let result = BuildOptions::new(temp_dir.path().join("entry.tsx"))
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .cwd(temp_dir.path())
             .runtime(Arc::clone(&runtime))
@@ -279,7 +279,6 @@ Some **content** here.
 
         // Test with CSS before MDX
         let result1 = BuildOptions::new(temp_dir.path().join("entry.tsx"))
-            .bundle(false)
             .platform(Platform::Node)
             .cwd(temp_dir.path())
             .runtime(Arc::clone(&runtime1))
@@ -293,7 +292,6 @@ Some **content** here.
 
         // Test with MDX before CSS
         let result2 = BuildOptions::new(temp_dir.path().join("entry.tsx"))
-            .bundle(false)
             .platform(Platform::Node)
             .cwd(temp_dir.path())
             .runtime(Arc::clone(&runtime2))

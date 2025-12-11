@@ -121,7 +121,13 @@ fn jsx_element_to_string(
                     Some(markdown::mdast::AttributeValue::Expression(expr)) => expr.value.clone(),
                     None => "true".to_string(),
                 };
-                props.push(format!("{}: {}", prop_name, prop_value));
+                // Quote prop names that aren't valid JS identifiers (kebab-case, etc.)
+                let key = if is_valid_js_identifier(prop_name) {
+                    prop_name.clone()
+                } else {
+                    format!("\"{}\"", escape_js_string(prop_name))
+                };
+                props.push(format!("{}: {}", key, prop_value));
             }
             markdown::mdast::AttributeContent::Expression(expr) => {
                 // Spread expression

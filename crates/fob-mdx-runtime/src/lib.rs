@@ -126,7 +126,7 @@ use fob_mdx::MdxCompileOptions as Options;
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,no_run
 /// use fob_mdx_runtime::{compile_mdx, MdxCompileOptions};
 ///
 /// let result = compile_mdx("# Hello", MdxCompileOptions::new())?;

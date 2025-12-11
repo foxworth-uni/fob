@@ -1,6 +1,11 @@
 //! Unified build API for the Fob bundler.
 //!
-//! This module provides a single, flexible configuration-based API for all bundling operations.
+//! This module provides a configuration-based API for all bundling operations
+//! using three orthogonal primitives:
+//!
+//! 1. **EntryMode**: Shared (entries can share chunks) vs Isolated (independent bundles)
+//! 2. **CodeSplittingConfig**: Code splitting configuration (Option = on/off)
+//! 3. **ExternalConfig**: External dependencies (None, List, FromManifest)
 //!
 //! # Examples
 //!
@@ -8,24 +13,31 @@
 //! use fob_bundler::BuildOptions;
 //!
 //! # async fn example() -> fob_bundler::Result<()> {
-//! // Bundle a single file with all dependencies (app/component)
+//! // Single entry standalone bundle
 //! let result = BuildOptions::new("./src/index.js")
-//!     .bundle(true)
+//!     .outfile("dist/bundle.js")
 //!     .build()
 //!     .await?;
 //!
 //! // Library: externalize dependencies
 //! let result = BuildOptions::new("./src/index.ts")
-//!     .bundle(false)
+//!     .externalize_from("package.json")
 //!     .platform(fob_bundler::Platform::Node)
-//!     .external(["react", "react-dom"])
+//!     .outfile("dist/index.js")
 //!     .build()
 //!     .await?;
 //!
 //! // App with code splitting
 //! let result = BuildOptions::new_multiple(["./src/main.js", "./src/admin.js"])
-//!     .bundle(true)
-//!     .splitting(true)
+//!     .bundle_together()
+//!     .with_code_splitting()
+//!     .outdir("dist")
+//!     .build()
+//!     .await?;
+//!
+//! // Component library: separate independent bundles
+//! let result = BuildOptions::new_multiple(["./src/Button.tsx", "./src/Card.tsx"])
+//!     .bundle_separately()
 //!     .outdir("dist")
 //!     .build()
 //!     .await?;
@@ -39,6 +51,7 @@ mod entry;
 mod minify;
 mod options;
 mod output;
+pub mod primitives;
 
 use crate::Result;
 
@@ -48,6 +61,7 @@ pub use entry::EntryPoints;
 pub use minify::MinifyLevel;
 pub use options::BuildOptions;
 pub use output::{BuildOutput, BuildResult};
+pub use primitives::{CodeSplittingConfig, EntryMode, ExternalConfig, IncrementalConfig};
 
 /// Execute a build with the given options.
 ///
@@ -62,15 +76,13 @@ pub use output::{BuildOutput, BuildResult};
 /// # async fn example() -> fob_bundler::Result<()> {
 /// // Using builder pattern
 /// let result = BuildOptions::new("./src/index.js")
-///     .bundle(false)
-///     .external(["react", "react-dom"])
+///     .externalize(["react", "react-dom"])
 ///     .build()
 ///     .await?;
 ///
 /// // Or construct directly
 /// let result = build(BuildOptions {
 ///     entry: fob_bundler::EntryPoints::Single("./src/index.js".into()),
-///     bundle: false,
 ///     ..Default::default()
 /// }).await?;
 /// # Ok(())

@@ -21,14 +21,21 @@ rustc-hash.workspace = true
 serde_json.workspace = true
 regex.workspace = true
 memchr.workspace = true
+dashmap.workspace = true
+bincode = { version = "2.0.1", features = ["serde"] }
 
-# Asset handling dependencies
+# OXC ecosystem - re-exported for upstream consumers
 oxc_parser.workspace = true
 oxc_ast.workspace = true
 oxc_ast_visit.workspace = true
 oxc_allocator.workspace = true
 oxc_span.workspace = true
 oxc_semantic.workspace = true
+oxc_codegen.workspace = true
+oxc_minifier.workspace = true
+oxc_transformer.workspace = true
+oxc_traverse.workspace = true
+oxc_isolated_declarations.workspace = true
 parking_lot.workspace = true
 
 # Platform-specific dependencies for native runtime

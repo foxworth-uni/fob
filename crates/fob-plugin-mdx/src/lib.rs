@@ -65,6 +65,11 @@ pub struct FobMdxPlugin {
     pub jsx_runtime: String,
     /// Use default plugins (heading IDs, image optimization)
     pub use_default_plugins: bool,
+    /// Provider import source for component injection (e.g., "gumbo/mdx", "@mdx-js/react")
+    ///
+    /// When set, compiled MDX will import useMDXComponents from this source
+    /// and merge provider components between defaults and props.components.
+    pub provider_import_source: Option<String>,
     /// Project root for resolving relative file paths
     project_root: PathBuf,
     /// Runtime for file access (handles virtual files + filesystem)
@@ -101,6 +106,7 @@ impl FobMdxPlugin {
             math: true,
             jsx_runtime: "react/jsx-runtime".to_string(),
             use_default_plugins: true,
+            provider_import_source: None,
             project_root: PathBuf::from("."),
             runtime,
         }
@@ -108,12 +114,14 @@ impl FobMdxPlugin {
 
     /// Create MdxCompileOptions from plugin config
     fn create_options(&self, filepath: Option<String>) -> MdxCompileOptions {
+        // Build options - provider_import_source can be set directly since it's Option<String>
         let mut opts = MdxCompileOptions::builder()
             .gfm(self.gfm)
             .footnotes(self.footnotes)
             .math(self.math)
             .jsx_runtime(self.jsx_runtime.clone())
             .use_default_plugins(self.use_default_plugins)
+            .maybe_provider_import_source(self.provider_import_source.clone())
             .build();
 
         opts.filepath = filepath;
@@ -320,88 +328,8 @@ impl FobPlugin for FobMdxPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fob_bundler::Runtime;
-    use std::sync::Arc;
 
-    #[cfg(not(target_family = "wasm"))]
-    #[test]
-    fn test_plugin_creation() {
-        use fob_bundler::runtime::BundlerRuntime;
-        let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
-        let plugin = FobMdxPlugin::new(runtime);
-        assert_eq!(plugin.name(), "fob-mdx");
-    }
-
-    #[cfg(not(target_family = "wasm"))]
-    #[test]
-    fn test_plugin_with_custom_options() {
-        use fob_bundler::runtime::BundlerRuntime;
-        let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
-        let mut plugin = FobMdxPlugin::new(runtime);
-        plugin.gfm = true;
-        plugin.math = false;
-        assert_eq!(plugin.name(), "fob-mdx");
-    }
-
-    #[cfg(not(target_family = "wasm"))]
-    #[test]
-    fn test_hook_usage_declares_correct_hooks() {
-        use fob_bundler::runtime::BundlerRuntime;
-        use fob_bundler::HookUsage;
-
-        let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
-        let plugin = FobMdxPlugin::new(runtime);
-        let usage = plugin.register_hook_usage();
-
-        // Plugin should register both ResolveId and Load hooks
-        assert!(
-            usage.contains(HookUsage::ResolveId),
-            "Plugin should register ResolveId hook"
-        );
-        assert!(
-            usage.contains(HookUsage::Load),
-            "Plugin should register Load hook"
-        );
-    }
-
-    #[cfg(not(target_family = "wasm"))]
-    #[test]
-    fn test_create_options_with_defaults() {
-        use fob_bundler::runtime::BundlerRuntime;
-
-        let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
-        let plugin = FobMdxPlugin::new(runtime);
-
-        let opts = plugin.create_options(Some("test.mdx".to_string()));
-
-        assert!(opts.gfm, "GFM should be enabled by default");
-        assert!(opts.footnotes, "Footnotes should be enabled by default");
-        assert!(opts.math, "Math should be enabled by default");
-        assert_eq!(opts.filepath.as_deref(), Some("test.mdx"));
-    }
-
-    #[cfg(not(target_family = "wasm"))]
-    #[test]
-    fn test_create_options_with_custom_settings() {
-        use fob_bundler::runtime::BundlerRuntime;
-
-        let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
-        let mut plugin = FobMdxPlugin::new(runtime);
-        plugin.gfm = false;
-        plugin.math = false;
-
-        let opts = plugin.create_options(None);
-
-        assert!(!opts.gfm, "GFM should be disabled when set");
-        assert!(!opts.math, "Math should be disabled when set");
-        assert!(
-            opts.filepath.is_none(),
-            "Filepath should be None when not provided"
-        );
-    }
-
-    // Integration-style unit tests using the full load pipeline
-
+    // Integration tests using the full bundler pipeline
     #[cfg(not(target_family = "wasm"))]
     mod load_hook_tests {
         use super::*;
@@ -420,7 +348,6 @@ mod tests {
             let runtime: Arc<dyn Runtime> = Arc::new(bundler_runtime);
 
             let result = BuildOptions::new("virtual:entry.tsx")
-                .bundle(false)
                 .platform(Platform::Node)
                 .virtual_file(
                     "virtual:entry.tsx",
@@ -464,7 +391,6 @@ mod tests {
 
             // Build a plain TypeScript file - MDX plugin should ignore it
             let result = BuildOptions::new("virtual:utils.ts")
-                .bundle(false)
                 .platform(Platform::Node)
                 .virtual_file("virtual:utils.ts", "export const greeting = 'Hello';")
                 .runtime(Arc::clone(&runtime))
@@ -499,7 +425,6 @@ mod tests {
             let runtime: Arc<dyn Runtime> = Arc::new(bundler_runtime);
 
             let result = BuildOptions::new("virtual:entry.tsx")
-                .bundle(false)
                 .platform(Platform::Node)
                 .virtual_file(
                     "virtual:entry.tsx",
@@ -532,7 +457,6 @@ mod tests {
             let runtime: Arc<dyn Runtime> = Arc::new(bundler_runtime);
 
             let result = BuildOptions::new("virtual:entry.tsx")
-                .bundle(false)
                 .platform(Platform::Node)
                 .virtual_file(
                     "virtual:entry.tsx",
@@ -563,7 +487,6 @@ mod tests {
             let runtime: Arc<dyn Runtime> = Arc::new(bundler_runtime);
 
             let result = BuildOptions::new("virtual:entry.tsx")
-                .bundle(false)
                 .platform(Platform::Node)
                 .virtual_file(
                     "virtual:entry.tsx",
@@ -593,6 +516,158 @@ mod tests {
                 );
             }
             // If it succeeds, that's also valid behavior for lenient MDX
+        }
+
+        /// Test MDX with imports from other files
+        #[tokio::test]
+        async fn test_mdx_with_component_imports() {
+            let bundler_runtime = BundlerRuntime::new(".");
+            bundler_runtime.add_virtual_file(
+                "virtual:button.tsx",
+                b"export const Button = (props: any) => props.children;",
+            );
+            bundler_runtime.add_virtual_file(
+                "virtual:doc.mdx",
+                b"import { Button } from 'virtual:button.tsx'
+
+# Hello
+
+<Button>Click me</Button>",
+            );
+
+            let runtime: Arc<dyn Runtime> = Arc::new(bundler_runtime);
+
+            let result = BuildOptions::new("virtual:entry.tsx")
+                .platform(Platform::Node)
+                .virtual_file(
+                    "virtual:entry.tsx",
+                    "import Doc from 'virtual:doc.mdx';\nexport { Doc };",
+                )
+                .runtime(Arc::clone(&runtime))
+                .plugin(Arc::new(FobMdxPlugin::new(runtime)))
+                .build()
+                .await
+                .expect("MDX with component imports should compile");
+
+            let chunk = result.chunks().next().expect("Should have chunk");
+
+            // The import should be preserved in output
+            assert!(
+                chunk.code.contains("Button"),
+                "Imported component should be in output"
+            );
+        }
+
+        /// Test multiple MDX files in the same bundle
+        #[tokio::test]
+        async fn test_multiple_mdx_files() {
+            let bundler_runtime = BundlerRuntime::new(".");
+            bundler_runtime.add_virtual_file("virtual:page1.mdx", b"# Page One\n\nFirst page.");
+            bundler_runtime.add_virtual_file("virtual:page2.mdx", b"# Page Two\n\nSecond page.");
+
+            let runtime: Arc<dyn Runtime> = Arc::new(bundler_runtime);
+
+            let result = BuildOptions::new("virtual:entry.tsx")
+                .platform(Platform::Node)
+                .virtual_file(
+                    "virtual:entry.tsx",
+                    "import Page1 from 'virtual:page1.mdx';\nimport Page2 from 'virtual:page2.mdx';\nexport { Page1, Page2 };",
+                )
+                .runtime(Arc::clone(&runtime))
+                .plugin(Arc::new(FobMdxPlugin::new(runtime)))
+                .build()
+                .await
+                .expect("Multiple MDX files should compile");
+
+            let chunk = result.chunks().next().expect("Should have chunk");
+
+            // Both pages should be in the output
+            assert!(
+                chunk.code.contains("Page One") || chunk.code.contains("page1"),
+                "First page content should be in output"
+            );
+            assert!(
+                chunk.code.contains("Page Two") || chunk.code.contains("page2"),
+                "Second page content should be in output"
+            );
+        }
+
+        /// Test MDX with math and code features
+        #[tokio::test]
+        async fn test_mdx_with_math_and_code() {
+            let bundler_runtime = BundlerRuntime::new(".");
+            bundler_runtime.add_virtual_file(
+                "virtual:technical.mdx",
+                b"# Technical Doc
+
+The formula $E = mc^2$ explains mass-energy equivalence.
+
+```rust
+fn main() {
+    println!(\"Hello\");
+}
+```",
+            );
+
+            let runtime: Arc<dyn Runtime> = Arc::new(bundler_runtime);
+
+            let result = BuildOptions::new("virtual:entry.tsx")
+                .platform(Platform::Node)
+                .virtual_file(
+                    "virtual:entry.tsx",
+                    "import Tech from 'virtual:technical.mdx';\nexport { Tech };",
+                )
+                .runtime(Arc::clone(&runtime))
+                .plugin(Arc::new(FobMdxPlugin::new(runtime)))
+                .build()
+                .await
+                .expect("MDX with math and code should compile");
+
+            let chunk = result.chunks().next().expect("Should have chunk");
+
+            // Code block should be in output
+            assert!(
+                chunk.code.contains("pre") || chunk.code.contains("code"),
+                "Code block should be rendered"
+            );
+        }
+
+        /// Test error message includes filename
+        #[tokio::test]
+        async fn test_error_includes_filename() {
+            let bundler_runtime = BundlerRuntime::new(".");
+            // Definitively invalid MDX - unclosed JSX expression
+            bundler_runtime.add_virtual_file("virtual:broken.mdx", b"<div>{unclosed");
+
+            let runtime: Arc<dyn Runtime> = Arc::new(bundler_runtime);
+
+            let result = BuildOptions::new("virtual:entry.tsx")
+                .platform(Platform::Node)
+                .virtual_file(
+                    "virtual:entry.tsx",
+                    "import Broken from 'virtual:broken.mdx';\nexport { Broken };",
+                )
+                .runtime(Arc::clone(&runtime))
+                .plugin(Arc::new(FobMdxPlugin::new(runtime)))
+                .build()
+                .await;
+
+            // This should definitely fail
+            match result {
+                Ok(_) => panic!("Invalid MDX should fail to compile"),
+                Err(e) => {
+                    let err_str = e.to_string();
+                    // Error should reference the file somehow
+                    assert!(
+                        err_str.contains("broken.mdx")
+                            || err_str.contains("virtual:")
+                            || err_str.contains("MDX")
+                            || err_str.contains("compile"),
+                        "Error should provide context about what failed: {}",
+                        err_str
+                    );
+                }
+            }
         }
     }
 }

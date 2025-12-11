@@ -23,7 +23,7 @@ list:
 
 # The ONE command that verifies everything is good (format + lint + test)
 # Run this before committing!
-check: format-check lint test
+check: format-check lint build-cli test
     @echo "✓ All checks passed! Ready to commit."
 
 # Quick compile check (doesn't run tests/lint)
@@ -89,6 +89,7 @@ lint-fix:
 test:
     @echo "Running tests..."
     @cargo test --workspace
+    @just build-cli
     @pnpm test
     @just test-napi
 

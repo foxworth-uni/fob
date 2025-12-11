@@ -14,10 +14,19 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import initDefault, { compile_mdx, WasmMdxOptions, initSync, init } from './mod.js';
+import { compile_mdx, WasmMdxOptions, initSync, init } from './mod.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const toStructuredError = (error: unknown) =>
+  error as {
+    kind?: string;
+    message?: string;
+    location?: { line?: number; column?: number };
+    suggestion?: string;
+    context?: string;
+  };
 
 // Initialize WASM once before all tests using Node.js sync method
 beforeAll(() => {
@@ -255,10 +264,11 @@ describe('Structured Error Handling', () => {
 
     try {
       compile_mdx(largeInput, null);
-    } catch (error: any) {
-      expect(error.kind).toBe('validationError');
-      expect(error.message).toBeTruthy();
-      expect(error.message).toContain('exceeds maximum');
+    } catch (error: unknown) {
+      const err = toStructuredError(error);
+      expect(err.kind).toBe('validationError');
+      expect(err.message).toBeTruthy();
+      expect(err.message).toContain('exceeds maximum');
     }
   });
 
@@ -269,18 +279,22 @@ describe('Structured Error Handling', () => {
       const result = compile_mdx(invalidInput, null);
       console.log('NO ERROR THROWN! Result:', result);
       expect.fail('Should have thrown an error');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = toStructuredError(error);
       // Debug: log the error to see its structure
-      console.log('Caught error - type:', typeof error);
-      console.log('Caught error - value:', error);
-      console.log('Caught error - constructor:', error.constructor.name);
-      if (typeof error === 'object') {
-        console.log('Caught error - keys:', Object.keys(error));
-        console.log('Caught error - kind:', error.kind);
-        console.log('Caught error - message:', error.message);
+      console.log('Caught error - type:', typeof err);
+      console.log('Caught error - value:', err);
+      console.log(
+        'Caught error - constructor:',
+        (err as { constructor?: { name?: string } })?.constructor?.name
+      );
+      if (typeof err === 'object' && err) {
+        console.log('Caught error - keys:', Object.keys(err as object));
+        console.log('Caught error - kind:', err.kind);
+        console.log('Caught error - message:', err.message);
       }
       // For now, just check that it threw
-      expect(error).toBeDefined();
+      expect(err).toBeDefined();
     }
   });
 
@@ -291,10 +305,11 @@ describe('Structured Error Handling', () => {
     try {
       compile_mdx(invalidMdx, null);
       expect.fail('Should have thrown');
-    } catch (error: any) {
-      expect(error.kind).toBe('compilationError');
-      expect(error.message).toBeDefined();
-      expect(typeof error.message).toBe('string');
+    } catch (error: unknown) {
+      const err = toStructuredError(error);
+      expect(err.kind).toBe('compilationError');
+      expect(err.message).toBeDefined();
+      expect(typeof err.message).toBe('string');
     }
   });
 
@@ -303,11 +318,12 @@ describe('Structured Error Handling', () => {
 
     try {
       compile_mdx(invalidMdx, null);
-    } catch (error: any) {
-      if (error.kind === 'compilationError' && error.location) {
-        expect(error.location.line).toBeGreaterThanOrEqual(1);
-        if (error.location.column !== undefined) {
-          expect(error.location.column).toBeGreaterThanOrEqual(1);
+    } catch (error: unknown) {
+      const err = toStructuredError(error);
+      if (err.kind === 'compilationError' && err.location) {
+        expect(err.location.line).toBeGreaterThanOrEqual(1);
+        if (err.location.column !== undefined) {
+          expect(err.location.column).toBeGreaterThanOrEqual(1);
         }
       }
     }
@@ -318,10 +334,11 @@ describe('Structured Error Handling', () => {
 
     try {
       compile_mdx(invalidMdx, null);
-    } catch (error: any) {
-      if (error.kind === 'compilationError' && error.suggestion) {
-        expect(typeof error.suggestion).toBe('string');
-        expect(error.suggestion.length).toBeGreaterThan(0);
+    } catch (error: unknown) {
+      const err = toStructuredError(error);
+      if (err.kind === 'compilationError' && err.suggestion) {
+        expect(typeof err.suggestion).toBe('string');
+        expect(err.suggestion.length).toBeGreaterThan(0);
       }
     }
   });
@@ -331,10 +348,11 @@ describe('Structured Error Handling', () => {
 
     try {
       compile_mdx(invalidMdx, null);
-    } catch (error: any) {
-      if (error.kind === 'compilationError' && error.context) {
-        expect(typeof error.context).toBe('string');
-        expect(error.context.length).toBeGreaterThan(0);
+    } catch (error: unknown) {
+      const err = toStructuredError(error);
+      if (err.kind === 'compilationError' && err.context) {
+        expect(typeof err.context).toBe('string');
+        expect(err.context.length).toBeGreaterThan(0);
       }
     }
   });
@@ -345,15 +363,17 @@ describe('Structured Error Handling', () => {
     // Validation error - null byte
     try {
       compile_mdx('Hello\x00World', null);
-    } catch (error: any) {
-      if (error.kind) errorKinds.add(error.kind);
+    } catch (error: unknown) {
+      const err = toStructuredError(error);
+      if (err.kind) errorKinds.add(err.kind);
     }
 
     // Compilation error - invalid syntax
     try {
       compile_mdx('import { x } fro "broken"', null);
-    } catch (error: any) {
-      if (error.kind) errorKinds.add(error.kind);
+    } catch (error: unknown) {
+      const err = toStructuredError(error);
+      if (err.kind) errorKinds.add(err.kind);
     }
 
     expect(errorKinds.has('validationError')).toBe(true);
@@ -370,10 +390,11 @@ describe('Structured Error Handling', () => {
     for (const testCase of testCases) {
       try {
         compile_mdx(testCase, null);
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const err = toStructuredError(error);
         // Error should have a kind property (structured error)
-        expect(error).toHaveProperty('kind');
-        expect(error).toHaveProperty('message');
+        expect(err).toHaveProperty('kind');
+        expect(err).toHaveProperty('message');
       }
     }
   });

@@ -1,7 +1,7 @@
 use fob_bundler::analysis::{AnalysisResult, TransformationTrace};
 use fob_bundler::graph::{GraphStatistics, ModuleGraph};
 use fob_bundler::output::Bundle as LibraryBuild;
-use fob_bundler::CacheAnalysis;
+use fob_bundler::{BuildResult, CacheAnalysis};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -34,6 +34,18 @@ impl AnalysisDocument {
             warnings: analysis.warnings.clone(),
             errors: analysis.errors.clone(),
             trace: None,
+        }
+    }
+
+    /// Create from the new BuildResult type
+    pub fn from_build_result(result: &BuildResult) -> Self {
+        Self {
+            stats: result.stats().clone(),
+            graph: result.module_graph().clone(),
+            cache: result.cache().clone(),
+            warnings: result.warnings.clone(),
+            errors: result.errors.clone(),
+            trace: result.trace.clone(),
         }
     }
 

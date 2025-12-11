@@ -1,14 +1,18 @@
 //! Output format conversion
 
-use crate::types::OutputFormat;
 use fob_bundler::OutputFormat as BundlerOutputFormat;
 
-/// Convert NAPI OutputFormat to fob-bundler OutputFormat
-pub fn convert_format(format: Option<OutputFormat>) -> BundlerOutputFormat {
-    match format {
-        Some(OutputFormat::Esm) => BundlerOutputFormat::Esm,
-        Some(OutputFormat::Cjs) => BundlerOutputFormat::Cjs,
-        Some(OutputFormat::Iife) => BundlerOutputFormat::Iife,
-        None => BundlerOutputFormat::Esm,
+/// Convert format string to fob-bundler OutputFormat (case-insensitive)
+/// Errors on invalid values instead of silently falling back.
+pub fn convert_format(format: Option<&str>) -> Result<BundlerOutputFormat, String> {
+    match format.map(|s| s.to_lowercase()).as_deref() {
+        Some("esm") => Ok(BundlerOutputFormat::Esm),
+        Some("cjs") => Ok(BundlerOutputFormat::Cjs),
+        Some("iife") => Ok(BundlerOutputFormat::Iife),
+        Some(other) => Err(format!(
+            "Invalid format '{}'. Expected: esm, cjs, iife",
+            other
+        )),
+        None => Ok(BundlerOutputFormat::Esm),
     }
 }

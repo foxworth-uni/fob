@@ -1,0 +1,42 @@
+# fob-ruby build automation
+
+# Default recipe
+default: build
+
+# Build the native extension (debug)
+build:
+    cargo build --package fob-ruby
+    @just _link-bundle debug
+
+# Build release
+build-release:
+    cargo build --release --package fob-ruby
+    @just _link-bundle release
+
+# Create .bundle symlink for macOS
+_link-bundle mode:
+    #!/usr/bin/env bash
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        ln -sf "{{justfile_directory()}}/../../target/{{mode}}/libfob.dylib" \
+               "{{justfile_directory()}}/../../target/{{mode}}/fob_ruby.bundle"
+        echo "Created fob_ruby.bundle symlink"
+    fi
+
+# Run the simple example
+example: build
+    cd {{justfile_directory()}}/../../examples/ruby/fob-simple && \
+    /opt/homebrew/opt/ruby/bin/ruby bundler.rb
+
+# Clean build artifacts
+clean:
+    cargo clean --package fob-ruby
+    rm -f {{justfile_directory()}}/../../target/debug/fob_ruby.bundle
+    rm -f {{justfile_directory()}}/../../target/release/fob_ruby.bundle
+
+# Check compilation without linking
+check:
+    cargo check --package fob-ruby
+
+# Run clippy
+lint:
+    cargo clippy --package fob-ruby

@@ -2,6 +2,15 @@
   "name": "@fox-uni/fob",
   "version": "0.3.0",
   "author": "Taron Foxworth <fox@9generations.com>",
+  "main": "./wrapper.js",
+  "types": "./wrapper.d.ts",
+  "exports": {
+    ".": {
+      "require": "./wrapper.js",
+      "import": "./esm-wrapper.mjs",
+      "types": "./wrapper.d.ts"
+    }
+  },
   "napi": {
     "binaryName": "fob-native",
     "packageName": "@fox-uni/fob",

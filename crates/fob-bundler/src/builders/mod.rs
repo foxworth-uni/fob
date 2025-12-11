@@ -11,22 +11,21 @@
 //! # async fn example() -> fob_bundler::Result<()> {
 //! // Library mode: externalize dependencies
 //! let result = BuildOptions::new("./src/index.ts")
-//!     .bundle(false)
+//!     .externalize_from("package.json")
 //!     .platform(Platform::Node)
 //!     .build()
 //!     .await?;
 //!
-//! // Bundle everything (app mode)
+//! // Bundle everything (standalone app)
 //! let result = BuildOptions::new("./src/index.js")
-//!     .bundle(true)
 //!     .platform(Platform::Browser)
 //!     .build()
 //!     .await?;
 //!
 //! // Multiple entries with code splitting
 //! let result = BuildOptions::new_multiple(["./src/main.js", "./src/admin.js"])
-//!     .bundle(true)
-//!     .splitting(true)
+//!     .bundle_together()
+//!     .with_code_splitting()
 //!     .outdir("dist")
 //!     .build()
 //!     .await?;
@@ -46,7 +45,10 @@ pub mod asset_registry;
 pub mod asset_resolver;
 
 // Re-export public API
-pub use unified::{BuildOptions, BuildOutput, BuildResult, EntryPoints, MinifyLevel, build};
+pub use unified::{
+    BuildOptions, BuildOutput, BuildResult, CodeSplittingConfig, EntryMode, EntryPoints,
+    ExternalConfig, IncrementalConfig, MinifyLevel, build,
+};
 
 #[cfg(feature = "dts-generation")]
 pub use unified::DtsOptions;

@@ -98,7 +98,7 @@ mod file_type_tests {
 
         // Use virtual: prefix consistently for imports
         let result = BuildOptions::new("virtual:entry.js")
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .virtual_file(
                 "virtual:entry.js",
@@ -129,7 +129,7 @@ mod file_type_tests {
         );
 
         let result = BuildOptions::new("virtual:entry.js")
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .virtual_file("virtual:entry.js", entry_content)
             .cwd(fixtures_dir())
@@ -168,7 +168,7 @@ mod file_type_tests {
         let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new(temp_dir.path()));
 
         let result = BuildOptions::new(temp_dir.path().join("entry.tsx"))
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .cwd(temp_dir.path())
             .runtime(Arc::clone(&runtime))
@@ -213,7 +213,7 @@ The description is: {frontmatter.description}
         let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new(temp_dir.path()));
 
         let result = BuildOptions::new(temp_dir.path().join("entry.tsx"))
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .cwd(temp_dir.path())
             .runtime(Arc::clone(&runtime))
@@ -265,7 +265,7 @@ That's all folks!
         let mdx_plugin = FobMdxPlugin::new(Arc::clone(&runtime));
 
         let result = BuildOptions::new(temp_dir.path().join("entry.tsx"))
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .cwd(temp_dir.path())
             .runtime(Arc::clone(&runtime))
@@ -291,7 +291,7 @@ That's all folks!
     #[tokio::test]
     async fn test_typescript_basic() {
         let result = BuildOptions::new("virtual:utils.ts")
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .virtual_file(
                 "virtual:utils.ts",
@@ -323,7 +323,7 @@ export type { Config };
     #[tokio::test]
     async fn test_typescript_with_generics() {
         let result = BuildOptions::new("virtual:generics.ts")
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .virtual_file(
                 "virtual:generics.ts",
@@ -428,7 +428,7 @@ The chain is: `entry.ts` → `App.tsx` → `content.mdx`
         let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new(temp_dir.path()));
 
         let result = BuildOptions::new(temp_dir.path().join("entry.ts"))
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .cwd(temp_dir.path())
             .runtime(Arc::clone(&runtime))
@@ -494,7 +494,7 @@ The chain is: `entry.ts` → `App.tsx` → `content.mdx`
         let runtime: Arc<dyn Runtime> = Arc::new(bundler_runtime);
 
         let result = BuildOptions::new("virtual:main.ts")
-            .bundle(false)
+            .externalize_from("package.json")
             .platform(Platform::Node)
             .virtual_file(
                 "virtual:main.ts",

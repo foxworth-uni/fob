@@ -75,6 +75,19 @@ pub struct MdxCompileOptions {
     /// Output format (Program or FunctionBody)
     #[builder(default)]
     pub output_format: OutputFormat,
+
+    /// Provider import source for component injection (e.g., "gumbo/mdx", "@mdx-js/react")
+    ///
+    /// When set, the compiled MDX will include:
+    /// ```javascript
+    /// import {useMDXComponents as _provideComponents} from '{source}';
+    /// ```
+    ///
+    /// And components will be merged: `_provideComponents()` → `props.components`
+    ///
+    /// This follows the MDX v3 pattern used by Next.js and @mdx-js/react.
+    #[builder(into)]
+    pub provider_import_source: Option<String>,
 }
 
 impl std::fmt::Debug for MdxCompileOptions {
@@ -87,6 +100,7 @@ impl std::fmt::Debug for MdxCompileOptions {
             .field("jsx_runtime", &self.jsx_runtime)
             .field("use_default_plugins", &self.use_default_plugins)
             .field("output_format", &self.output_format)
+            .field("provider_import_source", &self.provider_import_source)
             .field("plugins_count", &self.plugins.len())
             .finish()
     }
@@ -190,6 +204,7 @@ pub fn compile(
         jsx_runtime: options.jsx_runtime.clone(),
         output_format: options.output_format,
         frontmatter: frontmatter.clone(),
+        provider_import_source: options.provider_import_source.clone(),
     };
 
     // Add default plugins first (if enabled)

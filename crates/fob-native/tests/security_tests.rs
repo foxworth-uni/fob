@@ -4,7 +4,6 @@
 
 use fob_native::BundleConfig;
 use fob_native::Fob;
-use fob_native::types::OutputFormat;
 use tempfile::TempDir;
 
 #[tokio::test]
@@ -19,13 +18,14 @@ async fn test_path_validation_prevents_directory_traversal() {
     let config = BundleConfig {
         entries: vec!["index.js".to_string()],
         output_dir: Some("../../../etc".to_string()), // Directory traversal attempt
-        format: Some(OutputFormat::Esm),
+        format: Some("esm".to_string()),
         sourcemap: None,
         cwd: Some(cwd.to_string_lossy().to_string()),
         external: None,
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = Fob::new(config);
@@ -56,13 +56,14 @@ async fn test_path_validation_prevents_traversal_in_entry() {
     let config = BundleConfig {
         entries: vec!["../../../../etc/passwd".to_string()], // Directory traversal attempt
         output_dir: Some("dist".to_string()),
-        format: Some(OutputFormat::Esm),
+        format: Some("esm".to_string()),
         sourcemap: None,
         cwd: Some(cwd.to_string_lossy().to_string()),
         external: None,
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = Fob::new(config);
@@ -97,13 +98,14 @@ async fn test_path_validation_allows_valid_relative_paths() {
     let config = BundleConfig {
         entries: vec!["src/index.js".to_string()],
         output_dir: Some("dist".to_string()),
-        format: Some(OutputFormat::Esm),
+        format: Some("esm".to_string()),
         sourcemap: None,
         cwd: Some(cwd.to_string_lossy().to_string()),
         external: None,
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = Fob::new(config);
@@ -123,13 +125,14 @@ async fn test_path_validation_handles_absolute_paths() {
     let config = BundleConfig {
         entries: vec![entry_path.to_string_lossy().to_string()],
         output_dir: Some(cwd.join("dist").to_string_lossy().to_string()),
-        format: Some(OutputFormat::Esm),
+        format: Some("esm".to_string()),
         sourcemap: None,
         cwd: Some(cwd.to_string_lossy().to_string()),
         external: None,
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = Fob::new(config);
@@ -154,13 +157,14 @@ async fn test_path_validation_rejects_absolute_paths_outside_project() {
     let config = BundleConfig {
         entries: vec![outside_path.to_string()],
         output_dir: Some("dist".to_string()),
-        format: Some(OutputFormat::Esm),
+        format: Some("esm".to_string()),
         sourcemap: None,
         cwd: Some(cwd.to_string_lossy().to_string()),
         external: None,
         minify: None,
         platform: None,
         mdx: None,
+        ..Default::default()
     };
 
     let bundler = Fob::new(config);

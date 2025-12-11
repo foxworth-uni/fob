@@ -74,9 +74,27 @@ pub(crate) struct BundlePlan {
     pub cwd: Option<PathBuf>,
     pub virtual_files: FxHashMap<String, String>,
     pub runtime: Option<Arc<dyn crate::Runtime>>,
+    pub cache: Option<crate::cache::CacheConfig>,
+    pub incremental: Option<crate::builders::unified::primitives::IncrementalConfig>,
 }
 
 pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
+    // Clone data needed for cache key computation before consuming the plan
+    let cache_plan_for_key = if plan.cache.is_some() {
+        Some(BundlePlan {
+            entries: plan.entries.clone(),
+            options: plan.options.clone(),
+            plugins: plan.plugins.clone(),
+            cwd: plan.cwd.clone(),
+            virtual_files: plan.virtual_files.clone(),
+            runtime: plan.runtime.clone(),
+            cache: None,       // Don't include cache config in the key
+            incremental: None, // Don't include incremental config in the key
+        })
+    } else {
+        None
+    };
+
     let BundlePlan {
         entries,
         mut options,
@@ -84,7 +102,28 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
         cwd,
         virtual_files,
         runtime,
+        cache: cache_config,
+        incremental: incremental_config,
     } = plan;
+
+    // Try to load from cache if enabled
+    if let Some(ref config) = cache_config {
+        if !config.should_force_rebuild() {
+            if let Some(ref key_plan) = cache_plan_for_key {
+                match try_load_from_cache(key_plan, config) {
+                    Ok(cached) => {
+                        // Cache hit - return the cached result
+                        return Ok(cached);
+                    }
+                    Err(e) => {
+                        // Cache miss or error - continue with build
+                        // Errors are non-fatal, just log them
+                        eprintln!("Cache miss or error: {}", e);
+                    }
+                }
+            }
+        }
+    }
 
     // Determine the scan_cwd for asset scanning
     // Priority: explicit cwd > runtime.get_cwd() > std::env::current_dir() (native only)
@@ -273,19 +312,77 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
     // Extract collected module data from the plugin and build the module graph
     let collection_data = collection_plugin.take_data();
 
-    let graph = fob_graph::ModuleGraph::from_collected_data(collection_data).map_err(|e| {
-        Error::Bundler(vec![diagnostics::ExtractedDiagnostic {
-            kind: diagnostics::DiagnosticKind::Other("GraphBuildError".to_string()),
-            severity: diagnostics::DiagnosticSeverity::Error,
-            message: format!("Failed to build module graph from collected data: {}", e),
-            file: None,
-            line: None,
-            column: None,
-            help: None,
-            context: None,
-            error_chain: Vec::new(),
-        }])
-    })?;
+    // Try to use incremental cache if enabled
+    let graph = if let Some(ref inc_config) = incremental_config {
+        // Try to load cached graph
+        match try_load_incremental_graph(inc_config, &entries) {
+            Ok(Some(cached_graph)) => {
+                // Cache hit - reuse the graph
+                eprintln!("Incremental cache hit - reusing cached module graph");
+                cached_graph
+            }
+            Ok(None) => {
+                // Cache miss or first build - construct graph normally
+                eprintln!("Incremental cache miss - building module graph from scratch");
+                let graph =
+                    fob_graph::ModuleGraph::from_collected_data(collection_data).map_err(|e| {
+                        Error::Bundler(vec![diagnostics::ExtractedDiagnostic {
+                            kind: diagnostics::DiagnosticKind::Other("GraphBuildError".to_string()),
+                            severity: diagnostics::DiagnosticSeverity::Error,
+                            message: format!(
+                                "Failed to build module graph from collected data: {}",
+                                e
+                            ),
+                            file: None,
+                            line: None,
+                            column: None,
+                            help: None,
+                            context: None,
+                            error_chain: Vec::new(),
+                        }])
+                    })?;
+
+                // Save to incremental cache
+                if let Err(e) = try_save_incremental_graph(inc_config, &graph) {
+                    eprintln!("Warning: Failed to save incremental cache: {}", e);
+                }
+
+                graph
+            }
+            Err(e) => {
+                // Cache error (non-fatal) - fall back to normal build
+                eprintln!("Incremental cache error (non-fatal): {}", e);
+                fob_graph::ModuleGraph::from_collected_data(collection_data).map_err(|e| {
+                    Error::Bundler(vec![diagnostics::ExtractedDiagnostic {
+                        kind: diagnostics::DiagnosticKind::Other("GraphBuildError".to_string()),
+                        severity: diagnostics::DiagnosticSeverity::Error,
+                        message: format!("Failed to build module graph from collected data: {}", e),
+                        file: None,
+                        line: None,
+                        column: None,
+                        help: None,
+                        context: None,
+                        error_chain: Vec::new(),
+                    }])
+                })?
+            }
+        }
+    } else {
+        // No incremental caching - build graph normally
+        fob_graph::ModuleGraph::from_collected_data(collection_data).map_err(|e| {
+            Error::Bundler(vec![diagnostics::ExtractedDiagnostic {
+                kind: diagnostics::DiagnosticKind::Other("GraphBuildError".to_string()),
+                severity: diagnostics::DiagnosticSeverity::Error,
+                message: format!("Failed to build module graph from collected data: {}", e),
+                file: None,
+                line: None,
+                column: None,
+                help: None,
+                context: None,
+                error_chain: Vec::new(),
+            }])
+        })?
+    };
 
     let stats = compute_stats(&graph)?;
     let entry_points = graph.entry_points()?;
@@ -306,11 +403,274 @@ pub(crate) async fn execute_bundle(plan: BundlePlan) -> Result<AnalyzedBundle> {
         None
     };
 
-    Ok(AnalyzedBundle {
+    let result = AnalyzedBundle {
         bundle,
         analysis,
         cache,
         trace,
         asset_registry: asset_registry_opt,
+    };
+
+    // Save to cache if enabled
+    if let Some(ref config) = cache_config {
+        if let Some(ref key_plan) = cache_plan_for_key {
+            if let Err(e) = try_save_to_cache(key_plan, config, &result) {
+                // Cache save errors are non-fatal, just log them
+                eprintln!("Failed to save to cache: {}", e);
+            }
+        }
+    }
+
+    Ok(result)
+}
+
+/// Try to load a build result from cache.
+fn try_load_from_cache(
+    plan: &BundlePlan,
+    config: &crate::cache::CacheConfig,
+) -> Result<AnalyzedBundle> {
+    use crate::BundleOutput;
+    use crate::cache::{compute_cache_key, open_store, try_load};
+
+    // Open cache store
+    let store = open_store(&config.dir)
+        .map_err(|e| Error::InvalidConfig(format!("Failed to open cache store: {}", e)))?;
+
+    // Compute cache key
+    let key = compute_cache_key(plan, config)
+        .map_err(|e| Error::InvalidConfig(format!("Failed to compute cache key: {}", e)))?;
+
+    // Try to load from cache
+    let cached =
+        try_load(&store, &key).map_err(|e| Error::InvalidConfig(format!("Cache error: {}", e)))?;
+
+    // Validate metadata
+    if !cached.metadata.is_compatible() {
+        return Err(Error::InvalidConfig(format!(
+            "Cache version mismatch: expected {}, found {}",
+            crate::cache::serialize::CACHE_FORMAT_VERSION,
+            cached.metadata.format_version
+        )));
+    }
+
+    // Convert cached build back to AnalyzedBundle
+    let bundle_output = BundleOutput {
+        assets: cached
+            .outputs
+            .into_iter()
+            .map(|o| o.into_rolldown())
+            .collect(),
+        warnings: vec![],
+    };
+
+    // Create a minimal graph for cached results
+    // The graph JSON is preserved but not deserialized (ModuleGraph doesn't implement Deserialize)
+    let graph = fob_graph::ModuleGraph::new()
+        .map_err(|e| Error::InvalidConfig(format!("Failed to create module graph: {}", e)))?;
+
+    // Convert entry_points from String to ModuleId
+    let entry_points: Vec<fob_graph::ModuleId> = cached
+        .entry_points
+        .into_iter()
+        .map(|id| {
+            fob_graph::ModuleId::new(id)
+                .unwrap_or_else(|_| fob_graph::ModuleId::new("unknown").unwrap())
+        })
+        .collect();
+
+    let analysis = fob_graph::AnalysisResult {
+        graph,
+        entry_points,
+        warnings: cached.warnings,
+        errors: cached.errors,
+        stats: fob_graph::GraphStatistics::default(),
+        symbol_stats: fob_graph::SymbolStatistics::new(0, 0),
+    };
+
+    // Reconstruct asset registry if present
+    let asset_registry = if !cached.assets.is_empty() {
+        let registry = crate::builders::asset_registry::AssetRegistry::new();
+        for asset_info in cached.assets {
+            registry.register(
+                PathBuf::from(asset_info.source_path),
+                asset_info.referrer,
+                asset_info.specifier,
+            );
+        }
+        Some(Arc::new(registry))
+    } else {
+        None
+    };
+
+    Ok(AnalyzedBundle {
+        bundle: bundle_output,
+        analysis,
+        cache: cached.cache,
+        trace: cached.trace,
+        asset_registry,
     })
+}
+
+/// Try to save a build result to cache.
+fn try_save_to_cache(
+    plan: &BundlePlan,
+    config: &crate::cache::CacheConfig,
+    result: &AnalyzedBundle,
+) -> Result<()> {
+    use crate::cache::{
+        compute_cache_key, open_store,
+        serialize::{BuildComponents, CachedBuild},
+        try_save,
+    };
+
+    // Open cache store
+    let store = open_store(&config.dir)
+        .map_err(|e| Error::InvalidConfig(format!("Failed to open cache store: {}", e)))?;
+
+    // Compute cache key
+    let key = compute_cache_key(plan, config)
+        .map_err(|e| Error::InvalidConfig(format!("Failed to compute cache key: {}", e)))?;
+
+    // For now, use an empty JSON object for the graph since ModuleGraph doesn't implement Serialize
+    // This is acceptable because the cache is primarily for bundle output, not graph analysis
+    let graph_json = "{}".to_string();
+
+    // Convert entry_points to strings
+    let entry_points_str: Vec<String> = result
+        .analysis
+        .entry_points
+        .iter()
+        .map(|id| id.to_string())
+        .collect();
+
+    // Create cached build
+    let cached = CachedBuild::from_components(BuildComponents {
+        bundle: &result.bundle,
+        graph_json,
+        entry_points: entry_points_str,
+        warnings: result.analysis.warnings.clone(),
+        errors: result.analysis.errors.clone(),
+        cache: &result.cache,
+        trace: result.trace.as_ref(),
+        asset_registry: result.asset_registry.as_ref(),
+    });
+
+    // Save to cache
+    try_save(&store, &key, &cached)
+        .map_err(|e| Error::InvalidConfig(format!("Failed to save to cache: {}", e)))?;
+
+    Ok(())
+}
+
+/// Try to load cached module graph using incremental caching.
+///
+/// Returns:
+/// - Ok(Some(graph)) if cache hit and valid
+/// - Ok(None) if cache miss or invalid
+/// - Err if fatal error (though incremental errors should be non-fatal)
+fn try_load_incremental_graph(
+    config: &crate::builders::unified::primitives::IncrementalConfig,
+    entries: &[EntrySpec],
+) -> Result<Option<fob_graph::ModuleGraph>> {
+    use crate::cache::changes::ChangeDetector;
+    use crate::cache::incremental::IncrementalCache;
+
+    // Load incremental cache
+    let cache = match IncrementalCache::load(&config.cache_dir) {
+        Ok(Some(cache)) => cache,
+        Ok(None) => {
+            // No cache file exists (first build)
+            return Ok(None);
+        }
+        Err(e) => {
+            eprintln!("Warning: Failed to load incremental cache: {}", e);
+            return Ok(None);
+        }
+    };
+
+    // Convert entry specs to paths
+    let entry_paths: Vec<PathBuf> = entries
+        .iter()
+        .map(|spec| PathBuf::from(&spec.import))
+        .collect();
+
+    // Check if cache is valid for current entries
+    if !cache.is_valid_for(&entry_paths) {
+        eprintln!("Incremental cache invalid: entry points or Rolldown version changed");
+        return Ok(None);
+    }
+
+    // Get the cached graph
+    let Some(ref graph) = cache.graph else {
+        return Ok(None);
+    };
+
+    // Create change detector from cached hashes
+    let detector = ChangeDetector::from_graph(graph)?;
+
+    // Compute current file hashes
+    let modules = graph.modules()?;
+    let mut current_hashes = Vec::new();
+    for module in modules {
+        if module.id.is_virtual() {
+            continue;
+        }
+
+        match std::fs::read(&module.path) {
+            Ok(contents) => {
+                let hash = blake3::hash(&contents);
+                current_hashes.push((module.id.clone(), *hash.as_bytes()));
+            }
+            Err(_) => {
+                // File read error - treat as cache invalidation
+                eprintln!(
+                    "Warning: Failed to read file {:?} for change detection. Invalidating cache.",
+                    module.path
+                );
+                return Ok(None);
+            }
+        }
+    }
+
+    // Detect changes
+    let changes = detector.detect_changes(&current_hashes);
+
+    // If any changes detected, invalidate cache
+    if changes.has_changes() {
+        eprintln!(
+            "Incremental cache invalid: {} files changed",
+            changes.modified.len() + changes.added.len() + changes.removed.len()
+        );
+        return Ok(None);
+    }
+
+    // Cache is valid - return the graph
+    Ok(Some(graph.clone()))
+}
+
+/// Save module graph to incremental cache.
+fn try_save_incremental_graph(
+    config: &crate::builders::unified::primitives::IncrementalConfig,
+    graph: &fob_graph::ModuleGraph,
+) -> Result<()> {
+    use crate::cache::changes::ChangeDetector;
+    use crate::cache::incremental::IncrementalCache;
+
+    // Create change detector from current graph
+    let detector = ChangeDetector::from_graph(graph)?;
+
+    // Create incremental cache
+    let cache = IncrementalCache {
+        graph: Some(graph.clone()),
+        module_hashes: detector.module_hashes.clone(),
+        rolldown_version: crate::cache::incremental::IncrementalCache::new().rolldown_version,
+        format_version: crate::cache::incremental::IncrementalCache::FORMAT_VERSION,
+    };
+
+    // Save to disk
+    cache
+        .save(&config.cache_dir)
+        .map_err(|e| Error::InvalidConfig(format!("Failed to save incremental cache: {}", e)))?;
+
+    Ok(())
 }

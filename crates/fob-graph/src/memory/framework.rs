@@ -12,35 +12,33 @@ impl ModuleGraph {
     ///
     /// Note: FrameworkRule::apply is async, so we use tokio::runtime::Handle::current()
     /// to execute it. This maintains compatibility with the async trait while
-    /// allowing synchronous callers.
+    /// Apply a single framework rule asynchronously.
     ///
     /// # Platform Availability
     ///
     /// This method is only available on native platforms (not WASM) because it requires
     /// tokio runtime support.
     #[cfg(not(target_family = "wasm"))]
-    pub fn apply_framework_rule(&self, rule: Box<dyn super::super::FrameworkRule>) -> Result<()> {
-        let handle = tokio::runtime::Handle::try_current().map_err(|_| {
-            crate::Error::InvalidConfig(
-                "FrameworkRule::apply requires a tokio runtime context".to_string(),
-            )
-        })?;
-        handle.block_on(rule.apply(self))
+    pub async fn apply_framework_rule(
+        &self,
+        rule: Box<dyn super::super::FrameworkRule>,
+    ) -> Result<()> {
+        rule.apply(self).await
     }
 
-    /// Apply multiple framework rules.
+    /// Apply multiple framework rules asynchronously.
     ///
     /// # Platform Availability
     ///
     /// This method is only available on native platforms (not WASM) because it requires
     /// tokio runtime support.
     #[cfg(not(target_family = "wasm"))]
-    pub fn apply_framework_rules(
+    pub async fn apply_framework_rules(
         &self,
         rules: Vec<Box<dyn super::super::FrameworkRule>>,
     ) -> Result<()> {
         for rule in rules {
-            self.apply_framework_rule(rule)?;
+            self.apply_framework_rule(rule).await?;
         }
         Ok(())
     }
