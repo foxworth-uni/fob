@@ -252,10 +252,7 @@ entries = ["index.ts"]
     assert!(result.is_err(), "Malformed TOML should fail to load");
 
     let err_msg = result.unwrap_err().to_string();
-    assert!(
-        !err_msg.is_empty(),
-        "Error message should not be empty"
-    );
+    assert!(!err_msg.is_empty(), "Error message should not be empty");
 }
 
 #[test]
@@ -280,8 +277,5 @@ fn handles_malformed_package_json() {
     assert!(result.is_err(), "Malformed JSON should fail to load");
 
     let err_msg = result.unwrap_err().to_string();
-    assert!(
-        !err_msg.is_empty(),
-        "Error message should not be empty"
-    );
+    assert!(!err_msg.is_empty(), "Error message should not be empty");
 }

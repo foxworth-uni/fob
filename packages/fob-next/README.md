@@ -22,12 +22,12 @@ pnpm add @fob/next @fox-uni/fob @fob/mdx-runtime
 
 ```tsx
 // app/page.tsx
-import { loadMdxModule } from "@fob/next";
-import path from "node:path";
+import { loadMdxModule } from '@fob/next';
+import path from 'node:path';
 
 export default async function Page() {
   const mod = await loadMdxModule({
-    filePath: path.join(process.cwd(), "content/post.mdx"),
+    filePath: path.join(process.cwd(), 'content/post.mdx'),
   });
 
   const Content = mod.default;
@@ -44,13 +44,13 @@ export default async function Page() {
 
 ```tsx
 // app/page.tsx
-import { loadMdxModule } from "@fob/next";
-import { MDXProvider } from "@fob/next";
-import path from "node:path";
+import { loadMdxModule } from '@fob/next';
+import { MDXProvider } from '@fob/next';
+import path from 'node:path';
 
 export default async function Page() {
   const mod = await loadMdxModule({
-    filePath: path.join(process.cwd(), "content/post.mdx"),
+    filePath: path.join(process.cwd(), 'content/post.mdx'),
   });
 
   const Content = mod.default;
@@ -72,13 +72,13 @@ export default async function Page() {
 
 ```tsx
 // app/page.tsx
-import { renderMdx } from "@fob/next";
-import path from "node:path";
+import { renderMdx } from '@fob/next';
+import path from 'node:path';
 
 export default async function Page() {
   return (
     <main>
-      {await renderMdx(path.join(process.cwd(), "content/post.mdx"), {
+      {await renderMdx(path.join(process.cwd(), 'content/post.mdx'), {
         components: {
           h1: (props) => <h1 className="text-4xl" {...props} />,
         },
@@ -98,9 +98,7 @@ import { Callout } from "../components/Callout";
 
 # My Post
 
-<Callout type="info">
-  This is a custom component!
-</Callout>
+<Callout type="info">This is a custom component!</Callout>
 ```
 
 The bundler will automatically resolve and bundle these imports.
@@ -112,6 +110,7 @@ The bundler will automatically resolve and bundle these imports.
 Load an MDX module. Cached per request.
 
 **Options:**
+
 - `filePath` (required) - Absolute path to MDX file
 - `mdx` - MDX compilation options
   - `gfm?: boolean` - Enable GFM features (default: true)
@@ -130,6 +129,7 @@ Load an MDX module. Cached per request.
 Convenience function to load and render MDX in one call.
 
 **Parameters:**
+
 - `filePath` - Absolute path to MDX file
 - `options` - Same as `loadMdxModule` plus:
   - `components?: MDXComponents` - Component overrides
@@ -150,4 +150,3 @@ Lower-level API for bundling MDX without React cache.
 ## License
 
 MIT
-

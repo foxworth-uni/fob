@@ -67,8 +67,12 @@ mod roundtrip_impl {
         // Parse regenerated code with fresh allocator (required for lifetime safety)
         let allocator2 = OxcAllocator::default();
         let parse_opts2 = ParseOptions::from_path(filename);
-        let parsed2 = fob_gen::parse(&allocator2, &regenerated, parse_opts2)
-            .unwrap_or_else(|e| panic!("Failed to parse regenerated code for {}: {}\nRegenerated:\n{}", filename, e, regenerated));
+        let parsed2 = fob_gen::parse(&allocator2, &regenerated, parse_opts2).unwrap_or_else(|e| {
+            panic!(
+                "Failed to parse regenerated code for {}: {}\nRegenerated:\n{}",
+                filename, e, regenerated
+            )
+        });
 
         // Basic checks: both should have same number of statements
         assert_eq!(

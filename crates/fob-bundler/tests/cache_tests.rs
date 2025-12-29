@@ -245,10 +245,7 @@ async fn test_cache_handles_corrupted_data() {
     let cache_db = cache_dir.join("cache.redb");
     if cache_db.exists() {
         // Write garbage to corrupt the database
-        let mut file = fs::OpenOptions::new()
-            .write(true)
-            .open(&cache_db)
-            .unwrap();
+        let mut file = fs::OpenOptions::new().write(true).open(&cache_db).unwrap();
         file.write_all(b"CORRUPTED DATA HERE").unwrap();
     }
 

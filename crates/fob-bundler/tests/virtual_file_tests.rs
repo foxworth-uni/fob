@@ -406,10 +406,7 @@ export const x = {
             Err(e) => {
                 let err_msg = e.to_string();
                 // Error should be meaningful and indicate the problem
-                assert!(
-                    !err_msg.is_empty(),
-                    "Error message should not be empty"
-                );
+                assert!(!err_msg.is_empty(), "Error message should not be empty");
                 // Should ideally mention parse/syntax issue (flexible check)
                 assert!(
                     err_msg.len() > 10,

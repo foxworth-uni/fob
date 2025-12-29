@@ -1,18 +1,18 @@
 /**
  * Core bundler integration for fob-next
- * 
+ *
  * Bundles MDX files using @fox-uni/fob and provides caching layer
  */
 
-import pkg from "@fox-uni/fob";
-import type { ChunkInfo, BundleConfig } from "@fox-uni/fob";
-import { mkdir, writeFile, stat, readFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
-import { pathToFileURL } from "node:url";
-import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
-import type React from "react";
+import pkg from '@fox-uni/fob';
+import type { ChunkInfo, BundleConfig } from '@fox-uni/fob';
+import { mkdir, writeFile, stat, readFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import type React from 'react';
 
 const { Fob } = pkg;
 
@@ -52,32 +52,28 @@ export interface BundledMdxModule {
 async function getCacheKey(filePath: string): Promise<string> {
   try {
     const stats = await stat(filePath);
-    const content = readFileSync(filePath, "utf-8");
-    const hash = createHash("sha256")
+    const content = readFileSync(filePath, 'utf-8');
+    const hash = createHash('sha256')
       .update(filePath)
       .update(stats.mtimeMs.toString())
       .update(content)
-      .digest("hex");
+      .digest('hex');
     return hash.slice(0, 16);
   } catch {
     // Fallback to path-based key if stat fails
-    return createHash("sha256").update(filePath).digest("hex").slice(0, 16);
+    return createHash('sha256').update(filePath).digest('hex').slice(0, 16);
   }
 }
 
 /**
  * Bundle an MDX file and return the compiled module
  */
-export async function bundleMdx(
-  options: BundleMdxOptions
-): Promise<BundledMdxModule> {
+export async function bundleMdx(options: BundleMdxOptions): Promise<BundledMdxModule> {
   const { filePath, outputDir, cache = true, mdx, external, cwd } = options;
 
   // Resolve absolute paths
   const absFilePath = path.resolve(filePath);
-  const absOutputDir = outputDir
-    ? path.resolve(outputDir)
-    : path.join(tmpdir(), "fob-next-mdx");
+  const absOutputDir = outputDir ? path.resolve(outputDir) : path.join(tmpdir(), 'fob-next-mdx');
 
   // Create cache-aware output directory
   let finalOutputDir = absOutputDir;
@@ -89,11 +85,11 @@ export async function bundleMdx(
   await mkdir(finalOutputDir, { recursive: true });
 
   // Check if already cached (simple check - file exists)
-  const manifestPath = path.join(finalOutputDir, ".manifest.json");
+  const manifestPath = path.join(finalOutputDir, '.manifest.json');
 
   if (cache) {
     try {
-      const manifestContent = await readFile(manifestPath, "utf-8");
+      const manifestContent = await readFile(manifestPath, 'utf-8');
       const manifest = JSON.parse(manifestContent) as { entryChunk?: string };
       const entryChunk = manifest.entryChunk;
       if (entryChunk) {
@@ -116,11 +112,11 @@ export async function bundleMdx(
   const bundlerConfig = {
     entries: [absFilePath],
     outputDir: finalOutputDir,
-    format: "esm",
-    platform: "node",
-    sourcemap: "false",
-    entryMode: "isolated",
-    external: external || ["react", "react-dom", "@fob/mdx-runtime"],
+    format: 'esm',
+    platform: 'node',
+    sourcemap: 'false',
+    entryMode: 'isolated',
+    external: external || ['react', 'react-dom', '@fob/mdx-runtime'],
     cwd: cwd || path.dirname(absFilePath),
     ...(mdx && {
       mdx: {
@@ -135,7 +131,6 @@ export async function bundleMdx(
     }),
   } as unknown as BundleConfig;
 
-
   const bundler = new Fob(bundlerConfig);
 
   const result = await bundler.bundle();
@@ -143,25 +138,19 @@ export async function bundleMdx(
   // Write all chunks
   await Promise.all(
     result.chunks.map((chunk: ChunkInfo) =>
-      writeFile(path.join(finalOutputDir, chunk.fileName), chunk.code, "utf8")
+      writeFile(path.join(finalOutputDir, chunk.fileName), chunk.code, 'utf8')
     )
   );
 
   // Save manifest for cache lookup
-  const entryChunk = result.chunks.find(
-    (c: ChunkInfo) => c.kind === "entry"
-  )?.fileName;
+  const entryChunk = result.chunks.find((c: ChunkInfo) => c.kind === 'entry')?.fileName;
   if (entryChunk && cache) {
-    await writeFile(
-      manifestPath,
-      JSON.stringify({ entryChunk }, null, 2),
-      "utf8"
-    );
+    await writeFile(manifestPath, JSON.stringify({ entryChunk }, null, 2), 'utf8');
   }
 
   // Import the entry module
   if (!entryChunk) {
-    throw new Error("No entry chunk found in bundle result");
+    throw new Error('No entry chunk found in bundle result');
   }
 
   const modulePath = path.join(finalOutputDir, entryChunk);
@@ -169,4 +158,3 @@ export async function bundleMdx(
 
   return module as BundledMdxModule;
 }
-

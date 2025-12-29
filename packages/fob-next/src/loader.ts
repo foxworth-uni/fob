@@ -1,15 +1,15 @@
 /**
  * Next.js App Router loader for MDX files
- * 
+ *
  * Provides React Server Component-compatible API for loading MDX
  */
 
-import { bundleMdx, BundleMdxOptions, BundledMdxModule } from "./bundler.js";
-import { cache } from "react";
-import type { MDXComponents } from "@fob/mdx-runtime";
-import React from "react";
+import { bundleMdx, BundleMdxOptions, BundledMdxModule } from './bundler.js';
+import { cache } from 'react';
+import type { MDXComponents } from '@fob/mdx-runtime';
+import React from 'react';
 
-export interface LoadMdxOptions extends Omit<BundleMdxOptions, "filePath"> {
+export interface LoadMdxOptions extends Omit<BundleMdxOptions, 'filePath'> {
   /** Absolute path to MDX file */
   filePath: string;
 }
@@ -19,26 +19,24 @@ export { bundleMdx };
 
 /**
  * Load an MDX module (cached per request via React cache)
- * 
+ *
  * This function is wrapped with React's cache() to ensure
  * the same MDX file is only bundled once per request.
  */
-export const loadMdxModule = cache(
-  async (options: LoadMdxOptions): Promise<BundledMdxModule> => {
-    return bundleMdx(options);
-  }
-);
+export const loadMdxModule = cache(async (options: LoadMdxOptions): Promise<BundledMdxModule> => {
+  return bundleMdx(options);
+});
 
 /**
  * Render MDX content with component overrides
- * 
+ *
  * Convenience wrapper that loads and renders MDX in one call
  */
 export async function renderMdx(
   filePath: string,
   options?: {
     components?: MDXComponents;
-    mdx?: LoadMdxOptions["mdx"];
+    mdx?: LoadMdxOptions['mdx'];
     external?: string[];
     cwd?: string;
   }
@@ -61,4 +59,3 @@ export async function renderMdx(
 
   return React.createElement(Content, props);
 }
-
