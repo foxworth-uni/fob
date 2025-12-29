@@ -173,6 +173,7 @@ fob-native = { path = "crates/fob-native", version = "0.4.2" }
 fob-mdx = { path = "crates/fob-mdx", version = "0.4.2" }
 fob-mdx-wasm = { path = "crates/fob-mdx-wasm", version = "0.4.2" }
 fob-mdx-runtime = { path = "crates/fob-mdx-runtime", version = "0.4.2" }
+fob-plugin-mdx = { path = "crates/fob-plugin-mdx", version = "0.2.2" }
 
 # MDX dependencies
 serde-saphyr = "0.0"

@@ -14,7 +14,7 @@ name = "fob_mdx_runtime"
 
 [features]
 default = ["bundler"]
-bundler = ["dep:fob-bundler", "dep:fob-native", "dep:fob-plugin-mdx", "dep:rolldown_common", "dep:tokio"]
+bundler = ["dep:fob-bundler", "dep:fob-plugin-mdx", "dep:rolldown_common", "dep:tokio"]
 
 [dependencies]
 fob-mdx = { workspace = true }
@@ -24,8 +24,7 @@ thiserror.workspace = true
 bon.workspace = true
 
 fob-bundler = { workspace = true, optional = true }
-fob-native = { workspace = true, optional = true }
-fob-plugin-mdx = { path = "../fob-plugin-mdx", optional = true }
+fob-plugin-mdx = { workspace = true, optional = true }
 rolldown_common = { workspace = true, optional = true }
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]

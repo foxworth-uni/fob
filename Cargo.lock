@@ -2212,7 +2212,6 @@ dependencies = [
  "brk_rolldown_common",
  "fob-bundler",
  "fob-mdx",
- "fob-native",
  "fob-plugin-mdx",
  "thiserror 2.0.17",
  "tokio",

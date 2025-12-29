@@ -9,9 +9,9 @@ mod types;
 pub use types::{BundleMdxOptions, BundleMdxResult};
 
 use anyhow::{Context, Result};
+use fob_bundler::runtime::BundlerRuntime;
 use fob_bundler::{BuildOptions, BuildOutput, BundleOutput, OutputFormat, build};
 use fob_mdx::compile;
-use fob_native::runtime::NativeRuntime;
 use fob_plugin_mdx::FobMdxPlugin;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -100,8 +100,7 @@ pub async fn bundle_mdx(options: BundleMdxOptions) -> Result<BundleMdxResult> {
         .format(OutputFormat::Esm)
         .sourcemap_hidden();
 
-    let runtime =
-        Arc::new(NativeRuntime::new(cwd.clone()).context("Failed to create native runtime")?);
+    let runtime = Arc::new(BundlerRuntime::new(cwd.clone()));
 
     build_opts = build_opts
         .runtime(runtime.clone())
