@@ -35,6 +35,7 @@ __pycache__/
 *.so
 .venv/
 venv/
+.venv-test/
 
 # Ruby
 *.bundle

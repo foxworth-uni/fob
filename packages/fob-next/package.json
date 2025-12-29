@@ -1,0 +1,52 @@
+{
+  "name": "@fob/next",
+  "version": "0.1.0",
+  "description": "Next.js integration for fob MDX bundler",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "fob",
+    "nextjs",
+    "mdx",
+    "bundler",
+    "react-server-components"
+  ],
+  "author": "Taron Foxworth <fox@9generations.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/foxworth-uni/fob.git"
+  },
+  "peerDependencies": {
+    "next": ">=15.0.0",
+    "react": ">=19.0.0"
+  },
+  "dependencies": {
+    "@fox-uni/fob": "^0.2.4",
+    "@fob/mdx-runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.0.0",
+    "typescript": "^5.9.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}
+

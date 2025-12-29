@@ -99,6 +99,9 @@ jobs:
     name: Publish NPM
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      id-token: write  # Required for OIDC trusted publishing
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -132,11 +135,7 @@ jobs:
       - name: Publish to NPM
         run: |
           cd crates/fob-native
-          npm config set provenance true
-          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
           npm publish --access public
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   # Publish to crates.io
   publish-crates:
