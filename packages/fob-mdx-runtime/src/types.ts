@@ -48,8 +48,8 @@ export interface MDXComponents {
   // Code block with syntax highlighting
   CodeBlock?: ComponentType<CodeBlockProps>;
 
-  // Custom components (user-defined)
-  custom?: Record<string, ComponentType<unknown>>;
+  // Index signature to allow arbitrary custom component names
+  [key: string]: ComponentType<any> | undefined;
 }
 
 /**
