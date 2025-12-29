@@ -2,6 +2,7 @@
 
 use super::super::ModuleId;
 use super::super::symbol::UnreachableCode;
+use super::utils::LineIndex;
 use super::visitor::UnreachableCodeVisitor as Visitor;
 
 // Note: Parsing is done inline in detect_unreachable_code to avoid
@@ -15,8 +16,10 @@ pub(super) fn detect_unreachable_with_visitor(
     module_id: ModuleId,
 ) -> Vec<UnreachableCode> {
     // Create visitor to detect unreachable code
+    let line_index = LineIndex::new(source_text);
     let mut visitor = Visitor {
         source_text,
+        line_index: &line_index,
         module_id,
         unreachable: Vec::new(),
     };

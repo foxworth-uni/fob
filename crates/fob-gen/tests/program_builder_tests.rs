@@ -1,42 +1,50 @@
 //! Comprehensive tests for fob-gen builders
 
-use fob_gen::{Allocator, BinaryOperator, JsBuilder, LogicalOperator};
+use fob_gen::{Allocator, BinaryOperator, LogicalOperator, ProgramBuilder};
 use oxc_ast::ast::Statement;
 
 #[test]
 fn test_primitives() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // Test number
     let stmt = js.const_decl("x", js.number(42.0));
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
     assert!(code.contains("const x = 42"));
 
     // Test string
+    let mut js = ProgramBuilder::new(&allocator);
     let stmt = js.const_decl("msg", js.string("hello"));
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
     assert!(code.contains(r#"const msg = "hello""#));
 
     // Test boolean
+    let mut js = ProgramBuilder::new(&allocator);
     let stmt = js.const_decl("flag", js.bool(true));
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
     assert!(code.contains("const flag = true"));
 
     // Test null
+    let mut js = ProgramBuilder::new(&allocator);
     let stmt = js.const_decl("empty", js.null());
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
     assert!(code.contains("const empty = null"));
 }
 
 #[test]
 fn test_arrays() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     let arr = js.array(vec![js.number(1.0), js.number(2.0), js.number(3.0)]);
     let stmt = js.const_decl("nums", arr);
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     // Just verify it contains the basic structure
     assert!(code.contains("const nums"));
@@ -49,14 +57,15 @@ fn test_arrays() {
 #[test]
 fn test_objects() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     let obj = js.object(vec![
         js.prop("name", js.string("John")),
         js.prop("age", js.number(30.0)),
     ]);
     let stmt = js.const_decl("person", obj);
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("const person"));
     assert!(code.contains(r#"name: "John""#));
@@ -66,13 +75,14 @@ fn test_objects() {
 #[test]
 fn test_member_access() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // console.log
     let member = js.member(js.ident("console"), "log");
     let call = js.call(member, vec![js.arg(js.string("test"))]);
     let stmt = js.expr_stmt(call);
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("console.log"));
     assert!(code.contains(r#""test""#));
@@ -81,12 +91,13 @@ fn test_member_access() {
 #[test]
 fn test_computed_member() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // arr[0]
     let computed = js.computed_member(js.ident("arr"), js.number(0.0));
     let stmt = js.const_decl("first", computed);
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("const first = arr[0]"));
 }
@@ -94,7 +105,7 @@ fn test_computed_member() {
 #[test]
 fn test_arrow_functions() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // const double = x => x * 2
     let arrow = js.arrow_fn(
@@ -106,7 +117,8 @@ fn test_arrow_functions() {
         ),
     );
     let stmt = js.const_decl("double", arrow);
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("const double"));
     assert!(code.contains("=>"));
@@ -116,12 +128,13 @@ fn test_arrow_functions() {
 #[test]
 fn test_imports() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // import React from 'react'
     let import_decl = js.import_default("React", "react");
     let stmt = Statement::from(import_decl);
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("import React from"));
     assert!(code.contains(r#""react""#));
@@ -130,12 +143,13 @@ fn test_imports() {
 #[test]
 fn test_named_imports() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // import { useState, useEffect } from 'react'
     let import_decl = js.import_named(vec!["useState", "useEffect"], "react");
     let stmt = Statement::from(import_decl);
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("import"));
     assert!(code.contains("useState"));
@@ -146,12 +160,13 @@ fn test_named_imports() {
 #[test]
 fn test_exports() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // export const greeting = "Hello"
     let export_decl = js.export_const("greeting", js.string("Hello"));
     let stmt = Statement::from(export_decl);
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("export"));
     assert!(code.contains("const greeting"));
@@ -161,12 +176,13 @@ fn test_exports() {
 #[test]
 fn test_export_default() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // export default 42
     let export_decl = js.export_default(js.number(42.0));
     let stmt = Statement::from(export_decl);
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("export default 42"));
 }
@@ -174,7 +190,7 @@ fn test_export_default() {
 #[test]
 fn test_if_statement() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // if (x > 0) { return true; } else { return false; }
     let test = js.binary(js.ident("x"), BinaryOperator::GreaterThan, js.number(0.0));
@@ -182,7 +198,8 @@ fn test_if_statement() {
     let alternate = vec![js.return_stmt(Some(js.bool(false)))];
 
     let if_stmt = js.if_stmt(test, consequent, Some(alternate));
-    let code = js.program(vec![if_stmt]).unwrap();
+    js.push(if_stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("if"));
     assert!(code.contains("x > 0"));
@@ -193,7 +210,7 @@ fn test_if_statement() {
 #[test]
 fn test_logical_operators() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // const result = a && b || c
     let expr = js.logical(
@@ -202,7 +219,8 @@ fn test_logical_operators() {
         js.ident("c"),
     );
     let stmt = js.const_decl("result", expr);
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("const result"));
     assert!(code.contains("a && b"));
@@ -213,13 +231,14 @@ fn test_logical_operators() {
 #[test]
 fn test_conditional_expression() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // const result = x > 0 ? "positive" : "negative"
     let test = js.binary(js.ident("x"), BinaryOperator::GreaterThan, js.number(0.0));
     let conditional = js.conditional(test, js.string("positive"), js.string("negative"));
     let stmt = js.const_decl("result", conditional);
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("const result"));
     assert!(code.contains("x > 0"));
@@ -231,12 +250,13 @@ fn test_conditional_expression() {
 #[test]
 fn test_new_expression() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // const err = new Error("Failed")
     let new_expr = js.new_expr(js.ident("Error"), vec![js.arg(js.string("Failed"))]);
     let stmt = js.const_decl("err", new_expr);
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("const err = new Error"));
     assert!(code.contains(r#""Failed""#));
@@ -245,12 +265,13 @@ fn test_new_expression() {
 #[test]
 fn test_not_operator() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // const result = !flag
     let not_expr = js.not(js.ident("flag"));
     let stmt = js.const_decl("result", not_expr);
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("const result = !flag"));
 }
@@ -258,7 +279,7 @@ fn test_not_operator() {
 #[test]
 fn test_complex_program() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // import React from 'react';
     // const greeting = "Hello";
@@ -271,9 +292,8 @@ fn test_complex_program() {
     );
     let expr_stmt = js.expr_stmt(console_log);
 
-    let code = js
-        .program(vec![import_stmt, const_decl, expr_stmt])
-        .unwrap();
+    js.extend(vec![import_stmt, const_decl, expr_stmt]);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("import React"));
     assert!(code.contains("const greeting"));
@@ -283,28 +303,32 @@ fn test_complex_program() {
 #[test]
 fn test_let_declaration() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // let x;
     let stmt = js.let_decl("x", None);
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
     assert!(code.contains("let x"));
 
     // let y = 10;
+    let mut js = ProgramBuilder::new(&allocator);
     let stmt = js.let_decl("y", Some(js.number(10.0)));
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
     assert!(code.contains("let y = 10"));
 }
 
 #[test]
 fn test_throw_statement() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // throw new Error("Oops")
     let error = js.new_expr(js.ident("Error"), vec![js.arg(js.string("Oops"))]);
     let stmt = js.throw(error);
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("throw new Error"));
     assert!(code.contains(r#""Oops""#));
@@ -313,12 +337,13 @@ fn test_throw_statement() {
 #[test]
 fn test_template_literal() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // const msg = `Hello, ${name}!`
     let template = js.template_literal(vec!["Hello, ", "!"], vec![js.ident("name")]);
     let stmt = js.const_decl("msg", template);
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("const msg"));
     assert!(code.contains("`"));
@@ -329,7 +354,7 @@ fn test_template_literal() {
 #[test]
 fn test_template_literal_multiple_expressions() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // const msg = `${greeting}, ${name}!`
     let template = js.template_literal(
@@ -337,7 +362,8 @@ fn test_template_literal_multiple_expressions() {
         vec![js.ident("greeting"), js.ident("name")],
     );
     let stmt = js.const_decl("msg", template);
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("const msg"));
     assert!(code.contains("greeting"));
@@ -347,7 +373,7 @@ fn test_template_literal_multiple_expressions() {
 #[test]
 fn test_arrow_fn_with_block() {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // const fn = (x) => { return x * 2; }
     let arrow = js.arrow_fn_block(
@@ -359,7 +385,8 @@ fn test_arrow_fn_with_block() {
         )))],
     );
     let stmt = js.const_decl("fn", arrow);
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("const fn"));
     assert!(code.contains("=>"));

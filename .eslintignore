@@ -39,8 +39,3 @@ fixtures/
 # NAPI-RS generated bindings (auto-generated, do not lint)
 crates/fob-native/index.js
 crates/fob-native/index.d.ts
-
-# Language binding directories (no JS/TS to lint)
-crates/fob-python/
-crates/fob-ruby/
-crates/fob-php/

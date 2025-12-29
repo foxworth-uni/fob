@@ -328,7 +328,7 @@ pub fn index_html(name: &str) -> String {
     use fob_gen::{Allocator, HtmlBuilder};
 
     let allocator = Allocator::default();
-    let html_builder = HtmlBuilder::new(&allocator);
+    let html_builder = HtmlBuilder::new(allocator);
 
     // Use HtmlBuilder to generate the HTML
     // Note: HtmlBuilder doesn't support custom titles yet, so we'll generate and modify

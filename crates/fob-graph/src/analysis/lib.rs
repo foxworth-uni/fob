@@ -211,17 +211,33 @@ impl std::fmt::Debug for AnalyzeOptions {
 ///
 /// # Example
 ///
-/// ```rust,ignore
-/// use super::{analyze_with_options, AnalyzeOptions};
-/// use fob_graph::FrameworkRule;
+/// ```rust,no_run
+/// use fob_graph::analysis::{analyze_with_options, AnalyzeOptions};
+/// use fob_graph::{FrameworkRule, ModuleGraph, Result};
+/// use async_trait::async_trait;
 ///
 /// // Define your own framework rules
+/// #[derive(Clone)]
+/// struct MyCustomRule;
+///
+/// #[async_trait]
+/// impl FrameworkRule for MyCustomRule {
+///     async fn apply(&self, _graph: &ModuleGraph) -> Result<()> { Ok(()) }
+///     fn name(&self) -> &'static str { "my-rule" }
+///     fn description(&self) -> &'static str { "My Custom Rule" }
+///     fn clone_box(&self) -> Box<dyn FrameworkRule> { Box::new(self.clone()) }
+/// }
+///
+/// # async fn run() -> Result<()> {
 /// let options = AnalyzeOptions {
 ///     framework_rules: vec![Box::new(MyCustomRule)],
 ///     compute_usage_counts: true,
 /// };
 ///
-/// let result = analyze_with_options(["src/index.tsx"], options).await?;
+/// let result = analyze_with_options(["src/index.tsx"], options).await
+///     .map_err(|e| fob_graph::Error::Operation(e.to_string()))?;
+/// # Ok(())
+/// # }
 /// ```
 pub async fn analyze_with_options<P>(
     entries: impl IntoIterator<Item = P>,
@@ -261,12 +277,17 @@ where
 ///
 /// # Example
 ///
-/// ```rust,ignore
-/// use super::analyze;
+/// ```rust,no_run
+/// use fob_graph::analysis::analyze;
+/// use fob_graph::Result;
 ///
-/// let result = analyze(["src/index.tsx"]).await?;
+/// # async fn run() -> Result<()> {
+/// let result = analyze(["src/index.tsx"]).await
+///     .map_err(|e| fob_graph::Error::Operation(e.to_string()))?;
 /// // No framework rules are applied - pure infrastructure analysis
 /// let unused = result.graph.unused_exports();
+/// # Ok(())
+/// # }
 /// ```
 pub async fn analyze<P>(
     entries: impl IntoIterator<Item = P>,

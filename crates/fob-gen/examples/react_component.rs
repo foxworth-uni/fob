@@ -2,12 +2,12 @@
 //!
 //! This demonstrates generating a complete React component with JSX.
 
-use fob_gen::{Allocator, JsBuilder, JsxBuilder};
+use fob_gen::{Allocator, JsxBuilder, ProgramBuilder};
 use oxc_ast::ast::Statement;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
     let jsx = JsxBuilder::new(&allocator);
 
     // import React from 'react'
@@ -39,11 +39,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let export_default = js.export_default(js.ident("Button"));
 
     // Generate complete module
-    let code = js.program(vec![
+    js.extend(vec![
         Statement::from(import_react),
         button_decl,
         Statement::from(export_default),
-    ])?;
+    ]);
+    let code = js.generate(&Default::default())?;
 
     println!("{}", code);
     Ok(())

@@ -1,6 +1,0 @@
-dist/
-*.gem
-*.so
-*.bundle
-*.dylib
-.DS_Store

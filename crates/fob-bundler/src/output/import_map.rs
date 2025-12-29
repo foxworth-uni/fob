@@ -32,7 +32,7 @@ impl ImportMap {
         use fob_gen::{Allocator, HtmlBuilder};
 
         let allocator = Allocator::default();
-        let html_builder = HtmlBuilder::new(&allocator);
+        let html_builder = HtmlBuilder::new(allocator);
         html_builder.inject_import_map(html, &self.to_json())
     }
 }

@@ -2,8 +2,9 @@
 
 #[cfg(feature = "parser")]
 mod roundtrip_impl {
-    use fob_gen::{JsBuilder, ParseOptions};
+    use fob_gen::{ParseOptions, ProgramBuilder};
     use oxc_allocator::Allocator as OxcAllocator;
+    use oxc_codegen;
     use std::fs;
     use std::path::PathBuf;
 
@@ -59,55 +60,47 @@ mod roundtrip_impl {
         let parsed = fob_gen::parse(&allocator, source, parse_opts)
             .unwrap_or_else(|e| panic!("Failed to parse {}: {}", filename, e));
 
-        // Note: We can't easily regenerate from parsed AST because Statement doesn't implement Clone
-        // This test would need a deep clone or a different approach
-        // For now, we'll just verify the original code parses successfully
-        let regenerated = source;
+        // Regenerate code from parsed AST using oxc_codegen
+        let codegen = oxc_codegen::Codegen::new();
+        let regenerated = codegen.build(&parsed.program).code;
 
-        // Parse regenerated code
+        // Parse regenerated code with fresh allocator (required for lifetime safety)
+        let allocator2 = OxcAllocator::default();
         let parse_opts2 = ParseOptions::from_path(filename);
-        let parsed2 = fob_gen::parse(&allocator, &regenerated, parse_opts2)
-            .unwrap_or_else(|e| panic!("Failed to parse regenerated code for {}: {}", filename, e));
+        let parsed2 = fob_gen::parse(&allocator2, &regenerated, parse_opts2)
+            .unwrap_or_else(|e| panic!("Failed to parse regenerated code for {}: {}\nRegenerated:\n{}", filename, e, regenerated));
 
         // Basic checks: both should have same number of statements
         assert_eq!(
             parsed.program.body.len(),
             parsed2.program.body.len(),
-            "Statement count mismatch for {}",
-            filename
+            "Statement count mismatch for {}\nOriginal: {} statements\nRegenerated: {} statements\nRegenerated code:\n{}",
+            filename,
+            parsed.program.body.len(),
+            parsed2.program.body.len(),
+            regenerated
         );
-
-        // Both should parse without errors (or same errors)
-        // Note: We don't compare exact AST structure as formatting may differ
-        // but semantic equivalence is what matters
     }
 
     /// Test that generating code from builder produces stable output
     #[test]
     fn test_formatting_stability() {
         let allocator = OxcAllocator::default();
-        let js = JsBuilder::new(&allocator);
 
-        // Build the same statements multiple times
-        let statements1 = vec![
-            js.const_decl("x", js.number(42.0)),
-            js.const_decl("y", js.string("hello")),
-        ];
-
-        let statements2 = vec![
-            js.const_decl("x", js.number(42.0)),
-            js.const_decl("y", js.string("hello")),
-        ];
-
-        let statements3 = vec![
-            js.const_decl("x", js.number(42.0)),
-            js.const_decl("y", js.string("hello")),
-        ];
+        let generate_code = |alloc: &OxcAllocator| {
+            let mut js = ProgramBuilder::new(alloc);
+            let statements = vec![
+                js.const_decl("x", js.number(42.0)),
+                js.const_decl("y", js.string("hello")),
+            ];
+            js.extend(statements);
+            js.generate(&Default::default()).unwrap()
+        };
 
         // Generate code multiple times
-        let first = js.program(statements1).unwrap();
-        let second = js.program(statements2).unwrap();
-        let third = js.program(statements3).unwrap();
+        let first = generate_code(&allocator);
+        let second = generate_code(&allocator);
+        let third = generate_code(&allocator);
 
         // All generations should be identical
         assert_eq!(first, second, "First and second generation differ");

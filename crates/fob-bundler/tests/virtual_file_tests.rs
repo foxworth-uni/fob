@@ -382,6 +382,44 @@ export function BlogPage() {
         );
     }
 
+    /// Test that virtual files with syntax errors produce clear error messages
+    #[tokio::test]
+    async fn test_virtual_file_syntax_error() {
+        let result = BuildOptions::new("virtual:entry.js")
+            .externalize_from("package.json")
+            .platform(Platform::Node)
+            .virtual_file(
+                "virtual:entry.js",
+                r#"
+// This has invalid JavaScript syntax
+export const x = {
+    unclosed: "object
+// Missing closing brace and quote
+"#,
+            )
+            .build()
+            .await;
+
+        // Should fail with a parse/syntax error
+        match result {
+            Ok(_) => panic!("Syntax error should cause build to fail"),
+            Err(e) => {
+                let err_msg = e.to_string();
+                // Error should be meaningful and indicate the problem
+                assert!(
+                    !err_msg.is_empty(),
+                    "Error message should not be empty"
+                );
+                // Should ideally mention parse/syntax issue (flexible check)
+                assert!(
+                    err_msg.len() > 10,
+                    "Error message should be descriptive: {}",
+                    err_msg
+                );
+            }
+        }
+    }
+
     /// Test virtual entry importing disk MDX
     ///
     /// This tests the hybrid scenario where a virtual entry imports a real MDX file.

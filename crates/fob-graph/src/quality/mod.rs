@@ -38,7 +38,6 @@ pub fn calculate_quality_metrics(program: &Program, source_text: &str, table: &m
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::SourceType;
     use crate::semantic::analyze_symbols;
 
@@ -53,15 +52,8 @@ function longFunction() {
 }
         "#;
 
-        let mut table =
+        let table =
             analyze_symbols(source, "test.js", SourceType::JavaScript).expect("analysis failed");
-
-        // Parse again to get the program for quality metrics
-        let allocator = oxc_allocator::Allocator::default();
-        let source_type = oxc_span::SourceType::default();
-        let ret = oxc_parser::Parser::new(&allocator, source, source_type).parse();
-
-        calculate_quality_metrics(&ret.program, source, &mut table);
 
         // Find the function symbol
         let func_symbols = table.symbols_by_name("longFunction");
@@ -84,14 +76,8 @@ function manyParams(a, b, c, d, e) {
 }
         "#;
 
-        let mut table =
+        let table =
             analyze_symbols(source, "test.js", SourceType::JavaScript).expect("analysis failed");
-
-        let allocator = oxc_allocator::Allocator::default();
-        let source_type = oxc_span::SourceType::default();
-        let ret = oxc_parser::Parser::new(&allocator, source, source_type).parse();
-
-        calculate_quality_metrics(&ret.program, source, &mut table);
 
         let func_symbols = table.symbols_by_name("manyParams");
         assert_eq!(func_symbols.len(), 1);
@@ -113,14 +99,8 @@ class MyClass {
 }
         "#;
 
-        let mut table =
+        let table =
             analyze_symbols(source, "test.js", SourceType::JavaScript).expect("analysis failed");
-
-        let allocator = oxc_allocator::Allocator::default();
-        let source_type = oxc_span::SourceType::default();
-        let ret = oxc_parser::Parser::new(&allocator, source, source_type).parse();
-
-        calculate_quality_metrics(&ret.program, source, &mut table);
 
         let class_symbols = table.symbols_by_name("MyClass");
         assert_eq!(class_symbols.len(), 1);
@@ -146,14 +126,8 @@ function complexFunction(x) {
 }
         "#;
 
-        let mut table =
+        let table =
             analyze_symbols(source, "test.js", SourceType::JavaScript).expect("analysis failed");
-
-        let allocator = oxc_allocator::Allocator::default();
-        let source_type = oxc_span::SourceType::default();
-        let ret = oxc_parser::Parser::new(&allocator, source, source_type).parse();
-
-        calculate_quality_metrics(&ret.program, source, &mut table);
 
         let func_symbols = table.symbols_by_name("complexFunction");
         assert_eq!(func_symbols.len(), 1);

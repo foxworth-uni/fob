@@ -236,6 +236,21 @@ mod query_impl {
         pub fn count(&self) -> usize {
             self.matches.len()
         }
+
+        /// Get an iterator over the matched import declarations
+        pub fn iter<'s>(&'s self) -> impl Iterator<Item = &'a ImportDeclaration<'a>> + 's {
+            self.matches.iter().map(|&ptr| {
+                // SAFETY: These pointers are valid during the query lifetime
+                unsafe { &*ptr }
+            })
+        }
+    }
+    /// Represents one of several types of export declarations
+    #[derive(Debug)]
+    pub enum ExportDeclaration<'a> {
+        Named(&'a ExportNamedDeclaration<'a>),
+        Default(&'a ExportDefaultDeclaration<'a>),
+        All(&'a ExportAllDeclaration<'a>),
     }
 
     /// Query for exports
@@ -268,6 +283,7 @@ mod query_impl {
                         decl,
                         ModuleDeclaration::ExportNamedDeclaration(_)
                             | ModuleDeclaration::ExportDefaultDeclaration(_)
+                            | ModuleDeclaration::ExportAllDeclaration(_)
                     ) {
                         self.matches.push(decl as *const _);
                     }
@@ -284,6 +300,21 @@ mod query_impl {
         /// Get the number of matches
         pub fn count(&self) -> usize {
             self.matches.len()
+        }
+
+        /// Get an iterator over the matched export declarations
+        pub fn iter<'s>(&'s self) -> impl Iterator<Item = ExportDeclaration<'a>> + 's {
+            self.matches.iter().map(|&ptr| {
+                // SAFETY: These pointers are valid during the query lifetime
+                let decl = unsafe { &*ptr };
+                match decl {
+                    ModuleDeclaration::ExportNamedDeclaration(d) => ExportDeclaration::Named(d),
+                    ModuleDeclaration::ExportDefaultDeclaration(d) => ExportDeclaration::Default(d),
+                    ModuleDeclaration::ExportAllDeclaration(d) => ExportDeclaration::All(d),
+                    // This is safe because we only collect the above types
+                    _ => unreachable!(),
+                }
+            })
         }
     }
 }

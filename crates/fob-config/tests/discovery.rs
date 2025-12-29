@@ -230,3 +230,58 @@ fn package_json_with_null_joy_field_not_discovered() {
     let discovery = ConfigDiscovery::new(dir.path());
     assert!(discovery.find().is_none());
 }
+
+#[test]
+fn handles_malformed_toml() {
+    let dir = TempDir::new().unwrap();
+    // Invalid TOML syntax - unclosed bracket
+    fs::write(
+        dir.path().join("fob.toml"),
+        r#"
+[bundle
+entries = ["index.ts"]
+"#,
+    )
+    .unwrap();
+
+    let discovery = ConfigDiscovery::new(dir.path());
+    // Should find the file
+    assert!(discovery.find().is_some());
+    // But loading should fail with parse error
+    let result = discovery.load();
+    assert!(result.is_err(), "Malformed TOML should fail to load");
+
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+        !err_msg.is_empty(),
+        "Error message should not be empty"
+    );
+}
+
+#[test]
+fn handles_malformed_package_json() {
+    let dir = TempDir::new().unwrap();
+    // Invalid JSON syntax - missing closing brace
+    fs::write(
+        dir.path().join("package.json"),
+        r#"{
+  "name": "test",
+  "fob": {
+    "bundle": {
+      "entries": ["index.ts"]
+  }
+"#,
+    )
+    .unwrap();
+
+    let discovery = ConfigDiscovery::new(dir.path());
+    // Loading should fail with parse error
+    let result = discovery.load();
+    assert!(result.is_err(), "Malformed JSON should fail to load");
+
+    let err_msg = result.unwrap_err().to_string();
+    assert!(
+        !err_msg.is_empty(),
+        "Error message should not be empty"
+    );
+}

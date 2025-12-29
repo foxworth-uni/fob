@@ -3,11 +3,11 @@
 //! This demonstrates how `fob-gen` can generate complex JavaScript objects
 //! for configuration and routing.
 
-use fob_gen::{Allocator, JsBuilder};
+use fob_gen::{Allocator, ProgramBuilder};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let allocator = Allocator::default();
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // Create route entries
     let routes = vec![
@@ -44,7 +44,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let export_default = js.export_default(js.ident("routes"));
 
     // Generate module
-    let code = js.program(vec![routes_decl, Statement::from(export_default)])?;
+    js.extend(vec![routes_decl, Statement::from(export_default)]);
+    let code = js.generate(&Default::default())?;
 
     println!("{}", code);
     Ok(())

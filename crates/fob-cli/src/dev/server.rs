@@ -307,7 +307,7 @@ fn generate_index_html(entry_point: Option<&str>) -> Result<String, String> {
     use fob_gen::{Allocator, HtmlBuilder};
 
     let allocator = Allocator::default();
-    let html_builder = HtmlBuilder::new(&allocator);
+    let html_builder = HtmlBuilder::new(allocator);
 
     html_builder
         .index_html(entry_point)

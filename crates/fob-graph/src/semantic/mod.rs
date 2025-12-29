@@ -301,17 +301,38 @@ mod tests {
 
     #[test]
     fn test_line_column_calculation() {
-        use super::utils::get_line_column;
+        use super::utils::LineIndex;
         let source = "line 1\nline 2\nline 3";
+        let index = LineIndex::new(source);
 
         // Start of file
-        assert_eq!(get_line_column(source, 0), (1, 0));
+        assert_eq!(index.get_line_column(0, source), (1, 0));
 
         // Start of line 2 (after first \n)
-        assert_eq!(get_line_column(source, 7), (2, 0));
+        assert_eq!(index.get_line_column(7, source), (2, 0));
 
         // Start of line 3
-        assert_eq!(get_line_column(source, 14), (3, 0));
+        assert_eq!(index.get_line_column(14, source), (3, 0));
+    }
+
+    #[test]
+    fn test_line_column_offset_zero() {
+        use super::utils::LineIndex;
+
+        // Test with empty string
+        let empty_source = "";
+        let index = LineIndex::new(empty_source);
+        assert_eq!(index.get_line_column(0, empty_source), (1, 0));
+
+        // Test with single character
+        let single_char = "x";
+        let index = LineIndex::new(single_char);
+        assert_eq!(index.get_line_column(0, single_char), (1, 0));
+
+        // Test with newline at start
+        let newline_start = "\nline 2";
+        let index = LineIndex::new(newline_start);
+        assert_eq!(index.get_line_column(0, newline_start), (1, 0));
     }
 
     #[test]

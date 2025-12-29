@@ -1,6 +1,6 @@
 //! Comprehensive JSX builder tests
 
-use fob_gen::{Allocator, JsBuilder, JsxBuilder};
+use fob_gen::{Allocator, JsxBuilder, ProgramBuilder};
 use oxc_ast::ast::Statement;
 
 #[test]
@@ -11,9 +11,10 @@ fn test_jsx_simple_element() {
     // <div>Hello</div>
     let element = jsx.element("div", vec![], vec![jsx.text("Hello")], false);
 
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
     let stmt = js.const_decl("el", jsx.jsx_expr(element));
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("<div"));
     assert!(code.contains("</div>"));
@@ -33,9 +34,10 @@ fn test_jsx_self_closing() {
         true, // self_closing
     );
 
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
     let stmt = js.const_decl("img", jsx.jsx_expr(element));
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("<img"));
     assert!(code.contains("/>"));
@@ -58,9 +60,10 @@ fn test_jsx_with_attributes() {
         false,
     );
 
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
     let stmt = js.const_decl("el", jsx.jsx_expr(element));
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("<div"));
     assert!(code.contains("className"));
@@ -78,9 +81,10 @@ fn test_jsx_boolean_attribute() {
     // <input disabled />
     let element = jsx.element("input", vec![jsx.attr("disabled", None)], vec![], true);
 
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
     let stmt = js.const_decl("input", jsx.jsx_expr(element));
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("<input"));
     assert!(code.contains("disabled"));
@@ -90,7 +94,7 @@ fn test_jsx_boolean_attribute() {
 fn test_jsx_expression_attribute() {
     let allocator = Allocator::default();
     let jsx = JsxBuilder::new(&allocator);
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // <div className={styles.container}>Text</div>
     let expr = js.member(js.ident("styles"), "container");
@@ -102,7 +106,8 @@ fn test_jsx_expression_attribute() {
     );
 
     let stmt = js.const_decl("el", jsx.jsx_expr(element));
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("<div"));
     assert!(code.contains("className"));
@@ -119,9 +124,10 @@ fn test_jsx_nested_elements() {
 
     let div = jsx.element("div", vec![], vec![jsx.child(span)], false);
 
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
     let stmt = js.const_decl("el", jsx.jsx_expr(div));
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("<div"));
     assert!(code.contains("<span"));
@@ -134,7 +140,7 @@ fn test_jsx_nested_elements() {
 fn test_jsx_expression_children() {
     let allocator = Allocator::default();
     let jsx = JsxBuilder::new(&allocator);
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // <div>{count}</div>
     let element = jsx.element(
@@ -145,7 +151,8 @@ fn test_jsx_expression_children() {
     );
 
     let stmt = js.const_decl("el", jsx.jsx_expr(element));
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("<div"));
     assert!(code.contains("{"));
@@ -164,9 +171,10 @@ fn test_jsx_fragment() {
 
     let fragment = jsx.fragment(vec![jsx.child(first), jsx.child(second)]);
 
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
     let stmt = js.const_decl("el", jsx.jsx_fragment_expr(fragment));
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("<>"));
     assert!(code.contains("</>"));
@@ -180,7 +188,7 @@ fn test_jsx_component() {
     let jsx = JsxBuilder::new(&allocator);
 
     // <Button onClick={handleClick}>Click me</Button>
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
     let element = jsx.element(
         "Button",
         vec![jsx.attr("onClick", Some(jsx.expr_attr(js.ident("handleClick"))))],
@@ -189,7 +197,8 @@ fn test_jsx_component() {
     );
 
     let stmt = js.const_decl("btn", jsx.jsx_expr(element));
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("<Button"));
     assert!(code.contains("onClick"));
@@ -202,7 +211,7 @@ fn test_jsx_component() {
 fn test_jsx_mixed_children() {
     let allocator = Allocator::default();
     let jsx = JsxBuilder::new(&allocator);
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // <div>Text {variable} <span>more</span></div>
     let span = jsx.element("span", vec![], vec![jsx.text("more")], false);
@@ -219,7 +228,8 @@ fn test_jsx_mixed_children() {
     );
 
     let stmt = js.const_decl("el", jsx.jsx_expr(element));
-    let code = js.program(vec![stmt]).unwrap();
+    js.push(stmt);
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("<div"));
     assert!(code.contains("Text"));
@@ -232,13 +242,14 @@ fn test_jsx_mixed_children() {
 fn test_jsx_in_export() {
     let allocator = Allocator::default();
     let jsx = JsxBuilder::new(&allocator);
-    let js = JsBuilder::new(&allocator);
+    let mut js = ProgramBuilder::new(&allocator);
 
     // export default <App />
     let element = jsx.element("App", vec![], vec![], true);
     let export = js.export_default(jsx.jsx_expr(element));
 
-    let code = js.program(vec![Statement::from(export)]).unwrap();
+    js.push(Statement::from(export));
+    let code = js.generate(&Default::default()).unwrap();
 
     assert!(code.contains("export default"));
     assert!(code.contains("<App"));

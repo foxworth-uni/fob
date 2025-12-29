@@ -5,7 +5,7 @@
 
 #[cfg(feature = "fob_internal")]
 mod internal_impl {
-    use crate::JsBuilder;
+    use crate::ProgramBuilder;
     use oxc_ast::ast::*;
 
     /// Trait for manipulating imports in AST
@@ -26,7 +26,7 @@ mod internal_impl {
         fn inject_reload_client(&mut self, entry_ident: &str);
 
         /// Wrap exports with development boundary
-        fn wrap_with_dev_boundary(&mut self, builder: &JsBuilder<'a>);
+        fn wrap_with_dev_boundary(&mut self, builder: &ProgramBuilder<'a>);
     }
 
     /// Trait for common AST mutations
@@ -37,7 +37,7 @@ mod internal_impl {
         /// Wrap a function call with error handling
         fn wrap_call_with_error_handling(
             &mut self,
-            builder: &JsBuilder<'a>,
+            builder: &ProgramBuilder<'a>,
             call: &CallExpression<'a>,
         );
     }

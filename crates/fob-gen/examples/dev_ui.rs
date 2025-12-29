@@ -4,7 +4,7 @@ use fob_gen::{Allocator, HtmlBuilder, RouteSpec};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let allocator = Allocator::default();
-    let html = HtmlBuilder::new(&allocator);
+    let html = HtmlBuilder::new(allocator);
 
     // Generate index.html
     println!("=== Index HTML ===");

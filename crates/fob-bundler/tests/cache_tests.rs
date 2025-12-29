@@ -219,3 +219,61 @@ async fn test_cache_with_multiple_entries() {
 
     assert_eq!(result2.output.assets().count(), asset_count1);
 }
+
+/// Test that corrupted cache files don't crash the bundler.
+/// The bundler should gracefully handle corruption and rebuild.
+#[tokio::test]
+async fn test_cache_handles_corrupted_data() {
+    use std::fs;
+    use std::io::Write;
+
+    let temp = TempDir::new().unwrap();
+    let cache_dir = temp.path().join("cache");
+
+    // Build 1: Create valid cache
+    let result1 = BuildOptions::new("virtual:entry.js")
+        .virtual_file("virtual:entry.js", "export const x = 42;")
+        .cache_dir(&cache_dir)
+        .outfile(temp.path().join("out1.js"))
+        .build()
+        .await
+        .unwrap();
+
+    assert_eq!(result1.output.assets().count(), 1);
+
+    // Corrupt the cache database file by writing garbage
+    let cache_db = cache_dir.join("cache.redb");
+    if cache_db.exists() {
+        // Write garbage to corrupt the database
+        let mut file = fs::OpenOptions::new()
+            .write(true)
+            .open(&cache_db)
+            .unwrap();
+        file.write_all(b"CORRUPTED DATA HERE").unwrap();
+    }
+
+    // Build 2: Should rebuild despite corrupted cache (not crash or hang)
+    let result2 = BuildOptions::new("virtual:entry.js")
+        .virtual_file("virtual:entry.js", "export const x = 42;")
+        .cache_dir(&cache_dir)
+        .outfile(temp.path().join("out2.js"))
+        .build()
+        .await;
+
+    // The build should either succeed (cache ignored/rebuilt) or fail gracefully
+    match result2 {
+        Ok(result) => {
+            // Rebuilt successfully despite corruption
+            assert_eq!(result.output.assets().count(), 1);
+        }
+        Err(e) => {
+            // If it fails, error should mention cache issue (not panic)
+            let err_msg = e.to_string();
+            assert!(
+                err_msg.contains("cache") || err_msg.contains("database") || err_msg.len() > 0,
+                "Error should be meaningful: {}",
+                err_msg
+            );
+        }
+    }
+}

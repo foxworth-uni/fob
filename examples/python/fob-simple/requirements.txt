@@ -1,3 +1,0 @@
-# Fob Python bindings
-# Note: This requires building the Rust extension with maturin
-# See README.md for installation instructions

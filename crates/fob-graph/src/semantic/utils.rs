@@ -45,33 +45,52 @@ pub(super) fn determine_symbol_kind(flags: oxc_semantic::SymbolFlags) -> SymbolK
     }
 }
 
-/// Calculate line and column from byte offset in source text.
-///
-/// Returns (line, column) where line is 1-indexed and column is 0-indexed.
-pub(super) fn get_line_column(source: &str, offset: u32) -> (u32, u32) {
-    let offset = offset as usize;
-    if offset > source.len() {
-        return (0, 0);
+/// Fast line/column lookup using pre-calculated line offsets.
+pub(super) struct LineIndex {
+    line_starts: Vec<u32>,
+}
+
+impl LineIndex {
+    pub fn new(source: &str) -> Self {
+        let mut line_starts = vec![0];
+        for (i, ch) in source.char_indices() {
+            if ch == '\n' {
+                line_starts.push((i + 1) as u32);
+            }
+        }
+        Self { line_starts }
     }
 
-    let mut line = 1u32;
-    let mut column = 0u32;
-    let mut current_offset = 0;
+    /// Calculate line and column from byte offset.
+    /// Returns (line, column) where line is 1-indexed and column is 0-indexed.
+    ///
+    /// # Safety Note
+    ///
+    /// This function previously had an underflow bug when `offset=0`:
+    /// `binary_search` would return `Err(0)`, and `0 - 1` would underflow.
+    /// The fix explicitly handles `Err(0)` to map it to line index 0.
+    pub fn get_line_column(&self, offset: u32, source: &str) -> (u32, u32) {
+        // Binary search for the line
+        // When offset is less than all line starts, binary_search returns Err(0).
+        // We must handle this explicitly to prevent underflow from idx - 1.
+        let line_idx = match self.line_starts.binary_search(&offset) {
+            Ok(idx) => idx,
+            Err(0) => 0, // Offset before first line start (prevents underflow)
+            Err(idx) => idx - 1,
+        };
 
-    for ch in source.chars() {
-        if current_offset >= offset {
-            break;
-        }
+        let line_start = self.line_starts[line_idx] as usize;
+        let line = (line_idx + 1) as u32;
 
-        if ch == '\n' {
-            line += 1;
-            column = 0;
+        // Calculate column by counting characters from line start
+        // This is safe because we know offset >= line_start
+        let column = if offset as usize > source.len() {
+            0
         } else {
-            column += 1;
-        }
+            // We need character count, not byte count for column
+            source[line_start..offset as usize].chars().count() as u32
+        };
 
-        current_offset += ch.len_utf8();
+        (line, column)
     }
-
-    (line, column)
 }

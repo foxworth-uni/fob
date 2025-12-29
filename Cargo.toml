@@ -6,9 +6,6 @@ members = [
     "crates/fob-bundler",
     "crates/fob-target",
     "crates/fob-native",
-    "crates/fob-python",
-    "crates/fob-ruby",
-    "crates/fob-php",
     "crates/fob-cli",
     "crates/fob-plugin-css",
     "crates/fob-plugin-tailwind",
@@ -27,9 +24,6 @@ default-members = [
     "crates/fob-bundler",
     "crates/fob-target",
     "crates/fob-native",
-    "crates/fob-python",
-    "crates/fob-ruby",
-    "crates/fob-php",
     "crates/fob-cli",
     "crates/fob-plugin-css",
     "crates/fob-plugin-tailwind",
@@ -54,27 +48,27 @@ keywords = ["bundler", "esm", "javascript", "typescript", "rust"]
 
 [workspace.dependencies]
 # OXC ecosystem - High-performance JavaScript tooling
-oxc_parser = "0.101.0"
-oxc_ast = "0.101.0"
-oxc_ast_visit = "0.101.0"
-oxc_semantic = "0.101.0"
+oxc_parser = "0.103.0"
+oxc_ast = "0.103.0"
+oxc_ast_visit = "0.103.0"
+oxc_semantic = "0.103.0"
 oxc_resolver = "11.14.2"
-oxc_transformer = "0.101.0"
-oxc_transformer_plugins = "0.101.0"
-oxc_codegen = "0.101.0"
-oxc_minifier = "0.101.0"
-oxc_allocator = "0.101.0"
-oxc_span = "0.101.0"
+oxc_transformer = "0.103.0"
+oxc_transformer_plugins = "0.103.0"
+oxc_codegen = "0.103.0"
+oxc_minifier = "0.103.0"
+oxc_allocator = "0.103.0"
+oxc_span = "0.103.0"
 oxc_sourcemap = "6.0.1"
-oxc_traverse = "0.101.0"
-oxc_isolated_declarations = "0.101.0"
+oxc_traverse = "0.103.0"
+oxc_isolated_declarations = "0.103.0"
 
 # Rolldown bundler (via brk_rolldown crates from crates.io)
-rolldown = { package = "brk_rolldown", version = "0.5.1" }
-rolldown_plugin = { package = "brk_rolldown_plugin", version = "0.5.1" }
-rolldown_common = { package = "brk_rolldown_common", version = "0.5.1" }
-rolldown_error = { package = "brk_rolldown_error", version = "0.5.1" }
-rolldown_fs = { package = "brk_rolldown_fs", version = "=0.5.1" }
+rolldown = { package = "brk_rolldown", version = "0.6.0" }
+rolldown_plugin = { package = "brk_rolldown_plugin", version = "0.6.0" }
+rolldown_common = { package = "brk_rolldown_common", version = "0.6.0" }
+rolldown_error = { package = "brk_rolldown_error", version = "0.6.0" }
+rolldown_fs = { package = "brk_rolldown_fs", version = "0.6.0" }
 
 # Core dependencies
 rustc-hash = "2.1.1"
@@ -229,10 +223,4 @@ disallowed_methods = "deny"
 async_fn_in_trait = "allow"
 # Missing docs warnings are tracked separately per crate
 missing_docs = "allow"
-
-# Patches for broken upstream crates
-[patch.crates-io]
-# rb-sys 0.9.119 has a publishing bug - missing rust.rs file in src/stable_api/
-# Magnus requires rb-sys >= 0.9.113, so 0.9.118 is compatible
-rb-sys = { git = "https://github.com/oxidize-rb/rb-sys", tag = "v0.9.118" }
 

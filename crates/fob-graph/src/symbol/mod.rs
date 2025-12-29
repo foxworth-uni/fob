@@ -39,6 +39,20 @@ pub struct Symbol {
     /// Additional metadata for specialized symbol kinds
     #[serde(default)]
     pub metadata: SymbolMetadata,
+    /// Qualified member references (e.g. `React.ComponentProps`)
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub qualified_references: Vec<QualifiedReference>,
+}
+
+/// A qualified reference to a member of a symbol (e.g. `Namespace.Member`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct QualifiedReference {
+    /// The path of members accessed (e.g. `["ComponentProps"]` for `React.ComponentProps`)
+    pub member_path: Vec<String>,
+    /// Whether this reference is used in a type position
+    pub is_type: bool,
+    /// The source span of the reference
+    pub span: SymbolSpan,
 }
 
 impl Symbol {
@@ -58,6 +72,7 @@ impl Symbol {
             is_exported: false,
             scope_id,
             metadata: SymbolMetadata::None,
+            qualified_references: Vec::new(),
         }
     }
 
@@ -78,6 +93,7 @@ impl Symbol {
             is_exported: false,
             scope_id,
             metadata,
+            qualified_references: Vec::new(),
         }
     }
 

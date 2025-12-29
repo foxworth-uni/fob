@@ -1,21 +1,19 @@
 //! Development UI generators for dev server HTML/JS
 
-use crate::JsBuilder;
+use crate::ProgramBuilder;
 use crate::error::Result;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Statement;
 
 /// HTML builder for generating dev server HTML
-pub struct HtmlBuilder<'a> {
-    js: JsBuilder<'a>,
+pub struct HtmlBuilder {
+    allocator: Allocator,
 }
 
-impl<'a> HtmlBuilder<'a> {
+impl<'a> HtmlBuilder {
     /// Create a new HTML builder
-    pub fn new(allocator: &'a Allocator) -> Self {
-        Self {
-            js: JsBuilder::new(allocator),
-        }
+    pub fn new(allocator: Allocator) -> Self {
+        Self { allocator }
     }
 
     /// Generate index.html for dev server
@@ -244,22 +242,23 @@ impl<'a> HtmlBuilder<'a> {
     ///
     /// Creates a JavaScript module exporting route configuration
     /// with lazy-loaded components.
-    pub fn route_manifest(&self, routes: &[RouteSpec]) -> Result<String> {
+    pub fn route_manifest(&self, routes: &'a [RouteSpec]) -> Result<String> {
+        let mut js = ProgramBuilder::new(&self.allocator);
         let route_objects: Vec<_> = routes
             .iter()
             .map(|route| {
-                self.js.object(vec![
-                    self.js.prop("path", self.js.string(route.path.as_str())),
-                    self.js.prop("id", self.js.string(route.id.as_str())),
-                    self.js.prop(
+                js.object(vec![
+                    js.prop("path", js.string(route.path.as_str())),
+                    js.prop("id", js.string(route.id.as_str())),
+                    js.prop(
                         "component",
-                        self.js.call(
-                            self.js.ident("lazy"),
-                            vec![self.js.arg(self.js.arrow_fn(
+                        js.call(
+                            js.ident("lazy"),
+                            vec![js.arg(js.arrow_fn(
                                 vec![],
-                                self.js.call(
-                                    self.js.ident("import"),
-                                    vec![self.js.arg(self.js.string(route.file.as_str()))],
+                                js.call(
+                                    js.ident("import"),
+                                    vec![js.arg(js.string(route.file.as_str()))],
                                 ),
                             ))],
                         ),
@@ -268,12 +267,14 @@ impl<'a> HtmlBuilder<'a> {
             })
             .collect();
 
-        let routes_array = self.js.array(route_objects);
-        let routes_decl = self.js.const_decl("routes", routes_array);
-        let export_default = self.js.export_default(self.js.ident("routes"));
+        let routes_array = js.array(route_objects);
+        let routes_decl = js.const_decl("routes", routes_array);
+        let export_default = js.export_default(js.ident("routes"));
 
-        self.js
-            .program(vec![routes_decl, Statement::from(export_default)])
+        js.push(routes_decl);
+        js.push(Statement::from(export_default));
+
+        js.generate(&Default::default())
     }
 }
 

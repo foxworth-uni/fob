@@ -163,9 +163,9 @@ impl Default for CollectionState {
 pub fn parse_module_structure(
     code: &str,
 ) -> Result<(Vec<CollectedImport>, Vec<CollectedExport>, bool), CollectionError> {
-    use fob_gen::{ParseOptions, QueryBuilder, parse};
+    use fob_gen::{ExportDeclaration, ParseOptions, QueryBuilder, parse};
     use oxc_allocator::Allocator;
-    use oxc_ast::ast::{Declaration, ModuleDeclaration};
+    use oxc_ast::ast::Declaration;
 
     let allocator = Allocator::default();
 
@@ -199,106 +199,115 @@ pub fn parse_module_structure(
     // Use QueryBuilder to extract imports and exports
     let query = QueryBuilder::new(&allocator, parsed.ast());
 
-    // Extract imports
-    let _import_query = query.find_imports(None);
-    // Note: QueryBuilder doesn't expose the actual ImportDeclaration nodes yet,
-    // so we still need to walk the AST manually, but we use the parsed program
-    for stmt in parsed.ast().body.iter() {
-        if let Some(module_decl) = stmt.as_module_declaration() {
-            match module_decl {
-                ModuleDeclaration::ImportDeclaration(import) => {
-                    let mut specifiers = Vec::new();
-                    if let Some(specs) = &import.specifiers {
-                        for spec in specs {
-                            match spec {
-                                oxc_ast::ast::ImportDeclarationSpecifier::ImportDefaultSpecifier(default_spec) => {
-                                    specifiers.push(CollectedImportSpecifier::Default {
-                                        local: default_spec.local.name.to_string(),
-                                    });
-                                }
-                                oxc_ast::ast::ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns_spec) => {
-                                    specifiers.push(CollectedImportSpecifier::Namespace {
-                                        local: ns_spec.local.name.to_string(),
-                                    });
-                                }
-                                oxc_ast::ast::ImportDeclarationSpecifier::ImportSpecifier(named_spec) => {
-                                    let imported = match &named_spec.imported {
-                                        oxc_ast::ast::ModuleExportName::IdentifierName(ident) => ident.name.to_string(),
-                                        oxc_ast::ast::ModuleExportName::IdentifierReference(ident) => ident.name.to_string(),
-                                        oxc_ast::ast::ModuleExportName::StringLiteral(lit) => lit.value.to_string(),
-                                    };
-                                    specifiers.push(CollectedImportSpecifier::Named {
-                                        imported,
-                                        local: named_spec.local.name.to_string(),
-                                    });
-                                }
-                            }
-                        }
-                    }
-                    // Determine import kind based on OXC's import_kind field
-                    let kind = match import.import_kind {
-                        oxc_ast::ast::ImportOrExportKind::Value => CollectedImportKind::Static,
-                        oxc_ast::ast::ImportOrExportKind::Type => CollectedImportKind::TypeOnly,
-                    };
+    // Helper to extract name from ModuleExportName
+    fn get_module_export_name_string(name: &oxc_ast::ast::ModuleExportName) -> String {
+        match name {
+            oxc_ast::ast::ModuleExportName::IdentifierName(ident) => ident.name.to_string(),
+            oxc_ast::ast::ModuleExportName::IdentifierReference(ident) => ident.name.to_string(),
+            oxc_ast::ast::ModuleExportName::StringLiteral(lit) => lit.value.to_string(),
+        }
+    }
 
-                    imports.push(CollectedImport {
-                        source: import.source.value.to_string(),
-                        specifiers,
-                        kind,
-                        resolved_path: None, // Will be populated during graph walking
-                    });
-                }
-                ModuleDeclaration::ExportDefaultDeclaration(_) => {
-                    exports.push(CollectedExport::Default);
-                }
-                ModuleDeclaration::ExportNamedDeclaration(named) => {
-                    if let Some(src) = &named.source {
-                        // Re-export
-                        exports.push(CollectedExport::All {
-                            source: src.value.to_string(),
+    // Extract imports
+    for import_decl in query.find_imports(None).iter() {
+        let mut specifiers = Vec::new();
+        if let Some(specs) = &import_decl.specifiers {
+            for spec in specs {
+                match spec {
+                    oxc_ast::ast::ImportDeclarationSpecifier::ImportDefaultSpecifier(
+                        default_spec,
+                    ) => {
+                        specifiers.push(CollectedImportSpecifier::Default {
+                            local: default_spec.local.name.to_string(),
                         });
-                    } else if let Some(decl) = &named.declaration {
-                        // Export declaration
-                        match decl {
-                            Declaration::FunctionDeclaration(func) => {
-                                if let Some(id) = &func.id {
-                                    exports.push(CollectedExport::Named {
-                                        exported: id.name.to_string(),
-                                        local: Some(id.name.to_string()),
-                                    });
-                                }
-                            }
-                            Declaration::VariableDeclaration(var) => {
-                                for decl in &var.declarations {
-                                    if let oxc_ast::ast::BindingPatternKind::BindingIdentifier(
-                                        ident,
-                                    ) = &decl.id.kind
-                                    {
-                                        exports.push(CollectedExport::Named {
-                                            exported: ident.name.to_string(),
-                                            local: Some(ident.name.to_string()),
-                                        });
-                                    }
-                                }
-                            }
-                            Declaration::ClassDeclaration(class) => {
-                                if let Some(id) = &class.id {
-                                    exports.push(CollectedExport::Named {
-                                        exported: id.name.to_string(),
-                                        local: Some(id.name.to_string()),
-                                    });
-                                }
-                            }
-                            _ => {}
-                        }
+                    }
+                    oxc_ast::ast::ImportDeclarationSpecifier::ImportNamespaceSpecifier(ns_spec) => {
+                        specifiers.push(CollectedImportSpecifier::Namespace {
+                            local: ns_spec.local.name.to_string(),
+                        });
+                    }
+                    oxc_ast::ast::ImportDeclarationSpecifier::ImportSpecifier(named_spec) => {
+                        let imported = get_module_export_name_string(&named_spec.imported);
+                        specifiers.push(CollectedImportSpecifier::Named {
+                            imported,
+                            local: named_spec.local.name.to_string(),
+                        });
                     }
                 }
-                ModuleDeclaration::ExportAllDeclaration(all) => {
+            }
+        }
+        let kind = match import_decl.import_kind {
+            oxc_ast::ast::ImportOrExportKind::Value => CollectedImportKind::Static,
+            oxc_ast::ast::ImportOrExportKind::Type => CollectedImportKind::TypeOnly,
+        };
+
+        imports.push(CollectedImport {
+            source: import_decl.source.value.to_string(),
+            specifiers,
+            kind,
+            resolved_path: None,
+        });
+    }
+
+    // Extract exports
+    for export_decl in query.find_exports().iter() {
+        match export_decl {
+            ExportDeclaration::Default(_) => {
+                exports.push(CollectedExport::Default);
+            }
+            ExportDeclaration::Named(named) => {
+                if let Some(src) = &named.source {
                     exports.push(CollectedExport::All {
-                        source: all.source.value.to_string(),
+                        source: src.value.to_string(),
                     });
+                } else if let Some(decl) = &named.declaration {
+                    match decl {
+                        Declaration::FunctionDeclaration(func) => {
+                            if let Some(id) = &func.id {
+                                exports.push(CollectedExport::Named {
+                                    exported: id.name.to_string(),
+                                    local: Some(id.name.to_string()),
+                                });
+                            }
+                        }
+                        Declaration::VariableDeclaration(var) => {
+                            for decl in &var.declarations {
+                                if let oxc_ast::ast::BindingPatternKind::BindingIdentifier(ident) =
+                                    &decl.id.kind
+                                {
+                                    exports.push(CollectedExport::Named {
+                                        exported: ident.name.to_string(),
+                                        local: Some(ident.name.to_string()),
+                                    });
+                                }
+                            }
+                        }
+                        Declaration::ClassDeclaration(class) => {
+                            if let Some(id) = &class.id {
+                                exports.push(CollectedExport::Named {
+                                    exported: id.name.to_string(),
+                                    local: Some(id.name.to_string()),
+                                });
+                            }
+                        }
+                        _ => {}
+                    }
+                } else {
+                    // Export specifiers like `export { foo }` or `export { foo as bar }`
+                    for s in &named.specifiers {
+                        let local = get_module_export_name_string(&s.local);
+                        let exported = get_module_export_name_string(&s.exported);
+                        exports.push(CollectedExport::Named {
+                            exported,
+                            local: Some(local),
+                        });
+                    }
                 }
-                _ => {}
+            }
+            ExportDeclaration::All(all) => {
+                exports.push(CollectedExport::All {
+                    source: all.source.value.to_string(),
+                });
             }
         }
     }

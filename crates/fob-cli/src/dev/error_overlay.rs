@@ -28,7 +28,7 @@ pub fn generate_error_overlay(error: &str) -> Result<String, String> {
     use fob_gen::{Allocator, HtmlBuilder};
 
     let allocator = Allocator::default();
-    let html_builder = HtmlBuilder::new(&allocator);
+    let html_builder = HtmlBuilder::new(allocator);
 
     html_builder
         .error_overlay(error)

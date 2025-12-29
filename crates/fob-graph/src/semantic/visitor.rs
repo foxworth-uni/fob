@@ -5,11 +5,12 @@ use oxc_ast_visit::walk;
 
 use super::super::ModuleId;
 use super::super::symbol::{SymbolSpan, UnreachableCode};
-use super::utils::get_line_column;
+use super::utils::LineIndex;
 
 /// AST visitor that detects unreachable code.
 pub(super) struct UnreachableCodeVisitor<'a> {
     pub(super) source_text: &'a str,
+    pub(super) line_index: &'a LineIndex,
     pub(super) module_id: ModuleId,
     pub(super) unreachable: Vec<UnreachableCode>,
 }
@@ -35,7 +36,9 @@ impl<'a> UnreachableCodeVisitor<'a> {
             if found_terminator {
                 // This statement comes after a terminator - it's unreachable
                 let span = stmt.span();
-                let (line, column) = get_line_column(self.source_text, span.start);
+                let (line, column) = self
+                    .line_index
+                    .get_line_column(span.start, self.source_text);
 
                 let description = format!(
                     "Code is unreachable after {} statement",

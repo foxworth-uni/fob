@@ -36,3 +36,4 @@ fob_internal = []
 [dev-dependencies]
 # Testing
 proptest = { workspace = true }
+fob-gen = { path = ".", features = ["parser", "query-api"] }

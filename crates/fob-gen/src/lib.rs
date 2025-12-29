@@ -16,24 +16,24 @@
 //! ## Basic Usage
 //!
 //! ```rust
-//! use fob_gen::JsBuilder;
+//! use fob_gen::ProgramBuilder;
 //! use oxc_allocator::Allocator;
 //! use oxc_ast::ast::Statement;
 //!
 //! let allocator = Allocator::default();
-//! let js = JsBuilder::new(&allocator);
+//! let mut js = ProgramBuilder::new(&allocator);
 //!
 //! // Build: const x = 42;
 //! let stmt = js.const_decl("x", js.number(42.0));
+//! js.push(stmt);
 //!
 //! // Build: import React from 'react';
 //! let import = js.import_default("React", "react");
+//! // ModuleDeclarations need to be converted to Statements
+//! js.push(Statement::from(import));
 //!
 //! // Generate code
-//! let code = js.program(vec![
-//!     Statement::from(import),
-//!     stmt,
-//! ])?;
+//! let code = js.generate(&Default::default())?;
 //! println!("{}", code);
 //! # Ok::<(), fob_gen::GenError>(())
 //! ```
@@ -41,11 +41,11 @@
 //! ## Building Complex Expressions
 //!
 //! ```rust
-//! use fob_gen::JsBuilder;
+//! use fob_gen::ProgramBuilder;
 //! use oxc_allocator::Allocator;
 //!
 //! let allocator = Allocator::default();
-//! let js = JsBuilder::new(&allocator);
+//! let mut js = ProgramBuilder::new(&allocator);
 //!
 //! // Build: console.log("Hello, world!")
 //! let console_log = js.call(
@@ -53,19 +53,20 @@
 //!     vec![js.arg(js.string("Hello, world!"))],
 //! );
 //! let stmt = js.expr_stmt(console_log);
+//! js.push(stmt);
 //!
-//! let code = js.program(vec![stmt])?;
+//! let code = js.generate(&Default::default())?;
 //! # Ok::<(), fob_gen::GenError>(())
 //! ```
 //!
 //! ## Arrow Functions and Arrays
 //!
 //! ```rust
-//! use fob_gen::JsBuilder;
+//! use fob_gen::ProgramBuilder;
 //! use oxc_allocator::Allocator;
 //!
 //! let allocator = Allocator::default();
-//! let js = JsBuilder::new(&allocator);
+//! let mut js = ProgramBuilder::new(&allocator);
 //!
 //! // Build: const double = x => x * 2;
 //! let arrow = js.arrow_fn(
@@ -77,12 +78,12 @@
 //!     ),
 //! );
 //! let stmt = js.const_decl("double", arrow);
+//! js.push(stmt);
 //!
-//! let code = js.program(vec![stmt])?;
+//! let code = js.generate(&Default::default())?;
 //! # Ok::<(), fob_gen::GenError>(())
 //! ```
 
-mod builder;
 mod dev_ui;
 mod error;
 mod format;
@@ -93,7 +94,7 @@ mod program_builder;
 mod parser;
 
 #[cfg(feature = "query-api")]
-mod query;
+pub mod query;
 
 #[cfg(feature = "transform-engine")]
 mod transform;
@@ -101,7 +102,6 @@ mod transform;
 #[cfg(feature = "fob_internal")]
 mod internal;
 
-pub use builder::JsBuilder;
 pub use dev_ui::{HtmlBuilder, RouteSpec};
 pub use error::{GenError, Result};
 pub use format::{FormatOptions, IndentStyle, QuoteStyle};
@@ -112,7 +112,7 @@ pub use program_builder::ProgramBuilder;
 pub use parser::{ParseDiagnostic, ParseOptions, ParsedProgram, parse};
 
 #[cfg(feature = "query-api")]
-pub use query::{CallQuery, ExportQuery, ImportQuery, JsxQuery, QueryBuilder};
+pub use query::{CallQuery, ExportDeclaration, ExportQuery, ImportQuery, JsxQuery, QueryBuilder};
 
 #[cfg(feature = "transform-engine")]
 pub use transform::{TransformEngine, TransformOutput, TransformPass, TransformResult};

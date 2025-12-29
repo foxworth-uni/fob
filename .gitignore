@@ -28,50 +28,21 @@ fob-native.*.node
 *.linux-*.node
 *.win32-*.node
 
-# Python bindings (fob-python - PyO3/maturin)
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
-*.egg
-*.egg-info/
-dist-python/
-build/
-.eggs/
 .venv/
 venv/
-env/
-ENV/
-.pytest_cache/
-.mypy_cache/
-.tox/
-.coverage
-htmlcov/
-*.cover
-pip-log.txt
-pip-delete-this-directory.txt
-*.pyd
-*.pyo
 
-# Ruby bindings (fob-ruby - magnus/rb-sys)
+# Ruby
 *.bundle
 *.gem
-.bundle/
-vendor/bundle/
-lib/bundler/man/
-pkg/
-tmp/
-*.orig
 
-# PHP bindings (fob-php - ext-php-rs)
+# Shared libraries
 *.dylib
 *.dll
-modules/
-.phpunit.cache/
-vendor/
-composer.phar
-composer.lock
 
 # Cache directories
 .fob-cache/
