@@ -46,6 +46,9 @@ parking_lot.workspace = true
 sha2.workspace = true
 regex.workspace = true
 
+# Built-in CSS processing
+lightningcss.workspace = true
+
 # Build cache dependencies
 blake3.workspace = true
 bincode.workspace = true
@@ -78,8 +81,6 @@ num_cpus = "1.16"
 
 [dev-dependencies]
 tempfile.workspace = true
-fob-plugin-mdx = { path = "../fob-plugin-mdx" }
-fob-plugin-css = { path = "../fob-plugin-css" }
 rolldown = { workspace = true, features = ["testing"] }
 futures = "0.3"
 

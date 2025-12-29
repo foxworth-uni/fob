@@ -1,8 +1,7 @@
-//! Rolldown plugin implementation for lightningcss
+//! Built-in CSS processing functionality
 //!
-//! This module provides a Rolldown plugin that integrates lightningcss CSS processing
-//! into the Rolldown bundler pipeline. It uses the `load` hook to intercept `.css` files
-//! and process them through lightningcss for bundling, minification, and optimization.
+//! This module provides CSS processing capabilities integrated into the bundler.
+//! It uses lightningcss to transform, minify, and optimize CSS files during bundling.
 //!
 //! ## Features
 //!
@@ -14,24 +13,23 @@
 //! ## Example Usage
 //!
 //! ```rust,no_run
-//! use fob_plugin_css::FobCssPlugin;
+//! use fob_bundler::builtins::CssPlugin;
 //! use std::sync::Arc;
-//! use fob_bundler::runtime::BundlerRuntime; // Import BundlerRuntime
-//! use fob_bundler::Runtime; // Import the Runtime trait
+//! use fob_bundler::runtime::BundlerRuntime;
+//! use fob_bundler::Runtime;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-//! // Create a dummy runtime instance for the plugin (e.g., BundlerRuntime for tests)
 //! let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
-//! let plugin = Arc::new(FobCssPlugin::new(runtime)); // Pass the runtime
+//! let plugin = Arc::new(CssPlugin::new(runtime));
 //! # Ok(())
 //! # }
 //! ```
 
-use anyhow::Context;
-use fob_bundler::{
-    FobPlugin, HookLoadArgs, HookLoadOutput, HookLoadReturn, ModuleType, Plugin, PluginContext,
-    PluginPhase, Runtime,
+use crate::plugins::{FobPlugin, PluginPhase};
+use crate::{
+    HookLoadArgs, HookLoadOutput, HookLoadReturn, ModuleType, Plugin, PluginContext, Runtime,
 };
+use anyhow::Context;
 use lightningcss::{
     printer::PrinterOptions,
     stylesheet::{MinifyOptions, ParserOptions, StyleSheet},
@@ -43,9 +41,9 @@ use std::sync::Arc;
 mod config;
 pub use config::CssPluginOptions;
 
-/// Rolldown plugin that processes CSS files using lightningcss
+/// Built-in CSS processing functionality
 ///
-/// This plugin intercepts `.css` file loading and processes them through lightningcss,
+/// This processes `.css` files through lightningcss,
 /// providing bundling (@import resolution), minification, and browser-specific transforms.
 ///
 /// # Architecture
@@ -54,15 +52,15 @@ pub use config::CssPluginOptions;
 /// .css file → load() hook → lightningcss bundle → minify → target transforms → CSS
 /// ```
 #[derive(Clone, Debug)]
-pub struct FobCssPlugin {
+pub struct CssPlugin {
     /// Configuration options for CSS processing
     options: CssPluginOptions,
     /// Runtime for file access (handles virtual files + filesystem)
     runtime: Arc<dyn Runtime>,
 }
 
-impl FobCssPlugin {
-    /// Create a new FobCssPlugin with default options
+impl CssPlugin {
+    /// Create a new CssPlugin with default options
     ///
     /// # Arguments
     ///
@@ -71,12 +69,12 @@ impl FobCssPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use fob_plugin_css::FobCssPlugin;
+    /// use fob_bundler::builtins::CssPlugin;
     /// use fob_bundler::Runtime;
     /// use std::sync::Arc;
     ///
     /// # async fn example(runtime: Arc<dyn Runtime>) {
-    /// let plugin = FobCssPlugin::new(runtime);
+    /// let plugin = CssPlugin::new(runtime);
     /// # }
     /// ```
     pub fn new(runtime: Arc<dyn Runtime>) -> Self {
@@ -86,17 +84,17 @@ impl FobCssPlugin {
         }
     }
 
-    /// Create a new FobCssPlugin with custom options
+    /// Create a new CssPlugin with custom options
     ///
     /// # Arguments
     ///
     /// * `runtime` - Runtime for file access (handles virtual files + filesystem)
-    /// * `options` - CSS plugin options
+    /// * `options` - CSS processing options
     ///
     /// # Example
     ///
     /// ```rust
-    /// use fob_plugin_css::{FobCssPlugin, CssPluginOptions};
+    /// use fob_bundler::builtins::{CssPlugin, CssPluginOptions};
     /// use fob_bundler::Runtime;
     /// use std::sync::Arc;
     ///
@@ -105,7 +103,7 @@ impl FobCssPlugin {
     ///     .with_minify(true)
     ///     .with_targets(vec![">0.2%".to_string(), "not dead".to_string()]);
     ///
-    /// let plugin = FobCssPlugin::with_options(runtime, options);
+    /// let plugin = CssPlugin::with_options(runtime, options);
     /// # }
     /// ```
     pub fn with_options(runtime: Arc<dyn Runtime>, options: CssPluginOptions) -> Self {
@@ -123,8 +121,6 @@ impl FobCssPlugin {
     ///
     /// Processed CSS as a string
     fn process_css(&self, path: &Path, source: String) -> anyhow::Result<String> {
-        // Parse CSS
-        // Note: @import bundling will be added in future iteration
         let mut stylesheet = StyleSheet::parse(
             &source,
             ParserOptions {
@@ -134,19 +130,15 @@ impl FobCssPlugin {
         )
         .map_err(|e| anyhow::anyhow!("Failed to parse CSS from {}: {:?}", path.display(), e))?;
 
-        // Minify if enabled
         if self.options.minify {
             stylesheet.minify(MinifyOptions::default()).map_err(|e| {
                 anyhow::anyhow!("Failed to minify CSS from {}: {:?}", path.display(), e)
             })?;
         }
 
-        // Print to string
         let result = stylesheet
             .to_css(PrinterOptions {
                 minify: self.options.minify,
-                // TODO: Add browser targets support
-                // targets: self.get_targets()?,
                 ..Default::default()
             })
             .map_err(|e| anyhow::anyhow!("Failed to print CSS from {}: {:?}", path.display(), e))?;
@@ -156,7 +148,6 @@ impl FobCssPlugin {
 
     /// Check if a file should be processed based on include/exclude patterns
     fn should_process(&self, path: &str) -> bool {
-        // Skip if explicitly excluded
         if !self.options.exclude.is_empty() {
             for pattern in &self.options.exclude {
                 if path.contains(pattern.as_str()) {
@@ -165,7 +156,6 @@ impl FobCssPlugin {
             }
         }
 
-        // If include patterns are specified, file must match one
         if !self.options.include.is_empty() {
             return self
                 .options
@@ -178,26 +168,23 @@ impl FobCssPlugin {
     }
 }
 
-// Note: Default is removed since Runtime is required
-
-impl Plugin for FobCssPlugin {
-    /// Returns the plugin name for debugging and logging
+impl Plugin for CssPlugin {
+    /// Returns the name for debugging and logging
     fn name(&self) -> Cow<'static, str> {
         "fob-css".into()
     }
 
-    /// Declare which hooks this plugin uses
+    /// Declare which hooks this implementation uses
     ///
     /// This allows Rolldown to optimize by skipping unused hooks.
-    fn register_hook_usage(&self) -> fob_bundler::HookUsage {
-        use fob_bundler::HookUsage;
-        // We only use the load hook
+    fn register_hook_usage(&self) -> crate::HookUsage {
+        use crate::HookUsage;
         HookUsage::Load
     }
 
     /// Load hook - intercepts `.css` files and processes them
     ///
-    /// This is the core of the plugin. It:
+    /// This is the core functionality. It:
     /// 1. Checks if the file is a `.css` file
     /// 2. Reads the file from disk
     /// 3. Processes CSS through lightningcss:
@@ -216,25 +203,21 @@ impl Plugin for FobCssPlugin {
         _ctx: &PluginContext,
         args: &HookLoadArgs<'_>,
     ) -> impl std::future::Future<Output = HookLoadReturn> + Send {
-        // Capture data needed for async block to avoid lifetime issues
         let id = args.id.to_string();
         let options = self.options.clone();
         let runtime = Arc::clone(&self.runtime);
 
         async move {
-            // Only handle .css files
             if !id.ends_with(".css") {
                 return Ok(None);
             }
 
-            // Check if file should be processed
-            let plugin = FobCssPlugin::with_options(Arc::clone(&runtime), options);
+            let plugin = CssPlugin::with_options(Arc::clone(&runtime), options);
             if !plugin.should_process(&id) {
                 eprintln!("[fob-css] Skipping excluded file: {}", id);
                 return Ok(None);
             }
 
-            // Read the CSS source file using Runtime (handles virtual files + filesystem)
             let file_path = std::path::Path::new(&id);
             let content = runtime
                 .read_file(file_path)
@@ -243,10 +226,8 @@ impl Plugin for FobCssPlugin {
             let source = String::from_utf8(content)
                 .with_context(|| format!("CSS file {} contains invalid UTF-8", id))?;
 
-            // Save source length before moving
             let source_len = source.len();
 
-            // Process CSS through lightningcss
             let path = Path::new(&id);
             let processed = plugin.process_css(path, source)?;
 
@@ -258,8 +239,6 @@ impl Plugin for FobCssPlugin {
                 plugin.options.minify
             );
 
-            // Return processed CSS to Rolldown
-            // IMPORTANT: Set module_type to Css so Rolldown knows how to handle it
             Ok(Some(HookLoadOutput {
                 code: processed.into(),
                 module_type: Some(ModuleType::Css),
@@ -269,7 +248,7 @@ impl Plugin for FobCssPlugin {
     }
 }
 
-impl FobPlugin for FobCssPlugin {
+impl FobPlugin for CssPlugin {
     fn phase(&self) -> PluginPhase {
         PluginPhase::Transform
     }
@@ -278,25 +257,25 @@ impl FobPlugin for FobCssPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fob_bundler::Runtime;
+    use crate::Runtime;
     use std::sync::Arc;
 
     #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_plugin_creation() {
-        use fob_bundler::runtime::BundlerRuntime;
+        use crate::runtime::BundlerRuntime;
         let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
-        let plugin = FobCssPlugin::new(runtime);
+        let plugin = CssPlugin::new(runtime);
         assert_eq!(plugin.name(), "fob-css");
     }
 
     #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_plugin_with_options() {
-        use fob_bundler::runtime::BundlerRuntime;
+        use crate::runtime::BundlerRuntime;
         let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
         let options = CssPluginOptions::new().with_minify(true);
-        let plugin = FobCssPlugin::with_options(runtime, options);
+        let plugin = CssPlugin::with_options(runtime, options);
         assert_eq!(plugin.name(), "fob-css");
         assert!(plugin.options.minify);
     }
@@ -304,10 +283,9 @@ mod tests {
     #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_should_process_exclusions() {
-        use fob_bundler::runtime::BundlerRuntime;
+        use crate::runtime::BundlerRuntime;
         let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
-        let plugin =
-            FobCssPlugin::with_options(runtime, CssPluginOptions::new().exclude("vendor/"));
+        let plugin = CssPlugin::with_options(runtime, CssPluginOptions::new().exclude("vendor/"));
 
         assert!(!plugin.should_process("node_modules/vendor/styles.css"));
         assert!(plugin.should_process("src/styles.css"));
@@ -316,9 +294,9 @@ mod tests {
     #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_should_process_inclusions() {
-        use fob_bundler::runtime::BundlerRuntime;
+        use crate::runtime::BundlerRuntime;
         let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
-        let plugin = FobCssPlugin::with_options(runtime, CssPluginOptions::new().include("src/"));
+        let plugin = CssPlugin::with_options(runtime, CssPluginOptions::new().include("src/"));
 
         assert!(plugin.should_process("src/styles.css"));
         assert!(!plugin.should_process("vendor/styles.css"));
@@ -327,9 +305,9 @@ mod tests {
     #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_process_basic_css() {
-        use fob_bundler::runtime::BundlerRuntime;
+        use crate::runtime::BundlerRuntime;
         let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
-        let plugin = FobCssPlugin::new(runtime);
+        let plugin = CssPlugin::new(runtime);
         let css = "body { color: red; }".to_string();
         let path = Path::new("test.css");
 
@@ -341,17 +319,15 @@ mod tests {
     #[cfg(not(target_family = "wasm"))]
     #[test]
     fn test_process_with_minification() {
-        use fob_bundler::runtime::BundlerRuntime;
+        use crate::runtime::BundlerRuntime;
         let runtime: Arc<dyn Runtime> = Arc::new(BundlerRuntime::new("."));
-        let plugin = FobCssPlugin::with_options(runtime, CssPluginOptions::new().with_minify(true));
+        let plugin = CssPlugin::with_options(runtime, CssPluginOptions::new().with_minify(true));
 
         let css = "body {\n  color: red;\n  background: blue;\n}";
         let path = Path::new("test.css");
 
         let result = plugin.process_css(path, css.to_string()).unwrap();
-        // Minified CSS should be smaller
         assert!(result.len() < css.len());
-        // Should still contain the properties
         assert!(result.contains("color"));
         assert!(result.contains("background"));
     }

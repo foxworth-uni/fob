@@ -68,6 +68,7 @@ pub use fob_graph::*;
 
 // Bundler-specific modules
 pub mod builders;
+pub mod builtins;
 pub mod cache;
 pub mod config;
 pub mod output;
@@ -108,21 +109,16 @@ pub use rolldown_plugin::{
 // Re-export bundler APIs
 pub use builders::{
     BuildOptions, BuildOutput, BuildResult, CodeSplittingConfig, EntryMode, EntryPoints,
-    ExternalConfig, IncrementalConfig, MinifyLevel, build, plugin,
+    ExternalConfig, IncrementalConfig, MinifyLevel, build,
 };
+pub use builtins::CssPlugin;
 pub use cache::{CacheConfig, CacheKey};
 pub use config::{
     BuildConfig, ExternalPattern, OptimizationConfig, OutputConfig, ResolutionConfig,
 };
-pub use plugins::{FobPlugin, PluginPhase, PluginRegistry};
 
 #[cfg(feature = "dts-generation")]
 pub use builders::DtsOptions;
-
-// Re-export DtsEmitPlugin from plugins module when dts-generation feature is enabled
-#[cfg(feature = "dts-generation")]
-#[cfg_attr(docsrs, doc(cfg(feature = "dts-generation")))]
-pub use plugins::DtsEmitPlugin;
 
 // Logging utilities (optional, enabled with "logging" feature)
 #[cfg(feature = "logging")]

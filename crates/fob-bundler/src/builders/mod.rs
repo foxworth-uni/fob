@@ -52,5 +52,3 @@ pub use unified::{
 
 #[cfg(feature = "dts-generation")]
 pub use unified::DtsOptions;
-
-pub use common::plugin;

@@ -1,6 +1,6 @@
-//! Bundling module for runtime MDX bundling
+//! Runtime bundling module for MDX
 //!
-//! This module is only available when the "bundler" feature is enabled.
+//! This module is only available when the "runtime" feature is enabled.
 //! It provides the `bundle_mdx` function and related types for bundling
 //! MDX files with their dependencies at runtime.
 
@@ -8,11 +8,10 @@ mod types;
 
 pub use types::{BundleMdxOptions, BundleMdxResult};
 
+use crate::compile;
 use anyhow::{Context, Result};
 use fob_bundler::runtime::BundlerRuntime;
 use fob_bundler::{BuildOptions, BuildOutput, BundleOutput, OutputFormat, build};
-use fob_mdx::compile;
-use fob_plugin_mdx::FobMdxPlugin;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -54,7 +53,7 @@ fn extract_bundle_code(bundle: &BundleOutput) -> Result<String> {
 /// # Example
 ///
 /// ```rust,no_run
-/// use fob_mdx_runtime::bundler::{bundle_mdx, BundleMdxOptions};
+/// use fob_mdx::runtime::{bundle_mdx, BundleMdxOptions};
 /// use fob_mdx::MdxCompileOptions;
 /// use std::collections::HashMap;
 ///
@@ -102,9 +101,7 @@ pub async fn bundle_mdx(options: BundleMdxOptions) -> Result<BundleMdxResult> {
 
     let runtime = Arc::new(BundlerRuntime::new(cwd.clone()));
 
-    build_opts = build_opts
-        .runtime(runtime.clone())
-        .plugin(Arc::new(FobMdxPlugin::new(runtime)));
+    build_opts = build_opts.runtime(runtime);
 
     // Add MDX entry as virtual file
     build_opts

@@ -5,7 +5,7 @@ use std::{
 
 use path_clean::PathClean;
 use rolldown::{BundlerBuilder as RolldownBundlerBuilder, BundlerOptions, InputItem};
-use rolldown_plugin::{__inner::SharedPluginable, Plugin};
+use rolldown_plugin::__inner::SharedPluginable;
 use rustc_hash::FxHashMap;
 
 use crate::analysis::AnalyzedBundle;
@@ -23,43 +23,8 @@ pub(crate) fn normalize_entry_path(entry: impl AsRef<Path>) -> String {
     cleaned.to_string_lossy().into_owned()
 }
 
-/// Trait alias for values that can be converted into a `SharedPluginable`.
-pub trait IntoPlugin {
-    fn into_plugin(self) -> SharedPluginable;
-}
-
-pub(crate) struct PluginHandle<P>(P);
-
-pub fn plugin<P>(plugin: P) -> impl IntoPlugin
-where
-    P: Plugin + 'static,
-{
-    PluginHandle(plugin)
-}
-
-impl IntoPlugin for SharedPluginable {
-    fn into_plugin(self) -> SharedPluginable {
-        self
-    }
-}
-
-impl<T> IntoPlugin for Arc<T>
-where
-    T: Plugin + 'static,
-{
-    fn into_plugin(self) -> SharedPluginable {
-        self
-    }
-}
-
-impl<P> IntoPlugin for PluginHandle<P>
-where
-    P: Plugin + 'static,
-{
-    fn into_plugin(self) -> SharedPluginable {
-        Arc::new(self.0)
-    }
-}
+// Plugin API helpers removed - plugins are now added directly via Arc<Plugin>
+// The public .plugin() method on BuildOptions has been removed.
 
 #[derive(Clone, Debug)]
 pub(crate) struct EntrySpec {

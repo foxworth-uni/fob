@@ -17,7 +17,7 @@ use crate::builders::unified::{BuildOptions, BuildOutput, BuildResult, EntryPoin
 use crate::target::ExportConditions;
 
 #[cfg(feature = "dts-generation")]
-use crate::DtsEmitPlugin;
+use crate::plugins::DtsEmitPlugin;
 
 /// Execute a build with the given options.
 ///
@@ -67,17 +67,17 @@ async fn execute_unified_build(options: BuildOptions) -> Result<BuildResult> {
     // Add DTS plugin if enabled
     #[cfg(feature = "dts-generation")]
     let plugins = if let Some(dts_opts) = &options.dts {
-        let mut plugins = options.plugins.clone();
+        let mut plugins = Vec::new();
         if let Some(plugin) = configure_dts_plugin(dts_opts, &entries) {
             plugins.push(plugin);
         }
         plugins
     } else {
-        options.plugins.clone()
+        Vec::new()
     };
 
     #[cfg(not(feature = "dts-generation"))]
-    let plugins = options.plugins.clone();
+    let plugins = Vec::new();
 
     let plan = BundlePlan {
         entries,
@@ -301,7 +301,7 @@ async fn build_single_component(options: &BuildOptions, entry: &str) -> Result<A
             import: entry.to_string(),
         }],
         options: rolldown_options,
-        plugins: options.plugins.clone(),
+        plugins: Vec::new(),
         cwd: options.cwd.clone(),
         virtual_files: options.virtual_files.clone(),
         runtime: options.runtime.clone(),

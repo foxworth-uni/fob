@@ -1,6 +1,6 @@
 //! Core bundler implementation (no NAPI dependencies)
 
-use crate::api::config::{BundleConfig, MdxOptions};
+use crate::api::config::BundleConfig;
 use crate::conversion::format::convert_format;
 use crate::conversion::sourcemap::convert_sourcemap_mode;
 use crate::core::validator::validate_path;
@@ -8,7 +8,6 @@ use crate::runtime::NativeRuntime;
 use crate::types::parse_entry_mode;
 use fob_bundler::ExternalConfig;
 use fob_bundler::{BuildOptions, Runtime};
-use fob_plugin_mdx::FobMdxPlugin;
 use std::io;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -35,41 +34,6 @@ impl CoreBundler {
         );
 
         Ok(Self { config, runtime })
-    }
-
-    /// Check if MDX should be enabled (explicit config or auto-detect from entries)
-    fn should_enable_mdx(config: &BundleConfig) -> bool {
-        // Explicitly configured
-        if config.mdx.is_some() {
-            return true;
-        }
-        // Auto-detect: any entry ends with .mdx
-        config.entries.iter().any(|e| e.ends_with(".mdx"))
-    }
-
-    /// Create MDX plugin from config options
-    fn create_mdx_plugin(mdx_opts: Option<&MdxOptions>, runtime: Arc<dyn Runtime>) -> FobMdxPlugin {
-        let mut plugin = FobMdxPlugin::new(runtime);
-
-        if let Some(opts) = mdx_opts {
-            if let Some(gfm) = opts.gfm {
-                plugin.gfm = gfm;
-            }
-            if let Some(footnotes) = opts.footnotes {
-                plugin.footnotes = footnotes;
-            }
-            if let Some(math) = opts.math {
-                plugin.math = math;
-            }
-            if let Some(ref jsx_runtime) = opts.jsx_runtime {
-                plugin.jsx_runtime = jsx_runtime.clone();
-            }
-            if let Some(use_default) = opts.use_default_plugins {
-                plugin.use_default_plugins = use_default;
-            }
-        }
-
-        plugin
     }
 
     /// Create BuildOptions using the new composable primitives.
@@ -219,13 +183,6 @@ impl CoreBundler {
             // Set minify
             if let Some(true) = self.config.minify {
                 options = options.minify_level("identifiers");
-            }
-
-            // Auto-inject MDX plugin if needed
-            if Self::should_enable_mdx(&self.config) {
-                let mdx_plugin =
-                    Self::create_mdx_plugin(self.config.mdx.as_ref(), self.runtime.clone());
-                options = options.plugin(Arc::new(mdx_plugin));
             }
 
             options.build().await?

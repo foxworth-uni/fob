@@ -1,7 +1,7 @@
-//! Types for the bunny runtime bundling API
+//! Types for runtime MDX bundling API
 
+use crate::{FrontmatterData, MdxCompileOptions};
 use bon::Builder;
-use fob_mdx::{FrontmatterData, MdxCompileOptions};
 use std::collections::HashMap;
 
 /// Options for runtime MDX bundling
@@ -12,7 +12,7 @@ use std::collections::HashMap;
 /// # Example
 ///
 /// ```rust,no_run
-/// use fob_mdx_runtime::bundler::{BundleMdxOptions, bundle_mdx};
+/// use fob_mdx::runtime::{BundleMdxOptions, bundle_mdx};
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 /// let options = BundleMdxOptions::builder()
@@ -61,7 +61,7 @@ impl BundleMdxOptions {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use fob_mdx_runtime::bundler::BundleMdxOptions;
+    /// use fob_mdx::runtime::BundleMdxOptions;
     ///
     /// let options = BundleMdxOptions::builder()
     ///     .source("import X from './x.js'")
@@ -78,7 +78,7 @@ impl BundleMdxOptions {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use fob_mdx_runtime::bundler::BundleMdxOptions;
+    /// use fob_mdx::runtime::BundleMdxOptions;
     /// use fob_mdx::MdxCompileOptions;
     ///
     /// let options = BundleMdxOptions::builder()
@@ -103,7 +103,7 @@ impl BundleMdxOptions {
 /// # Example
 ///
 /// ```rust,no_run
-/// use fob_mdx_runtime::bundler::{bundle_mdx, BundleMdxOptions};
+/// use fob_mdx::runtime::{bundle_mdx, BundleMdxOptions};
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 /// let result = bundle_mdx(

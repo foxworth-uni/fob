@@ -93,9 +93,6 @@ pub struct BuildConfig {
 
     /// Virtual files that don't exist on disk
     pub virtual_files: FxHashMap<String, String>,
-
-    /// Plugins to use during bundling
-    pub plugins: Vec<crate::SharedPluginable>,
 }
 
 impl BuildConfig {
@@ -124,7 +121,6 @@ impl BuildConfig {
             cwd: None,
             runtime: None,
             virtual_files: FxHashMap::default(),
-            plugins: Vec::new(),
         }
     }
 
@@ -218,12 +214,6 @@ impl BuildConfig {
     /// Add a virtual file
     pub fn virtual_file(mut self, path: impl Into<String>, content: impl Into<String>) -> Self {
         self.virtual_files.insert(path.into(), content.into());
-        self
-    }
-
-    /// Add a plugin
-    pub fn plugin(mut self, plugin: crate::SharedPluginable) -> Self {
-        self.plugins.push(plugin);
         self
     }
 
@@ -340,7 +330,6 @@ impl BuildConfig {
                 MinifyLevel::Identifiers => Some("identifiers".to_string()),
             },
             globals: FxHashMap::default(),
-            plugins: self.plugins,
             virtual_files: self.virtual_files,
             path_aliases: self.resolution.aliases,
             cwd: self.cwd,

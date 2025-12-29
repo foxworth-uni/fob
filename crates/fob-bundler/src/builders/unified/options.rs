@@ -1,4 +1,4 @@
-use crate::{Error, OutputFormat, Platform, Result, Runtime, SharedPluginable};
+use crate::{Error, OutputFormat, Platform, Result, Runtime};
 use rustc_hash::FxHashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -106,9 +106,6 @@ pub struct BuildOptions {
     /// Example: `{"react": "React", "react-dom": "ReactDOM"}`
     pub globals: FxHashMap<String, String>,
 
-    /// Rolldown/Rollup plugins to apply during bundling.
-    pub plugins: Vec<SharedPluginable>,
-
     /// Virtual files that don't exist on disk.
     ///
     /// Maps virtual paths to their content. Useful for programmatic entry points.
@@ -204,7 +201,6 @@ impl BuildOptions {
             sourcemap: Some(crate::SourceMapType::File),
             minify_level: None,
             globals: FxHashMap::default(),
-            plugins: Vec::new(),
             virtual_files: FxHashMap::default(),
             path_aliases: FxHashMap::default(),
             cwd: None,
@@ -261,7 +257,6 @@ impl BuildOptions {
             sourcemap: Some(crate::SourceMapType::File),
             minify_level: None,
             globals: FxHashMap::default(),
-            plugins: Vec::new(),
             virtual_files: FxHashMap::default(),
             path_aliases: FxHashMap::default(),
             cwd: None,
@@ -458,15 +453,6 @@ impl BuildOptions {
         for (k, v) in entries {
             self.globals.insert(k.into(), v.into());
         }
-        self
-    }
-
-    /// Add a Rolldown plugin.
-    pub fn plugin<P>(mut self, plugin: P) -> Self
-    where
-        P: crate::builders::common::IntoPlugin,
-    {
-        self.plugins.push(plugin.into_plugin());
         self
     }
 

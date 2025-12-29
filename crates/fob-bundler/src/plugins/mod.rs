@@ -4,12 +4,12 @@
 //! - Plugin registry with execution phases
 //! - Built-in plugins (DTS generation, etc.)
 
-pub mod registry;
+pub(crate) mod registry;
 
 #[cfg(feature = "dts-generation")]
-pub mod dts_emit;
+pub(crate) mod dts_emit;
 
-pub use registry::{FobPlugin, PluginPhase, PluginRegistry};
+pub(crate) use registry::{FobPlugin, PluginPhase, PluginRegistry};
 
 #[cfg(feature = "dts-generation")]
-pub use dts_emit::DtsEmitPlugin;
+pub(crate) use dts_emit::DtsEmitPlugin;

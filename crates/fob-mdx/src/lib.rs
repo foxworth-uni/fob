@@ -426,3 +426,15 @@ mod tests {
         assert_eq!(options.jsx_runtime, "preact/jsx-runtime");
     }
 }
+
+// Bundler integration (requires bundler feature)
+#[cfg(feature = "bundler")]
+pub mod bundler;
+#[cfg(feature = "bundler")]
+pub use bundler::FobMdxPlugin;
+
+// Runtime bundling (requires runtime feature)
+#[cfg(feature = "runtime")]
+pub mod runtime;
+#[cfg(feature = "runtime")]
+pub use runtime::{BundleMdxOptions, BundleMdxResult, bundle_mdx};

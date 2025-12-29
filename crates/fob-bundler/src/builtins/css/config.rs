@@ -1,4 +1,4 @@
-//! CSS plugin configuration types
+//! CSS processing configuration types
 
 /// Configuration options for CSS processing
 ///

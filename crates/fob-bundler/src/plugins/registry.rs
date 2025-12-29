@@ -13,7 +13,7 @@ use std::sync::Arc;
 /// This ensures that virtual file resolution happens before module resolution,
 /// which happens before transformation, etc.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum PluginPhase {
+pub(crate) enum PluginPhase {
     /// Virtual file resolution (always first)
     ///
     /// Plugins that provide virtual files that don't exist on disk.
@@ -24,6 +24,7 @@ pub enum PluginPhase {
     ///
     /// Plugins that modify or extend module resolution behavior.
     /// Runs after virtual files are available but before transformation.
+    #[allow(dead_code)]
     Resolve = 10,
 
     /// Content transformation (MDX, CSS, etc.)
@@ -52,7 +53,7 @@ pub enum PluginPhase {
 /// allows specifying the execution phase for better ordering.
 ///
 /// Note: `Plugin` already requires `Send + Sync`, so we don't repeat those bounds here.
-pub trait FobPlugin: Plugin {
+pub(crate) trait FobPlugin: Plugin {
     /// Return the execution phase for this plugin
     ///
     /// Defaults to `Transform` for backward compatibility.
@@ -62,7 +63,7 @@ pub trait FobPlugin: Plugin {
 }
 
 /// Plugin registry that maintains plugins in phase order
-pub struct PluginRegistry {
+pub(crate) struct PluginRegistry {
     plugins: Vec<(PluginPhase, SharedPluginable)>,
 }
 
@@ -103,11 +104,13 @@ impl PluginRegistry {
     }
 
     /// Get the number of plugins in the registry
+    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.plugins.len()
     }
 
     /// Check if the registry is empty
+    #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
         self.plugins.is_empty()
     }
