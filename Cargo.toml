@@ -40,27 +40,27 @@ keywords = ["bundler", "esm", "javascript", "typescript", "rust"]
 
 [workspace.dependencies]
 # OXC ecosystem - High-performance JavaScript tooling
-oxc_parser = "0.103.0"
-oxc_ast = "0.103.0"
-oxc_ast_visit = "0.103.0"
-oxc_semantic = "0.103.0"
-oxc_resolver = "11.14.2"
-oxc_transformer = "0.103.0"
-oxc_transformer_plugins = "0.103.0"
-oxc_codegen = "0.103.0"
-oxc_minifier = "0.103.0"
-oxc_allocator = "0.103.0"
-oxc_span = "0.103.0"
+oxc_parser = "0.115.0"
+oxc_ast = "0.115.0"
+oxc_ast_visit = "0.115.0"
+oxc_semantic = "0.115.0"
+oxc_resolver = "11.19.1"
+oxc_transformer = "0.115.0"
+oxc_transformer_plugins = "0.115.0"
+oxc_codegen = "0.115.0"
+oxc_minifier = "0.115.0"
+oxc_allocator = "0.115.0"
+oxc_span = "0.115.0"
 oxc_sourcemap = "6.0.1"
-oxc_traverse = "0.103.0"
-oxc_isolated_declarations = "0.103.0"
+oxc_traverse = "0.115.0"
+oxc_isolated_declarations = "0.115.0"
 
 # Rolldown bundler (via brk_rolldown crates from crates.io)
-rolldown = { package = "brk_rolldown", version = "0.6.0" }
-rolldown_plugin = { package = "brk_rolldown_plugin", version = "0.6.0" }
-rolldown_common = { package = "brk_rolldown_common", version = "0.6.0" }
-rolldown_error = { package = "brk_rolldown_error", version = "0.6.0" }
-rolldown_fs = { package = "brk_rolldown_fs", version = "0.6.0" }
+rolldown = { package = "brk_rolldown", version = "1.0.0-rc.7" }
+rolldown_plugin = { package = "brk_rolldown_plugin", version = "1.0.0-rc.7" }
+rolldown_common = { package = "brk_rolldown_common", version = "1.0.0-rc.7" }
+rolldown_error = { package = "brk_rolldown_error", version = "1.0.0-rc.7" }
+rolldown_fs = { package = "brk_rolldown_fs", version = "1.0.0-rc.7" }
 
 # Core dependencies
 rustc-hash = "2.1.1"
@@ -148,7 +148,7 @@ markdown = "1.0.0-alpha.21"
 winnow = "0.7"
 
 # CSS parsing and transformation
-lightningcss = "1.0.0-alpha.68"
+lightningcss = "1.0.0-alpha.71"
 
 # WASM support - getrandom 0.3 provides random number generation for WASM targets
 # Note: For wasm32-unknown-unknown (browser), use "wasm_js" feature to enable browser's Crypto.getRandomValues()

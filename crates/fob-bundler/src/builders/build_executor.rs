@@ -59,7 +59,7 @@ async fn execute_unified_build(options: BuildOptions) -> Result<BuildResult> {
     let mut rolldown_options = configure_rolldown_options(&options);
 
     // Apply code splitting configuration
-    rolldown_options.advanced_chunks = options
+    rolldown_options.manual_code_splitting = options
         .code_splitting
         .as_ref()
         .map(|c| c.to_rolldown_options());
@@ -330,11 +330,8 @@ fn configure_rolldown_options(options: &BuildOptions) -> BundlerOptions {
             // Externalize specific packages
             IsExternal::from(packages.clone())
         }
-        ExternalConfig::FromManifest(_path) => {
-            // Externalize dependencies from package.json
-            // TODO: Read package.json and extract dependencies/peerDependencies
-            // For now, fall back to externalizing all bare imports
-            IsExternal::from(vec!["^[^./]".to_string()])
+        ExternalConfig::FromManifest(path) => {
+            read_externals_from_manifest(path)
         }
     });
 
@@ -375,6 +372,46 @@ fn configure_rolldown_options(options: &BuildOptions) -> BundlerOptions {
     ));
 
     rolldown_options
+}
+
+/// Read externals from a package.json manifest.
+///
+/// Extracts `dependencies` and `peerDependencies` keys and returns them as an
+/// externals list. Falls back to externalizing all bare imports if the file
+/// cannot be read or parsed.
+fn read_externals_from_manifest(path: &std::path::PathBuf) -> IsExternal {
+    let content = match std::fs::read_to_string(path) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!(
+                "Warning: Could not read package.json at {}: {}. Falling back to externalizing all bare imports.",
+                path.display(),
+                e
+            );
+            return IsExternal::from(vec!["^[^./]".to_string()]);
+        }
+    };
+
+    let json: serde_json::Value = match serde_json::from_str(&content) {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!(
+                "Warning: Could not parse package.json at {}: {}. Falling back to externalizing all bare imports.",
+                path.display(),
+                e
+            );
+            return IsExternal::from(vec!["^[^./]".to_string()]);
+        }
+    };
+
+    let mut packages: Vec<String> = Vec::new();
+    for field in ["dependencies", "peerDependencies"] {
+        if let Some(deps) = json.get(field).and_then(|v| v.as_object()) {
+            packages.extend(deps.keys().cloned());
+        }
+    }
+
+    IsExternal::from(packages)
 }
 
 /// Configure module resolution options.

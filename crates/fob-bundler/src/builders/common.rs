@@ -3,9 +3,9 @@ use std::{
     sync::Arc,
 };
 
+use crate::SharedPluginable;
 use path_clean::PathClean;
 use rolldown::{BundlerBuilder as RolldownBundlerBuilder, BundlerOptions, InputItem};
-use rolldown_plugin::__inner::SharedPluginable;
 use rustc_hash::FxHashMap;
 
 use crate::analysis::AnalyzedBundle;

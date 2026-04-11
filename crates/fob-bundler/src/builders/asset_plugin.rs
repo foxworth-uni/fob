@@ -479,8 +479,8 @@ impl AssetDetectionPlugin {
 ///
 /// Returns a list of (specifier, resolved_path) pairs for each discovered asset.
 ///
-/// NOTE: Simplified implementation using regex pattern matching.
-/// TODO: Use full AST parsing once Rolldown plugin API is stabilized.
+/// NOTE: Uses regex pattern matching; AST parsing requires Rolldown to expose
+/// the transform AST in its plugin API, which is not yet stable.
 async fn detect_assets(
     source: &str,
     module_id: &str,

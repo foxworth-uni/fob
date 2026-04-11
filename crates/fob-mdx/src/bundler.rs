@@ -33,7 +33,7 @@ use crate::{MdxCompileOptions, compile};
 use anyhow::Context;
 use fob_bundler::{
     HookLoadArgs, HookLoadOutput, HookLoadReturn, HookResolveIdArgs, HookResolveIdOutput,
-    HookResolveIdReturn, ModuleType, Plugin, PluginContext, Runtime,
+    HookResolveIdReturn, ModuleType, Plugin, PluginContext, Runtime, SharedLoadPluginContext,
 };
 use std::borrow::Cow;
 use std::path::PathBuf;
@@ -252,7 +252,7 @@ impl Plugin for FobMdxPlugin {
     /// for true async behavior.
     fn load(
         &self,
-        _ctx: &PluginContext,
+        _ctx: SharedLoadPluginContext,
         args: &HookLoadArgs<'_>,
     ) -> impl std::future::Future<Output = HookLoadReturn> + Send {
         // Capture data needed for async block to avoid lifetime issues

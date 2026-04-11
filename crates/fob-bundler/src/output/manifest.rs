@@ -48,7 +48,7 @@ impl BundleManifest {
                         .iter()
                         .map(|s| s.to_string())
                         .collect(),
-                    css: vec![], // TODO: Extract CSS references
+                    css: vec![], // NOTE: Rolldown's OutputChunk does not yet expose CSS references.
                     modules,
                 },
             );

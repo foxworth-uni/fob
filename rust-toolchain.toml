@@ -2,5 +2,5 @@
 # See https://rust-lang.github.io/rustup/overrides.html
 
 [toolchain]
-channel = "stable"
+channel = "1.92.0"
 components = ["rustfmt", "clippy"]

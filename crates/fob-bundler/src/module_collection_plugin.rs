@@ -1,6 +1,7 @@
 use rolldown_plugin::{
     HookLoadArgs, HookLoadReturn, HookResolveIdArgs, HookResolveIdReturn, HookTransformArgs,
-    HookTransformReturn, HookUsage, Plugin, PluginContext, TransformPluginContext,
+    HookTransformReturn, HookUsage, Plugin, PluginContext, SharedLoadPluginContext,
+    TransformPluginContext,
 };
 use std::sync::Arc;
 
@@ -88,7 +89,7 @@ impl Plugin for ModuleCollectionPlugin {
 
     fn load(
         &self,
-        _ctx: &PluginContext,
+        _ctx: SharedLoadPluginContext,
         args: &HookLoadArgs<'_>,
     ) -> impl std::future::Future<Output = HookLoadReturn> + Send {
         let state = Arc::clone(&self.state);

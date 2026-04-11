@@ -65,7 +65,7 @@ impl MinifyLevel {
     pub(crate) fn to_rolldown_options(self) -> Option<rolldown::RawMinifyOptions> {
         match self {
             Self::None => None,
-            // TODO: Map to granular Rolldown options when available
+            // NOTE: Collapses to bool until Rolldown exposes granular minify options.
             Self::Whitespace | Self::Syntax | Self::Identifiers => {
                 Some(rolldown::RawMinifyOptions::from(true))
             }

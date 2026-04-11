@@ -93,11 +93,10 @@ pub async fn from_rolldown_parts(
                 .has_star_exports(normal.ecma_view.meta.has_star_export())
                 .execution_order(Some(normal.exec_order));
 
-                if normal.is_user_defined_entry
-                    || entry_idx
-                        .get(&idx)
-                        .map(|k| k.is_user_defined())
-                        .unwrap_or(false)
+                if entry_idx
+                    .get(&idx)
+                    .map(|k| k.is_user_defined())
+                    .unwrap_or(false)
                 {
                     builder = builder.entry(true);
                 }
@@ -193,7 +192,7 @@ fn convert_exports(normal: &NormalModule, module_id: &ModuleId) -> Vec<Export> {
     for named_import in normal.ecma_view.named_imports.values() {
         if let Specifier::Literal(lit) = &named_import.imported {
             // If this imported name matches an export name, it's likely a re-export
-            export_to_import_record.insert(lit.to_string(), named_import.record_id);
+            export_to_import_record.insert(lit.to_string(), named_import.record_idx);
         }
     }
 
@@ -250,7 +249,7 @@ fn convert_imports(normal: &NormalModule, module_id: &ModuleId) -> Vec<PendingIm
     let mut record_specifiers: FxHashMap<ImportRecordIdx, Vec<ImportSpecifier>> =
         FxHashMap::default();
     for named in normal.ecma_view.named_imports.values() {
-        let entry = record_specifiers.entry(named.record_id).or_default();
+        let entry = record_specifiers.entry(named.record_idx).or_default();
         let specifier = match &named.imported {
             Specifier::Star => ImportSpecifier::Namespace("*".into()),
             Specifier::Literal(lit) => {
@@ -324,7 +323,7 @@ fn convert_imports(normal: &NormalModule, module_id: &ModuleId) -> Vec<PendingIm
             );
             PendingImport {
                 import,
-                target: Some(record.resolved_module),
+                target: record.state.resolved_module,
             }
         })
         .collect()
@@ -344,12 +343,12 @@ fn convert_import_kind(kind: RdImportKind) -> ImportKind {
 
 fn convert_module_format(format: RdModuleDefFormat) -> FobModuleFormat {
     match format {
-        RdModuleDefFormat::EsmMjs => FobModuleFormat::EsmMjs,
+        RdModuleDefFormat::EsmMjs | RdModuleDefFormat::EsmMts => FobModuleFormat::EsmMjs,
         RdModuleDefFormat::EsmPackageJson => FobModuleFormat::EsmPackageJson,
-        RdModuleDefFormat::CjsPackageJson => FobModuleFormat::CjsPackageJson,
+        RdModuleDefFormat::CjsPackageJson | RdModuleDefFormat::Cjs | RdModuleDefFormat::Cts => {
+            FobModuleFormat::CjsPackageJson
+        }
         RdModuleDefFormat::Unknown => FobModuleFormat::Unknown,
-        // Rolldown uses variants like ESM and CJS (capitalized), map them to our format
-        _ => FobModuleFormat::Unknown, // Catch-all for any other variants
     }
 }
 

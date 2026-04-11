@@ -101,7 +101,6 @@ impl Plugin for DtsEmitPlugin {
         args: &mut HookGenerateBundleArgs<'_>,
     ) -> impl std::future::Future<Output = HookNoopReturn> + Send {
         let strip_internal = self.strip_internal;
-        let sourcemap = self.sourcemap;
         let dts_dir = self.dts_dir.clone();
 
         async move {
@@ -168,12 +167,6 @@ impl Plugin for DtsEmitPlugin {
 
                         dts_assets.push(Output::Asset(Arc::new(asset)));
 
-                        // TODO: Generate .d.ts.map if sourcemap is enabled
-                        // This requires capturing source maps from OXC codegen
-                        if sourcemap {
-                            // Placeholder for future implementation
-                            // Would need to use CodeGenerator with sourcemap enabled
-                        }
                     }
                 }
             }

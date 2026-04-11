@@ -100,11 +100,14 @@ pub use rolldown_common::{
 
 // Re-export plugin types (CRITICAL for plugin authors)
 pub use rolldown_plugin::{
-    __inner::SharedPluginable, HookGenerateBundleArgs, HookLoadArgs, HookLoadOutput,
-    HookLoadReturn, HookNoopReturn, HookResolveIdArgs, HookResolveIdOutput, HookResolveIdReturn,
-    HookTransformArgs, HookTransformOutput, HookTransformReturn, HookUsage, Plugin, PluginContext,
-    SharedTransformPluginContext,
+    HookGenerateBundleArgs, HookLoadArgs, HookLoadOutput, HookLoadReturn, HookNoopReturn,
+    HookResolveIdArgs, HookResolveIdOutput, HookResolveIdReturn, HookTransformArgs,
+    HookTransformOutput, HookTransformReturn, HookUsage, Plugin, PluginContext, Pluginable,
+    SharedLoadPluginContext, SharedTransformPluginContext,
 };
+
+/// Type alias for shared plugin instances (replaces removed rolldown_plugin::__inner::SharedPluginable)
+pub type SharedPluginable = std::sync::Arc<dyn Pluginable>;
 
 // Re-export bundler APIs
 pub use builders::{

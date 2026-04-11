@@ -12,7 +12,7 @@ use anyhow::Context;
 use rolldown_common::{ModuleType, ResolvedExternal};
 use rolldown_plugin::{
     HookLoadArgs, HookLoadOutput, HookLoadReturn, HookResolveIdArgs, HookResolveIdOutput,
-    HookResolveIdReturn, Plugin, PluginContext,
+    HookResolveIdReturn, Plugin, PluginContext, SharedLoadPluginContext,
 };
 use std::borrow::Cow;
 use std::path::Path;
@@ -96,7 +96,7 @@ impl Plugin for RuntimeFilePlugin {
     /// other plugins.
     fn load(
         &self,
-        _ctx: &PluginContext,
+        _ctx: SharedLoadPluginContext,
         args: &HookLoadArgs<'_>,
     ) -> impl std::future::Future<Output = HookLoadReturn> + Send {
         let id = args.id.to_string();

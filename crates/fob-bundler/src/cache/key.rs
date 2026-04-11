@@ -13,8 +13,8 @@ use crate::builders::common::BundlePlan;
 const CACHE_FORMAT_VERSION: u32 = 1;
 
 /// Rolldown version for cache key.
-/// TODO: Get this from rolldown crate metadata.
-const ROLLDOWN_VERSION: &str = env!("CARGO_PKG_VERSION");
+/// Keep in sync with `workspace.dependencies.rolldown` in Cargo.toml.
+const ROLLDOWN_VERSION: &str = "0.5.1";
 
 /// Content-addressed cache key (BLAKE3 hash).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -173,9 +173,9 @@ fn hash_bundler_options(hasher: &mut Hasher, options: &rolldown::BundlerOptions)
         }
     }
 
-    // Advanced chunks (code splitting config)
-    if let Some(advanced_chunks) = &options.advanced_chunks {
-        hasher.update(format!("{:?}", advanced_chunks).as_bytes());
+    // Manual code splitting config (formerly advanced_chunks)
+    if let Some(manual_code_splitting) = &options.manual_code_splitting {
+        hasher.update(format!("{:?}", manual_code_splitting).as_bytes());
     }
 
     // Transform options (decorators, etc.)

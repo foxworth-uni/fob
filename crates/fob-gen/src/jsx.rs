@@ -81,7 +81,7 @@ impl<'a> JsxBuilder<'a> {
 
     /// Create a JSX closing element
     fn closing_element(&self, name: JSXElementName<'a>) -> JSXClosingElement<'a> {
-        JSXClosingElement { span: SPAN, name }
+        self.ast.jsx_closing_element(SPAN, name)
     }
 
     /// Create a JSX attribute: `name="value"`
@@ -102,10 +102,10 @@ impl<'a> JsxBuilder<'a> {
 
     /// Create an expression attribute value: `{expr}`
     pub fn expr_attr(&self, expr: Expression<'a>) -> JSXAttributeValue<'a> {
-        JSXAttributeValue::ExpressionContainer(self.ast.alloc(JSXExpressionContainer {
-            span: SPAN,
-            expression: JSXExpression::from(expr),
-        }))
+        let container = self
+            .ast
+            .jsx_expression_container(SPAN, JSXExpression::from(expr));
+        JSXAttributeValue::ExpressionContainer(self.ast.alloc(container))
     }
 
     /// Create a JSX text child
@@ -122,20 +122,18 @@ impl<'a> JsxBuilder<'a> {
 
     /// Create a JSX expression child: `{expr}`
     pub fn expr_child(&self, expr: Expression<'a>) -> JSXChild<'a> {
-        JSXChild::ExpressionContainer(self.ast.alloc(JSXExpressionContainer {
-            span: SPAN,
-            expression: JSXExpression::from(expr),
-        }))
+        let container = self
+            .ast
+            .jsx_expression_container(SPAN, JSXExpression::from(expr));
+        JSXChild::ExpressionContainer(self.ast.alloc(container))
     }
 
     /// Create a JSX fragment: `<>children</>`
     pub fn fragment(&self, children: Vec<JSXChild<'a>>) -> JSXFragment<'a> {
-        JSXFragment {
-            span: SPAN,
-            opening_fragment: JSXOpeningFragment { span: SPAN },
-            closing_fragment: JSXClosingFragment { span: SPAN },
-            children: self.ast.vec_from_iter(children),
-        }
+        let opening = self.ast.jsx_opening_fragment(SPAN);
+        let closing = self.ast.jsx_closing_fragment(SPAN);
+        let children_vec = self.ast.vec_from_iter(children);
+        self.ast.jsx_fragment(SPAN, opening, children_vec, closing)
     }
 
     /// Convert JSX element to expression

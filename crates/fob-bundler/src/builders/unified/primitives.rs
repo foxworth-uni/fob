@@ -95,9 +95,9 @@ impl CodeSplittingConfig {
         }
     }
 
-    /// Convert to Rolldown's AdvancedChunksOptions.
-    pub(crate) fn to_rolldown_options(&self) -> rolldown::AdvancedChunksOptions {
-        rolldown::AdvancedChunksOptions {
+    /// Convert to Rolldown's ManualCodeSplittingOptions.
+    pub(crate) fn to_rolldown_options(&self) -> rolldown::ManualCodeSplittingOptions {
+        rolldown::ManualCodeSplittingOptions {
             min_size: Some(self.min_size as f64),
             min_share_count: Some(self.min_imports),
             max_size: None,

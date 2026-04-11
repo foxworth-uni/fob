@@ -5,6 +5,7 @@
 
 use crate::SharedPluginable;
 use rolldown_plugin::Plugin;
+#[allow(unused_imports)]
 use std::sync::Arc;
 
 /// Plugin execution phases

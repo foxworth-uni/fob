@@ -120,7 +120,7 @@ export function run() { return greet('world'); }
         .await
         .expect("bundle mixing virtual and physical files");
 
-    assert_eq!(result.stats().module_count, 2);
+    assert_eq!(result.stats().module_count, 3);
 }
 
 #[tokio::test]
@@ -143,7 +143,7 @@ async fn virtual_file_multiple() {
         .await
         .expect("bundle with multiple virtual files");
 
-    assert_eq!(result.stats().module_count, 2);
+    assert_eq!(result.stats().module_count, 3);
 }
 
 #[tokio::test]

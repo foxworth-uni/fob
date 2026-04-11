@@ -1,4 +1,5 @@
 //! Error types for configuration validation and loading.
+#![allow(unused_assignments)] // miette::Diagnostic derive generates code that triggers this lint
 
 use std::path::PathBuf;
 

@@ -97,11 +97,10 @@ impl DevBuilder {
     )> {
         let start = Instant::now();
 
-        // For now, delegate to unified build since we're using the production
-        // build function which already writes to disk. In a full implementation,
-        // we would intercept the bundle output before disk write.
-        //
-        // TODO: Enhance fob-core to support in-memory builds without disk I/O
+        // Delegates to the production build path which writes to disk, then reads
+        // files back into the in-memory cache. The disk round-trip is acceptable
+        // for dev; an in-memory build path would skip it but requires fob-bundler
+        // to support returning output without writing.
         let result = crate::commands::build::build_with_result(&self.config, &self.cwd).await?;
 
         let duration_ms = start.elapsed().as_millis() as u64;

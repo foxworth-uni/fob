@@ -23,8 +23,7 @@ impl<'a> HtmlBuilder {
     pub fn index_html(&self, entry_point: Option<&str>) -> Result<String> {
         let script_src = entry_point.unwrap_or("/virtual_gumbo-client-entry.js");
 
-        // Generate HTML as a string (for now, since HTML isn't JS AST)
-        // TODO: Consider creating an HTML AST builder if needed
+        // Generate HTML as a formatted string; no AST builder needed for this simple template.
         let html = format!(
             r#"<!DOCTYPE html>
 <html lang="en">

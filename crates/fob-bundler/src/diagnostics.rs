@@ -110,9 +110,7 @@ pub fn extract_from_rolldown_error(error: &dyn std::fmt::Debug) -> Vec<Extracted
     // Convert error to string for analysis
     let error_str = format!("{error:?}");
 
-    // Try to extract structured information
-    // For now, we'll parse the debug string format
-    // TODO: Use Rolldown's public API when available
+    // NOTE: Parses debug-formatted strings until Rolldown exposes a public diagnostic API.
 
     // Check if this looks like a batched error (multiple diagnostics)
     if error_str.contains("BatchedBuildDiagnostic") || error_str.contains("diagnostics") {

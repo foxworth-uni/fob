@@ -27,7 +27,8 @@
 
 use crate::plugins::{FobPlugin, PluginPhase};
 use crate::{
-    HookLoadArgs, HookLoadOutput, HookLoadReturn, ModuleType, Plugin, PluginContext, Runtime,
+    HookLoadArgs, HookLoadOutput, HookLoadReturn, ModuleType, Plugin, Runtime,
+    SharedLoadPluginContext,
 };
 use anyhow::Context;
 use lightningcss::{
@@ -200,7 +201,7 @@ impl Plugin for CssPlugin {
     /// - `Err(e)` - Processing error
     fn load(
         &self,
-        _ctx: &PluginContext,
+        _ctx: SharedLoadPluginContext,
         args: &HookLoadArgs<'_>,
     ) -> impl std::future::Future<Output = HookLoadReturn> + Send {
         let id = args.id.to_string();

@@ -52,7 +52,8 @@ impl<'a> ProgramBuilder<'a> {
 
     /// Create an identifier expression: `name`
     pub fn ident(&self, name: impl Into<Atom<'a>>) -> Expression<'a> {
-        self.ast.expression_identifier(SPAN, name)
+        let atom: Atom<'a> = name.into();
+        self.ast.expression_identifier(SPAN, atom)
     }
 
     /// Create a string literal: `"value"`
@@ -80,7 +81,8 @@ impl<'a> ProgramBuilder<'a> {
 
     /// Create a member expression: `obj.prop`
     pub fn member(&self, object: Expression<'a>, property: impl Into<Atom<'a>>) -> Expression<'a> {
-        let prop_name = self.ast.identifier_name(SPAN, property);
+        let atom: Atom<'a> = property.into();
+        let prop_name = self.ast.identifier_name(SPAN, atom);
         let member = self
             .ast
             .member_expression_static(SPAN, object, prop_name, false);
@@ -119,7 +121,8 @@ impl<'a> ProgramBuilder<'a> {
 
     /// Create an object property: `key: value`
     pub fn prop(&self, key: impl Into<Atom<'a>>, value: Expression<'a>) -> ObjectPropertyKind<'a> {
-        let key_name = self.ast.identifier_name(SPAN, key);
+        let atom: Atom<'a> = key.into();
+        let key_name = self.ast.identifier_name(SPAN, atom);
         let property = self.ast.object_property(
             SPAN,
             PropertyKind::Init,
@@ -147,13 +150,18 @@ impl<'a> ProgramBuilder<'a> {
         let param_items: Vec<_> = params
             .into_iter()
             .map(|name| {
-                let pattern = self.ast.binding_pattern(
-                    self.ast.binding_pattern_kind_binding_identifier(SPAN, name),
-                    NONE,
-                    false,
-                );
-                self.ast
-                    .formal_parameter(SPAN, self.ast.vec(), pattern, None, false, false)
+                let pattern = self.ast.binding_pattern_binding_identifier(SPAN, name);
+                self.ast.formal_parameter(
+                    SPAN,
+                    self.ast.vec(),
+                    pattern,
+                    NONE,  // type_annotation
+                    NONE,  // initializer
+                    false, // optional
+                    None,  // accessibility
+                    false, // readonly
+                    false, // override
+                )
             })
             .collect();
 
@@ -190,13 +198,18 @@ impl<'a> ProgramBuilder<'a> {
         let param_items: Vec<_> = params
             .into_iter()
             .map(|name| {
-                let pattern = self.ast.binding_pattern(
-                    self.ast.binding_pattern_kind_binding_identifier(SPAN, name),
-                    NONE,
-                    false,
-                );
-                self.ast
-                    .formal_parameter(SPAN, self.ast.vec(), pattern, None, false, false)
+                let pattern = self.ast.binding_pattern_binding_identifier(SPAN, name);
+                self.ast.formal_parameter(
+                    SPAN,
+                    self.ast.vec(),
+                    pattern,
+                    NONE,  // type_annotation
+                    NONE,  // initializer
+                    false, // optional
+                    None,  // accessibility
+                    false, // readonly
+                    false, // override
+                )
             })
             .collect();
 
@@ -226,17 +239,15 @@ impl<'a> ProgramBuilder<'a> {
 
     /// Create a const declaration: `const name = init;`
     pub fn const_decl(&self, name: impl Into<Atom<'a>>, init: Expression<'a>) -> Statement<'a> {
-        let pattern = self.ast.binding_pattern(
-            self.ast.binding_pattern_kind_binding_identifier(SPAN, name),
-            NONE,
-            false,
-        );
+        let atom: Atom<'a> = name.into();
+        let pattern = self.ast.binding_pattern_binding_identifier(SPAN, atom);
         let declarator = self.ast.variable_declarator(
             SPAN,
             VariableDeclarationKind::Const,
             pattern,
-            Some(init),
-            false,
+            NONE,       // type_annotation
+            Some(init), // init
+            false,      // definite
         );
         let declarations = self.ast.vec1(declarator);
         let var_decl = self.ast.variable_declaration(
@@ -254,14 +265,16 @@ impl<'a> ProgramBuilder<'a> {
         name: impl Into<Atom<'a>>,
         init: Option<Expression<'a>>,
     ) -> Statement<'a> {
-        let pattern = self.ast.binding_pattern(
-            self.ast.binding_pattern_kind_binding_identifier(SPAN, name),
-            NONE,
-            false,
+        let atom: Atom<'a> = name.into();
+        let pattern = self.ast.binding_pattern_binding_identifier(SPAN, atom);
+        let declarator = self.ast.variable_declarator(
+            SPAN,
+            VariableDeclarationKind::Let,
+            pattern,
+            NONE,  // type_annotation
+            init,  // init
+            false, // definite
         );
-        let declarator =
-            self.ast
-                .variable_declarator(SPAN, VariableDeclarationKind::Let, pattern, init, false);
         let declarations = self.ast.vec1(declarator);
         let var_decl =
             self.ast
@@ -289,28 +302,18 @@ impl<'a> ProgramBuilder<'a> {
             self.ast.statement_block(SPAN, alt_stmts)
         });
 
-        Statement::IfStatement(self.ast.alloc(IfStatement {
-            span: SPAN,
-            test,
-            consequent: consequent_block,
-            alternate: alternate_block,
-        }))
+        self.ast
+            .statement_if(SPAN, test, consequent_block, alternate_block)
     }
 
     /// Create a return statement: `return expr;`
     pub fn return_stmt(&self, expr: Option<Expression<'a>>) -> Statement<'a> {
-        Statement::ReturnStatement(self.ast.alloc(ReturnStatement {
-            span: SPAN,
-            argument: expr,
-        }))
+        self.ast.statement_return(SPAN, expr)
     }
 
     /// Create a throw statement: `throw expr;`
     pub fn throw(&self, expr: Expression<'a>) -> Statement<'a> {
-        Statement::ThrowStatement(self.ast.alloc(ThrowStatement {
-            span: SPAN,
-            argument: expr,
-        }))
+        self.ast.statement_throw(SPAN, expr)
     }
 
     // ===== IMPORTS & EXPORTS =====
@@ -321,7 +324,8 @@ impl<'a> ProgramBuilder<'a> {
         local: impl Into<Atom<'a>>,
         source: impl Into<Atom<'a>>,
     ) -> ModuleDeclaration<'a> {
-        let binding = self.ast.binding_identifier(SPAN, local);
+        let local_atom: Atom<'a> = local.into();
+        let binding = self.ast.binding_identifier(SPAN, local_atom);
         let specifier = self.ast.import_default_specifier(SPAN, binding);
         let specifiers = self
             .ast
@@ -361,7 +365,7 @@ impl<'a> ProgramBuilder<'a> {
         let specifiers: Vec<_> = names
             .into_iter()
             .map(|name| {
-                let atom = name.into();
+                let atom: Atom<'a> = name.into();
                 let imported_name = self.ast.identifier_name(SPAN, atom);
                 let local_binding = self.ast.binding_identifier(SPAN, atom);
                 let specifier = self.ast.import_specifier(
@@ -405,14 +409,15 @@ impl<'a> ProgramBuilder<'a> {
             Statement::VariableDeclaration(var_decl) => Declaration::VariableDeclaration(var_decl),
             _ => unreachable!(),
         };
-        ModuleDeclaration::ExportNamedDeclaration(self.ast.alloc(ExportNamedDeclaration {
-            span: SPAN,
-            declaration: Some(declaration),
-            specifiers: self.ast.vec(),
-            source: None,
-            export_kind: ImportOrExportKind::Value,
-            with_clause: None,
-        }))
+        let export = self.ast.export_named_declaration(
+            SPAN,
+            Some(declaration),
+            self.ast.vec(),
+            None,
+            ImportOrExportKind::Value,
+            NONE,
+        );
+        ModuleDeclaration::ExportNamedDeclaration(self.ast.alloc(export))
     }
 
     // ===== PROGRAM-LEVEL OPERATIONS =====
@@ -569,18 +574,13 @@ impl<'a> ProgramBuilder<'a> {
             .into_iter()
             .enumerate()
             .map(|(i, part)| {
-                let atom = part.into();
-                let tail = i == expressions.len(); // Last quasi element
+                let atom: Atom<'a> = part.into();
+                let tail = i == expressions.len();
                 let value = TemplateElementValue {
                     raw: atom,
                     cooked: Some(atom),
                 };
-                TemplateElement {
-                    span: SPAN,
-                    value,
-                    tail,
-                    lone_surrogates: false,
-                }
+                self.ast.template_element(SPAN, value, tail, false)
             })
             .collect();
 
@@ -599,9 +599,6 @@ impl<'a> ProgramBuilder<'a> {
     /// js.array(vec![js.spread(js.ident("items"))])
     /// ```
     pub fn spread(&self, expr: Expression<'a>) -> SpreadElement<'a> {
-        SpreadElement {
-            span: SPAN,
-            argument: expr,
-        }
+        self.ast.spread_element(SPAN, expr)
     }
 }

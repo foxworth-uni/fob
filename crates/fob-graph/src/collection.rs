@@ -272,8 +272,8 @@ pub fn parse_module_structure(
                         }
                         Declaration::VariableDeclaration(var) => {
                             for decl in &var.declarations {
-                                if let oxc_ast::ast::BindingPatternKind::BindingIdentifier(ident) =
-                                    &decl.id.kind
+                                if let oxc_ast::ast::BindingPattern::BindingIdentifier(ident) =
+                                    &decl.id
                                 {
                                     exports.push(CollectedExport::Named {
                                         exported: ident.name.to_string(),
