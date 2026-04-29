@@ -20,7 +20,6 @@ dts-generation = ["fob-bundler/dts-generation"]
 [dependencies]
 # Core dependencies
 fob-bundler = { path = "../fob-bundler", version = "0.5.0" }
-fob-config = { path = "../fob-config", version = "0.5.0" }
 fob-gen = { path = "../fob-gen", version = "0.5.0" }
 
 # Async runtime

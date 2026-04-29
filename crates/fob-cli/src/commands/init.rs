@@ -185,11 +185,6 @@ fn generate_project_files(
     fs::write(project_dir.join("tsconfig.json"), tsconfig)?;
     ui::success("  Created tsconfig.json");
 
-    // Generate fob.config.json
-    let joy_config = templates::joy_config_json(template);
-    fs::write(project_dir.join("fob.config.json"), joy_config)?;
-    ui::success("  Created fob.config.json");
-
     // Generate source file
     let source_file = templates::source_file(template);
     let source_filename = match template {

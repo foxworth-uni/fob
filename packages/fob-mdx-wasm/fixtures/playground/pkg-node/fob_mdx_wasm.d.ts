@@ -1,61 +1,67 @@
 /* tslint:disable */
 /* eslint-disable */
 
+/**
+ * WASM-compatible MDX compilation options
+ *
+ * This is a JS-friendly wrapper around `MdxCompileOptions` that can be
+ * constructed and configured from JavaScript.
+ */
 export class WasmMdxOptions {
-  free(): void;
-  [Symbol.dispose](): void;
-  /**
-   * Set the filepath (for error messages)
-   */
-  set_filepath(filepath: string): void;
-  /**
-   * Enable/disable footnotes
-   */
-  set_footnotes(enabled: boolean): void;
-  /**
-   * Set JSX runtime (default: "react/jsx-runtime")
-   */
-  set_jsx_runtime(runtime: string): void;
-  /**
-   * Set output format ("program" or "function-body")
-   */
-  set_output_format(format: string): void;
-  /**
-   * Create new options with defaults
-   */
-  constructor();
-  /**
-   * Enable/disable GFM (GitHub Flavored Markdown)
-   */
-  set_gfm(enabled: boolean): void;
-  /**
-   * Enable/disable math
-   */
-  set_math(enabled: boolean): void;
-  /**
-   * Get JSX runtime
-   */
-  readonly jsx_runtime: string;
-  /**
-   * Get output format
-   */
-  readonly output_format: string;
-  /**
-   * Get GFM setting
-   */
-  readonly gfm: boolean;
-  /**
-   * Get math setting
-   */
-  readonly math: boolean;
-  /**
-   * Get the filepath
-   */
-  readonly filepath: string | undefined;
-  /**
-   * Get footnotes setting
-   */
-  readonly footnotes: boolean;
+    free(): void;
+    [Symbol.dispose](): void;
+    /**
+     * Create new options with defaults
+     */
+    constructor();
+    /**
+     * Set the filepath (for error messages)
+     */
+    set_filepath(filepath: string): void;
+    /**
+     * Enable/disable footnotes
+     */
+    set_footnotes(enabled: boolean): void;
+    /**
+     * Enable/disable GFM (GitHub Flavored Markdown)
+     */
+    set_gfm(enabled: boolean): void;
+    /**
+     * Set JSX runtime (default: "react/jsx-runtime")
+     */
+    set_jsx_runtime(runtime: string): void;
+    /**
+     * Enable/disable math
+     */
+    set_math(enabled: boolean): void;
+    /**
+     * Set output format ("program" or "function-body")
+     */
+    set_output_format(format: string): void;
+    /**
+     * Get the filepath
+     */
+    readonly filepath: string | undefined;
+    /**
+     * Get footnotes setting
+     */
+    readonly footnotes: boolean;
+    /**
+     * Get GFM setting
+     */
+    readonly gfm: boolean;
+    /**
+     * Get JSX runtime
+     */
+    readonly jsx_runtime: string;
+    /**
+     * Get math setting
+     */
+    readonly math: boolean;
+    /**
+     * Get output format
+     */
+    readonly output_format: string;
 }
 
 /**

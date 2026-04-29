@@ -21,13 +21,6 @@ pub(crate) enum PluginPhase {
     /// Must run before any other plugins try to resolve or load files.
     Virtual = 0,
 
-    /// Module resolution
-    ///
-    /// Plugins that modify or extend module resolution behavior.
-    /// Runs after virtual files are available but before transformation.
-    #[allow(dead_code)]
-    Resolve = 10,
-
     /// Content transformation (MDX, CSS, etc.)
     ///
     /// Plugins that transform file contents (e.g., MDX to JSX, CSS processing).
@@ -102,18 +95,6 @@ impl PluginRegistry {
     pub fn into_rolldown_plugins(mut self) -> Vec<SharedPluginable> {
         self.plugins.sort_by_key(|(phase, _)| *phase);
         self.plugins.into_iter().map(|(_, plugin)| plugin).collect()
-    }
-
-    /// Get the number of plugins in the registry
-    #[allow(dead_code)]
-    pub fn len(&self) -> usize {
-        self.plugins.len()
-    }
-
-    /// Check if the registry is empty
-    #[allow(dead_code)]
-    pub fn is_empty(&self) -> bool {
-        self.plugins.is_empty()
     }
 }
 

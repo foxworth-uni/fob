@@ -30,7 +30,7 @@
 
 use anyhow::{Context, Result};
 use oxc_allocator::Allocator;
-use oxc_codegen::Codegen;
+use oxc_codegen::{Codegen, CodegenOptions};
 use oxc_isolated_declarations::{IsolatedDeclarations, IsolatedDeclarationsOptions};
 use oxc_parser::Parser;
 use oxc_span::SourceType as OxcSourceType;
@@ -101,6 +101,7 @@ impl Plugin for DtsEmitPlugin {
         args: &mut HookGenerateBundleArgs<'_>,
     ) -> impl std::future::Future<Output = HookNoopReturn> + Send {
         let strip_internal = self.strip_internal;
+        let sourcemap = self.sourcemap;
         let dts_dir = self.dts_dir.clone();
 
         async move {
@@ -135,20 +136,24 @@ impl Plugin for DtsEmitPlugin {
                             }
                         };
 
-                        // Generate .d.ts content using OXC
-                        let dts_content =
-                            match generate_dts(&source, module_id.as_ref(), strip_internal) {
-                                Ok(content) => content,
-                                Err(e) => {
-                                    // If generation fails, warn but continue
-                                    eprintln!(
-                                        "Warning: Failed to generate .d.ts for {}: {}",
-                                        module_id.as_ref(),
-                                        e
-                                    );
-                                    continue;
-                                }
-                            };
+                        // Generate .d.ts content (and optional source map JSON) using OXC
+                        let (mut dts_content, map_json) = match generate_dts(
+                            &source,
+                            module_id.as_ref(),
+                            strip_internal,
+                            sourcemap,
+                        ) {
+                            Ok(out) => out,
+                            Err(e) => {
+                                // If generation fails, warn but continue
+                                eprintln!(
+                                    "Warning: Failed to generate .d.ts for {}: {}",
+                                    module_id.as_ref(),
+                                    e
+                                );
+                                continue;
+                            }
+                        };
 
                         // Compute output filename for the .d.ts file
                         let dts_filename = compute_dts_filename(
@@ -156,6 +161,31 @@ impl Plugin for DtsEmitPlugin {
                             module_id.as_ref(),
                             dts_dir.as_deref(),
                         );
+
+                        // If a source map was produced, append the sourceMappingURL
+                        // comment to the .d.ts content and queue a sibling .d.ts.map asset.
+                        // The URL is the basename of the map file because both files
+                        // always live in the same directory.
+                        if let Some(map_json) = map_json {
+                            let map_filename = format!("{}.map", dts_filename);
+                            let map_basename = Path::new(&map_filename)
+                                .file_name()
+                                .and_then(|s| s.to_str())
+                                .unwrap_or(&map_filename);
+                            if !dts_content.ends_with('\n') {
+                                dts_content.push('\n');
+                            }
+                            dts_content
+                                .push_str(&format!("//# sourceMappingURL={}\n", map_basename));
+
+                            let map_asset = OutputAsset {
+                                names: vec![],
+                                original_file_names: vec![module_id.to_string()],
+                                filename: map_filename.into(),
+                                source: map_json.into(),
+                            };
+                            dts_assets.push(Output::Asset(Arc::new(map_asset)));
+                        }
 
                         // Create an OutputAsset for the .d.ts file
                         let asset = OutputAsset {
@@ -166,7 +196,6 @@ impl Plugin for DtsEmitPlugin {
                         };
 
                         dts_assets.push(Output::Asset(Arc::new(asset)));
-
                     }
                 }
             }
@@ -193,17 +222,26 @@ fn is_typescript_module(path: &str) -> bool {
 /// # Arguments
 ///
 /// * `source` - TypeScript source code
-/// * `file_path` - Path to the source file (for error messages)
+/// * `file_path` - Path to the source file (used for error messages and the
+///   `sources[0]` entry of the generated source map, when enabled)
 /// * `strip_internal` - Whether to strip @internal declarations
+/// * `sourcemap` - When true, request a v3 source map from codegen and return
+///   it serialized as JSON alongside the .d.ts string
 ///
 /// # Returns
 ///
-/// The generated .d.ts file content as a String
+/// A tuple of `(dts_code, sourcemap_json)`. The map is `None` when `sourcemap`
+/// is false or when codegen did not produce one.
 ///
 /// # Errors
 ///
 /// Returns an error if parsing or transformation fails
-fn generate_dts(source: &str, file_path: &str, strip_internal: bool) -> Result<String> {
+fn generate_dts(
+    source: &str,
+    file_path: &str,
+    strip_internal: bool,
+    sourcemap: bool,
+) -> Result<(String, Option<String>)> {
     // Create OXC allocator (required for all OXC operations)
     let allocator = Allocator::default();
 
@@ -250,11 +288,23 @@ fn generate_dts(source: &str, file_path: &str, strip_internal: bool) -> Result<S
         );
     }
 
-    // Generate .d.ts string from AST
-    let codegen = Codegen::new();
+    // Generate .d.ts string from AST. Setting `source_map_path` is the
+    // switch that tells oxc_codegen to record mappings; the path value
+    // becomes `sources[0]` in the resulting v3 source map.
+    let codegen = Codegen::new()
+        .with_source_text(source)
+        .with_options(CodegenOptions {
+            source_map_path: if sourcemap {
+                Some(PathBuf::from(file_path))
+            } else {
+                None
+            },
+            ..CodegenOptions::default()
+        });
     let generated = codegen.build(&dts_result.program);
 
-    Ok(generated.code)
+    let map_json = generated.map.map(|m| m.to_json_string());
+    Ok((generated.code, map_json))
 }
 
 /// Compute the output filename for a .d.ts file
@@ -329,13 +379,17 @@ export function greet(name: string): string {
 }
 "#;
 
-        let result = generate_dts(source, "test.ts", false);
+        let result = generate_dts(source, "test.ts", false, false);
         assert!(result.is_ok());
 
-        let dts = result.unwrap();
+        let (dts, map) = result.unwrap();
         assert!(dts.contains("export"));
         assert!(dts.contains("function greet"));
         assert!(dts.contains("string"));
+        assert!(
+            map.is_none(),
+            "no map should be produced when sourcemap=false"
+        );
     }
 
     #[test]
@@ -348,17 +402,46 @@ export function publicFn(): void {}
 "#;
 
         // With strip_internal = true
-        let result = generate_dts(source, "test.ts", true);
+        let result = generate_dts(source, "test.ts", true, false);
         assert!(result.is_ok());
-        let dts = result.unwrap();
+        let (dts, _) = result.unwrap();
         assert!(!dts.contains("_internalFn"));
         assert!(dts.contains("publicFn"));
 
         // With strip_internal = false
-        let result = generate_dts(source, "test.ts", false);
+        let result = generate_dts(source, "test.ts", false, false);
         assert!(result.is_ok());
-        let dts = result.unwrap();
+        let (dts, _) = result.unwrap();
         assert!(dts.contains("_internalFn"));
         assert!(dts.contains("publicFn"));
+    }
+
+    #[test]
+    fn test_generate_dts_emits_sourcemap() {
+        let source = r#"
+export function greet(name: string): string {
+    return `Hello, ${name}!`;
+}
+"#;
+
+        let (dts, map) =
+            generate_dts(source, "src/test.ts", false, true).expect("dts generation succeeds");
+
+        // .d.ts content is unchanged whether sourcemap is on or off — the
+        // sourceMappingURL comment is appended by the plugin's bundle hook,
+        // not by generate_dts itself.
+        assert!(dts.contains("function greet"));
+
+        let map_json = map.expect("map should be produced when sourcemap=true");
+        let parsed: serde_json::Value = serde_json::from_str(&map_json).expect("map is valid JSON");
+        assert_eq!(parsed["version"], 3);
+        let sources = parsed["sources"].as_array().expect("sources is an array");
+        assert!(!sources.is_empty(), "sources must be non-empty");
+        // The path we passed in should show up as the (only) source.
+        assert!(
+            sources.iter().any(|s| s.as_str() == Some("src/test.ts")),
+            "expected src/test.ts in sources, got {:?}",
+            sources
+        );
     }
 }

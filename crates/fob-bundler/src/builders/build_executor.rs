@@ -330,9 +330,7 @@ fn configure_rolldown_options(options: &BuildOptions) -> BundlerOptions {
             // Externalize specific packages
             IsExternal::from(packages.clone())
         }
-        ExternalConfig::FromManifest(path) => {
-            read_externals_from_manifest(path)
-        }
+        ExternalConfig::FromManifest(path) => read_externals_from_manifest(path),
     });
 
     // Globals for IIFE/UMD

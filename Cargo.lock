@@ -2139,7 +2139,6 @@ dependencies = [
  "console",
  "figment",
  "fob-bundler",
- "fob-config",
  "fob-gen",
  "indicatif",
  "insta",
@@ -2170,21 +2169,6 @@ dependencies = [
  "serde",
  "serde_json",
  "worker",
-]
-
-[[package]]
-name = "fob-config"
-version = "0.5.0"
-dependencies = [
- "figment",
- "indexmap",
- "miette",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.18",
- "toml 0.9.12+spec-1.1.0",
- "tracing",
 ]
 
 [[package]]
@@ -2293,18 +2277,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
- "tokio",
-]
-
-[[package]]
-name = "fob-target"
-version = "0.5.0"
-dependencies = [
- "fob-bundler",
- "miette",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
  "tokio",
 ]
 

@@ -157,7 +157,6 @@ jobs:
           # Publish in dependency order, skip already-published
           CRATES=(
             fob-browser-test
-            fob-config
             fob-gen
             fob-graph
             fob-bundler

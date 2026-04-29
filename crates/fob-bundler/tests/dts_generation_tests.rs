@@ -294,3 +294,68 @@ export function Button(props: ButtonProps): JSX.Element {
     assert!(dts_content.contains("ButtonProps"));
     assert!(dts_content.contains("Button"));
 }
+
+#[tokio::test]
+async fn test_library_emits_declaration_map() {
+    let project = create_ts_library_project();
+    let entry = project.path().join("src/index.ts");
+
+    let result = fob::BuildOptions::new(entry)
+        .externalize_from("package.json")
+        .platform(Platform::Node)
+        .emit_dts(true)
+        .declaration_map(true)
+        .cwd(project.path())
+        .sourcemap(false)
+        .build()
+        .await
+        .expect("Failed to bundle");
+
+    let bundle = result.output.as_single().expect("single bundle");
+
+    let dts_assets: Vec<_> = bundle
+        .assets
+        .iter()
+        .filter(|a| a.filename().ends_with(".d.ts"))
+        .collect();
+    let map_assets: Vec<_> = bundle
+        .assets
+        .iter()
+        .filter(|a| a.filename().ends_with(".d.ts.map"))
+        .collect();
+
+    assert_eq!(dts_assets.len(), 1, "expected exactly one .d.ts asset");
+    assert_eq!(
+        map_assets.len(),
+        1,
+        "expected exactly one .d.ts.map asset when declaration_map is on"
+    );
+
+    // The .d.ts must reference its sibling map by basename (not absolute path).
+    let dts_content = String::from_utf8_lossy(dts_assets[0].content_as_bytes());
+    let map_basename = std::path::Path::new(map_assets[0].filename())
+        .file_name()
+        .and_then(|s| s.to_str())
+        .expect("map filename has a basename");
+    let expected_comment = format!("//# sourceMappingURL={}", map_basename);
+    assert!(
+        dts_content.contains(&expected_comment),
+        "expected `{}` in .d.ts content, got:\n{}",
+        expected_comment,
+        dts_content
+    );
+
+    // Map must be a valid v3 source map referencing the original .ts source.
+    let map_content = String::from_utf8_lossy(map_assets[0].content_as_bytes());
+    let parsed: serde_json::Value =
+        serde_json::from_str(&map_content).expect("declaration map is valid JSON");
+    assert_eq!(parsed["version"], 3, "expected v3 source map");
+    let sources = parsed["sources"].as_array().expect("sources is an array");
+    assert!(
+        sources
+            .iter()
+            .any(|s| s.as_str().map(|p| p.ends_with("index.ts")).unwrap_or(false)),
+        "expected an index.ts entry in sources, got {:?}",
+        sources
+    );
+}

@@ -199,75 +199,6 @@ pub fn tsconfig_json(template: Template) -> &'static str {
     }
 }
 
-/// Generate fob.config.json for a template.
-///
-/// Creates bundler configuration appropriate for each template type.
-/// Component libraries externalize React and emit type declarations.
-/// Meta frameworks target Node.js with multiple entry points.
-pub fn joy_config_json(template: Template) -> &'static str {
-    match template {
-        Template::Library => {
-            r#"{
-  "bundle": {
-    "entries": ["src/index.ts"],
-    "format": "esm",
-    "output_dir": "dist",
-    "minify": false,
-    "source_maps": "external",
-    "platform": "node",
-    "transform": {
-      "target": "es2020"
-    },
-    "typescript_config": {
-      "emit_declarations": true,
-      "declaration_map": true
-    }
-  }
-}
-"#
-        }
-        Template::App => {
-            r#"{
-  "bundle": {
-    "entries": ["src/main.ts"],
-    "format": "esm",
-    "output_dir": "dist",
-    "minify": true,
-    "source_maps": "external",
-    "platform": "browser",
-    "transform": {
-      "target": "es2020"
-    }
-  }
-}
-"#
-        }
-        Template::ComponentLibrary => {
-            r#"{
-  "bundle": {
-    "entries": ["src/index.ts", "src/Button.tsx"],
-    "format": "esm",
-    "external": ["react"],
-    "typescript_config": {
-      "emit_declarations": true
-    }
-  }
-}
-"#
-        }
-        Template::MetaFramework => {
-            r#"{
-  "bundle": {
-    "entries": ["src/index.ts", "src/router.ts", "src/server.ts"],
-    "format": "esm",
-    "platform": "node"
-  }
-}
-"#
-        }
-    }
-}
-
 /// Generate source file content for a template.
 ///
 /// Note: Currently uses static strings for simplicity, but could be refactored
@@ -681,28 +612,6 @@ mod tests {
     fn test_tsconfig_json_component_library() {
         let json = tsconfig_json(Template::ComponentLibrary);
         assert!(json.contains("\"jsx\": \"react\""));
-    }
-
-    #[test]
-    fn test_joy_config_json() {
-        let lib_config = joy_config_json(Template::Library);
-        assert!(lib_config.contains("\"bundle\""));
-        assert!(lib_config.contains("\"entries\""));
-        assert!(lib_config.contains("\"typescript_config\""));
-        assert!(lib_config.contains("\"emit_declarations\": true"));
-
-        let app_config = joy_config_json(Template::App);
-        assert!(app_config.contains("\"bundle\""));
-        assert!(app_config.contains("\"platform\": \"browser\""));
-
-        let comp_config = joy_config_json(Template::ComponentLibrary);
-        assert!(comp_config.contains("src/Button.tsx"));
-        assert!(comp_config.contains("\"external\": [\"react\"]"));
-
-        let meta_config = joy_config_json(Template::MetaFramework);
-        assert!(meta_config.contains("src/router.ts"));
-        assert!(meta_config.contains("src/server.ts"));
-        assert!(meta_config.contains("\"platform\": \"node\""));
     }
 
     #[test]

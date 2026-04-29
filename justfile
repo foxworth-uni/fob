@@ -222,10 +222,6 @@ test-cli:
 run-cli *args:
     @cargo run --package fob-cli -- {{args}}
 
-# fob-config
-test-config:
-    @cargo test --package fob-config --all-features
-
 # fob-gen
 test-gen:
     @cargo test --package fob-gen --all-features
